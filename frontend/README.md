@@ -92,7 +92,7 @@
 开发：
 
 ```bash
-npm run dev
+npm start
 打开 http://localhost:8000
 ```
 
