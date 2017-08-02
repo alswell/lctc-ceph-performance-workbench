@@ -13,10 +13,17 @@ DATA = {"data":
 }
     
 @urls.register
-class Host(generic.View):
+class Hosts(generic.View):
     url_regex = r'^host$'
 
     @utils.json_response
     def get(self, request):
         return DATA
 
+@urls.register
+class Host(generic.View):
+    url_regex = r'^host/(?P<id>\d+)/$$'
+
+    @utils.json_response
+    def get(self, request, id):
+        return DATA["data"][int(id)]
