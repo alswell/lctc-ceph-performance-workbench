@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'mysql',
+    'fiotest',
 ]
 
 MIDDLEWARE = [
@@ -79,6 +80,14 @@ DATABASES = {
         #'ENGINE': 'django.db.backends.sqlite3',
         #'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
         'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'django_default',
+        'USER': 'root',
+        'PASSWORD': '',
+        'HOST': '127.0.0.1',
+        'PORT': '3306',
+    },
+    'mysql': {
+        'ENGINE': 'django.db.backends.mysql',
         'NAME': 'test',
         'USER': 'root',
         'PASSWORD': '',
@@ -92,10 +101,10 @@ DATABASES = {
         'PASSWORD': '',
         'HOST': '127.0.0.1',
         'PORT': '3306',
-    }
+    },
 }
 
-DATABASE_ROUTERS = ['ceph_perf_api.db_route.MySqlRouter']
+DATABASE_ROUTERS = ['ceph_perf_api.db_route.MySqlRouter', 'ceph_perf_api.db_route.FioRouter']
 
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
