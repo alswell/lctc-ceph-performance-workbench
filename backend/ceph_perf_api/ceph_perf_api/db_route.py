@@ -23,12 +23,12 @@ class MySqlRouter:
 class FioRouter:
     def db_for_read(self, model, **hints):
         if model._meta.app_label == "fiotest":
-	    return "fiotest"
+	    return "default"
         return None
 
     def db_for_write(self, model, **hints):
         if model._meta.app_label == "fiotest":
-	    return "fiotest"
+	    return "default"
         return None
 
     def allow_relation(self, obj1, obj2, **hints):
@@ -39,6 +39,6 @@ class FioRouter:
 
     def allow_migrate(self, db, app_label, model_name=None, **hints):
 	if app_label == 'fiotest':
-	    return db == 'fiotest'
+	    return db == 'default'
 	return None
 

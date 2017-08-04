@@ -142,6 +142,24 @@ const Routers = function ({ history, app }) {
           },
         },
         {
+          path: 'fiotest',
+          getComponent (nextState, cb) {
+            require.ensure([], require => {
+              registerModel(app, require('./models/fiotest.model'))
+              cb(null, require('./routes/fiotest/'))
+            }, 'fiotest')
+          },
+        },
+        {
+          path: 'sysdata',
+          getComponent (nextState, cb) {
+            require.ensure([], require => {
+              registerModel(app, require('./models/sysdata.model'))
+              cb(null, require('./routes/sysdata/'))
+            }, 'sysdata')
+          },
+        },
+        {
           path: '*',
           getComponent (nextState, cb) {
             require.ensure([], require => {
