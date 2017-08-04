@@ -38,3 +38,10 @@ http://www.cnblogs.com/caseast/articles/4806213.html
         # edit table
     ./manage.py makemigrations mysql    #初始化表结构
     ./manage.py migrate                 #表创建完毕
+
+RestAPI examples:
+INSERT:  curl -X POST 0.0.0.0:8866/api/v1/userinfo -d '{"username": "root", "password": "123456"}'
+DELETE:  curl -X DELETE 0.0.0.0:8866/api/v1/userinfo/2/
+QUERY:   curl -X GET 0.0.0.0:8866/api/v1/userinfo/1/
+         curl -X GET 0.0.0.0:8866/api/v1/userinfo
+EDIT:    curl -X PUT 0.0.0.0:8866/api/v1/userinfo/1/ -d '{"password": "123456"}'
