@@ -1,5 +1,6 @@
 *.pyc
 *.pyo
+migrations
 
 dist
 node_modules
