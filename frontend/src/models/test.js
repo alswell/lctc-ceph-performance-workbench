@@ -200,7 +200,8 @@ export default {
       payload,
     }, { call, put }) {
       const data = yield call(query, parse(payload))
-      yield put({ type: 'queryWeather', payload: { ...data } })
+      console.log(data)
+      yield put({ type: 'queryWeather', payload: { ...data.data } })
     },
     *queryWeather ({
       payload,

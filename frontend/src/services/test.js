@@ -1,7 +1,7 @@
 import { request, config } from '../utils'
 import { fetch } from './restfulService'
-const { api } = config
-const { dashboard } = api
+//const { api } = config
+//const { dashboard } = api
 
 export async function myCity (params) {
   return request({
@@ -18,12 +18,10 @@ export async function queryWeather (params) {
 }
 
 export async function query (params) {
-  //let r = request({
-  let r = fetch({
+  //return request({
+  return fetch({
     url: 'dashboard',
     method: 'get',
     data: params,
   })
-  console.log(r)
-  return r
 }
