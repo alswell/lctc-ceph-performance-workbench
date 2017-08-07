@@ -172,6 +172,18 @@ class Result(object):
         row_dic = {}
         for sheet in sheet_list:
             row_dic[sheet] = 2
+
+        pwd_dir = os.getcwd().split('/')
+        pwd_log_dir = pwd_dir[-1].split('_')
+        suite_time = '{}-{}-{} {}:{}:{}'.format(
+            pwd_log_dir[-6],
+            pwd_log_dir[-5],
+            pwd_log_dir[-4],
+            pwd_log_dir[-3],
+            pwd_log_dir[-2],
+            pwd_log_dir[-1],
+        )
+
         for log in logs:
             #rbd_randrw_4k_runtime30_iodepth1_numjob1_imagenum2_hahaha_%100_2017_07_18_17_27_04
             config_log = log.split('_')
@@ -228,6 +240,8 @@ class Result(object):
                     config_log[14]
                 )
                 result_to_db = {
+                    #'job_name': jobname,
+                    'suite_time': suite_time,
                     'time': time,
                     'case_name': log,
                     'blocksize': bs,

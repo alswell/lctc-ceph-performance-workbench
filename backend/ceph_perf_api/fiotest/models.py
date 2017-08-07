@@ -9,6 +9,7 @@ class Result(models.Model):
     id = models.AutoField(primary_key=True)
     case_name = models.CharField(max_length=100)
     time = models.DateTimeField(null=True)
+    suite_time = models.DateTimeField(null=True)
     blocksize = models.CharField(max_length=20, null=True)
     iodepth = models.IntegerField(null=True)
     numberjob = models.IntegerField(null=True)

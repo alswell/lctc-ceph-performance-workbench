@@ -462,11 +462,7 @@ class SysInfo(object):
                 host = log_file.split('_')[0]
                 osd = log_file.split('_')[1]
                 ceph_configs = json.load(open(log_file))
-                self.db.insert_tb_cephconfigfilestonedata(casename, host, osd, **ceph_configs)
-                self.db.insert_tb_cephconfigjournaldata(casename, host, osd, **ceph_configs)
-                self.db.insert_tb_cephconfigosddata(casename, host, osd, **ceph_configs)
-                self.db.insert_tb_cephconfigrbddata(casename, host, osd, **ceph_configs)
-                self.db.insert_tb_cephconfigclientdata(casename, host, osd, **ceph_configs)
+                self.db.insert_tb_cephconfigdata(casename, host, osd, **ceph_configs)
 
 
 def format_subnet(subnet_input):  
