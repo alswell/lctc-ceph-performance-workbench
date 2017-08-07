@@ -22,6 +22,7 @@ module.exports = {
     posts: `${APIV1}/posts`,
     user: `${APIV1}/user/:id`,
     dashboard: `${APIV1}/dashboard`,
+    test: `${APIV1}/test`,
     v1test: `${APIV1}/test`,
     v2test: `${APIV2}/test`,
     newUser: `${APINEW}/users`,
