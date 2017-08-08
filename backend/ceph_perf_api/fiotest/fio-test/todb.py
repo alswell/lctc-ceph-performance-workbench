@@ -26,7 +26,6 @@ class ToDB(object):
                 kwargs['readwrite'],
                 kwargs['lat']
         )
-        print sql
         try:
             self.cursor.execute(sql)
             self.db.commit()
@@ -287,6 +286,205 @@ class ToDB(object):
                 kwargs['objecter_inflight_ops'],
                 kwargs['objecter_inflight_op_bytes'],
             )
+        try:
+            self.cursor.execute(sql)
+            self.db.commit()
+        except:
+            self.db.rollback()
+
+    def insert_tb_perfdumpdata(self, casename, node, log_osd, **kwargs):
+        sql = "SELECT * FROM fiotest_result \
+            WHERE case_name = '{}'".format(casename)
+        try:
+            self.cursor.execute(sql)
+            results = self.cursor.fetchall()
+            for row in results:
+                caseid = row[0]
+        except:
+            self.db.rollback()
+        sql = "INSERT INTO fiotest_perfdump(caseid_id, node, osd, \
+            filestore_queue_transaction_latency_avg_avgcount, \
+            filestore_queue_transaction_latency_avg_sum, \
+            filestore_bytes, \
+            filestore_ops, \
+            filestore_op_queue_bytes, \
+            filestore_journal_bytes, \
+            filestore_journal_latency_avgcount, \
+            filestore_journal_latency_sum, \
+            filestore_journal_wr, \
+            filestore_journal_wr_bytes_avgcount, \
+            filestore_journal_wr_bytes_sum, \
+            filestore_journal_ops, \
+            filestore_apply_latency_avgcount, \
+            filestore_apply_latency_sum, \
+            filestore_commitcycle, \
+            filestore_commitcycle_latency_avgcount, \
+            filestore_commitcycle_sum, \
+            leveldb_leveldb_submit_sync_latency_avgcount, \
+            leveldb_leveldb_submit_sync_latency_sum, \
+            leveldb_leveldb_get_latency_avgcount, \
+            leveldb_leveldb_get_latency_sum, \
+            leveldb_leveldb_submit_latency_avgcount, \
+            leveldb_leveldb_submit_latency_sum, \
+            osd_op, \
+            osd_op_wip, \
+            osd_op_in_bytes, \
+            osd_op_out_bytes, \
+            osd_op_latency_avgcount, \
+            osd_op_latency_sum, \
+            osd_op_process_latency_avgcount, \
+            osd_op_process_latency_sum, \
+            osd_op_prepare_latency_avgcount, \
+            osd_op_prepare_latency_sum, \
+            osd_op_r_latency_avgcount, \
+            osd_op_r_latency_sum, \
+            osd_op_r_process_latency_avgcount, \
+            osd_op_r_process_latency_sum, \
+            osd_op_r, \
+            osd_op_r_out_bytes, \
+            osd_op_w, \
+            osd_op_w_in_bytes, \
+            osd_op_w_latency_avgcount, \
+            osd_op_w_latency_sum, \
+            osd_op_w_process_latency_avgcount, \
+            osd_op_w_process_latency_sum, \
+            osd_op_w_rlat_avgcount, \
+            osd_op_w_rlat_sum, \
+            osd_stat_bytes_used, \
+            osd_stat_bytes_avail, \
+            osd_buffer_bytes, \
+            recoverystate_perf_primary_latency_avgcount, \
+            recoverystate_perf_primary_latency_sum, \
+            recoverystate_perf_peering_latency_avgcount, \
+            recoverystate_perf_peering_latency_sum, \
+            recoverystate_perf_backfilling_latency_avgcount, \
+            recoverystate_perf_backfilling_latency_sum ) \
+            VALUES ('{}', '{}', '{}', \
+            '{}', '{}', '{}', '{}', '{}', \
+            '{}', '{}', '{}', '{}', '{}', \
+            '{}', '{}', '{}', '{}', '{}', \
+            '{}', '{}', '{}', '{}', '{}', \
+            '{}', '{}', '{}', '{}', '{}', \
+            '{}', '{}', '{}', '{}', '{}', \
+            '{}', '{}', '{}', '{}', '{}', \
+            '{}', '{}', '{}', '{}', '{}', \
+            '{}', '{}', '{}', '{}', '{}', \
+            '{}', '{}', '{}', '{}', '{}', \
+            '{}', '{}', '{}', '{}', '{}', \
+            '{}')".format(
+                caseid,
+                node,
+                log_osd,
+                kwargs['filestore']['queue_transaction_latency_avg']['avgcount'],
+                kwargs['filestore']['queue_transaction_latency_avg']['sum'],
+                kwargs['filestore']['bytes'],
+                kwargs['filestore']['ops'],
+                kwargs['filestore']['op_queue_bytes'],
+                kwargs['filestore']['journal_bytes'],
+                kwargs['filestore']['journal_latency']['avgcount'],
+                kwargs['filestore']['journal_latency']['sum'],
+                kwargs['filestore']['journal_wr'],
+                kwargs['filestore']['journal_wr_bytes']['avgcount'],
+                kwargs['filestore']['journal_wr_bytes']['sum'],
+                kwargs['filestore']['journal_ops'],
+                kwargs['filestore']['apply_latency']['avgcount'],
+                kwargs['filestore']['apply_latency']['sum'],
+                kwargs['filestore']['commitcycle'],
+                kwargs['filestore']['commitcycle_latency']['avgcount'],
+                kwargs['filestore']['commitcycle_latency']['sum'],
+                kwargs['leveldb']['leveldb_submit_sync_latency']['avgcount'],
+                kwargs['leveldb']['leveldb_submit_sync_latency']['sum'],
+                kwargs['leveldb']['leveldb_get_latency']['avgcount'],
+                kwargs['leveldb']['leveldb_get_latency']['sum'],
+                kwargs['leveldb']['leveldb_submit_latency']['avgcount'],
+                kwargs['leveldb']['leveldb_submit_latency']['sum'],
+                kwargs['osd']['op'],
+                kwargs['osd']['op_wip'],
+                kwargs['osd']['op_in_bytes'],
+                kwargs['osd']['op_out_bytes'],
+                kwargs['osd']['op_latency']['avgcount'],
+                kwargs['osd']['op_latency']['sum'],
+                kwargs['osd']['op_process_latency']['avgcount'],
+                kwargs['osd']['op_process_latency']['sum'],
+                kwargs['osd']['op_prepare_latency']['avgcount'],
+                kwargs['osd']['op_prepare_latency']['sum'],
+                kwargs['osd']['op_r_latency']['avgcount'],
+                kwargs['osd']['op_r_latency']['sum'],
+                kwargs['osd']['op_r_process_latency']['avgcount'],
+                kwargs['osd']['op_r_process_latency']['sum'],
+                kwargs['osd']['op_r'],
+                kwargs['osd']['op_r_out_bytes'],
+                kwargs['osd']['op_w'],
+                kwargs['osd']['op_w_in_bytes'],
+                kwargs['osd']['op_w_latency']['avgcount'],
+                kwargs['osd']['op_w_latency']['sum'],
+                kwargs['osd']['op_w_process_latency']['avgcount'],
+                kwargs['osd']['op_w_process_latency']['sum'],
+                kwargs['osd']['op_w_rlat']['avgcount'],
+                kwargs['osd']['op_w_rlat']['sum'],
+                kwargs['osd']['stat_bytes_used'],
+                kwargs['osd']['stat_bytes_avail'],
+                kwargs['osd']['buffer_bytes'],
+                kwargs['recoverystate_perf']['primary_latency']['avgcount'],
+                kwargs['recoverystate_perf']['primary_latency']['sum'],
+                kwargs['recoverystate_perf']['peering_latency']['avgcount'],
+                kwargs['recoverystate_perf']['peering_latency']['sum'],
+                kwargs['recoverystate_perf']['backfilling_latency']['avgcount'],
+                kwargs['recoverystate_perf']['backfilling_latency']['sum'],
+            )
+        try:
+            self.cursor.execute(sql)
+            self.db.commit()
+        except:
+            self.db.rollback()
+
+    def insert_tb_cephstatusdata(self, casename, time, **kwargs):
+        sql = "SELECT * FROM fiotest_result \
+            WHERE case_name = '{}'".format(casename)
+        try:
+            self.cursor.execute(sql)
+            results = self.cursor.fetchall()
+            for row in results:
+                caseid = row[0]
+        except:
+            self.db.rollback()
+        sql = "INSERT INTO fiotest_cephstatus(caseid_id, time, \
+            health_overall_status, \
+            health_summary, \
+            health_detail, \
+            fsid, \
+            monmap_mons, \
+            osdmap_osdmap_num_osds, \
+            osdmap_osdmap_num_up_osds, \
+            osdmap_osdmap_num_in_osds, \
+            pgmap_pgs_by_state, \
+            pgmap_num_pgs, \
+            pgmap_data_bytes, \
+            pgmap_bytes_used, \
+            pgmap_bytes_avail, \
+            pgmap_bytes_total ) \
+            VALUES ('{}', '{}', \
+            '{}', '{}', '{}', '{}', '{}', \
+            '{}', '{}', '{}', '{}', '{}', \
+            '{}', '{}', '{}', '{}' )".format(
+                caseid,
+                time,
+                kwargs['health']['overall_status'],
+                kwargs['health']['summary'],
+                kwargs['health']['detail'],
+                kwargs['fsid'],
+                kwargs['monmap']['mons'],
+                kwargs['osdmap']['osdmap']['num_osds'],
+                kwargs['osdmap']['osdmap']['num_up_osds'],
+                kwargs['osdmap']['osdmap']['num_in_osds'],
+                kwargs['pgmap']['pgs_by_state'],
+                kwargs['pgmap']['num_pgs'],
+                kwargs['pgmap']['data_bytes'],
+                kwargs['pgmap']['bytes_used'],
+                kwargs['pgmap']['bytes_avail'],
+                kwargs['pgmap']['bytes_total'],
+            )
+        print sql
         try:
             self.cursor.execute(sql)
             self.db.commit()

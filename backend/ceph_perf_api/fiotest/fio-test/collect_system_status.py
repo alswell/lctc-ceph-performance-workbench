@@ -21,6 +21,7 @@ class SysInfo(object):
             self.db = ToDB()
         self.havedb = havedb
         self.intervaltime = 1
+        self.ceph_intervaltime = 10
 
         self.host_list = []
         ssh = paramiko.SSHClient()
@@ -46,7 +47,7 @@ class SysInfo(object):
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
         ssh.connect(
-            hostname = self.nodes[host]['public_ip'],
+            hostname = host,
             port = 22,
             username = 'root',
             password = 'passw0rd'
@@ -57,15 +58,17 @@ class SysInfo(object):
         ssh.close()
 
     def sys_info(self, host):
-        cmds = ['sar -A {} >/tmp/sar.log &'.format(self.intervaltime),
+        cmds = [
+            'sar -A {} >/tmp/sar.log &'.format(self.intervaltime),
             'date >/tmp/iostat.log; iostat -p -dxm {} >>/tmp/iostat.log &'.format(self.intervaltime),
-            'while true; do ceph -s --format json-pretty; sleep {}; done >/tmp/ceph.log &'.format(self.intervaltime)]
+            'date >/tmp/ceph.log; while true; do ceph -s --format json-pretty; sleep {}; done >>/tmp/ceph.log &'.format(self.ceph_intervaltime)]
         self.run_sshcmds(host, cmds)
 
     def get_sys_info(self):
         for host in self.host_list:
+            host_ip = self.nodes[host]['public_ip']
             print 'get sysinfo {}'.format(host)
-            p = Process(target=self.sys_info, args=(host,))
+            p = Process(target=self.sys_info, args=(host_ip,))
             p.start()
 
     def cleanup_sys_info(self, host):
@@ -73,15 +76,15 @@ class SysInfo(object):
             'kill -9 `ps -ef | grep sar | grep -v grep | awk \'{print $2}\'`',
             'kill -9 `ps -ef | grep iostat | grep -v grep | awk \'{print $2}\'`',
             'kill -9 `ps -ef | grep \'ceph -s\' | grep -v grep | awk \'{print $2}\'`',
-            'kill -9 `ps -ef | grep \'ceph -name\' | grep -v grep | awk \'{print $2}\'`']
+        ]
         self.run_sshcmds(host, cmds)
 
     def cleanup_all(self):
         for host in self.host_list:
+            host_ip = self.nodes[host]['public_ip']
             print 'cleanup sysinfo collect process in {}'.format(host)
-            p = Process(target=self.cleanup_sys_info,args=(host,))
+            p = Process(target=self.cleanup_sys_info,args=(host_ip,))
             p.start()
-            self.get_ceph_perfdump(host)
 
     def get_logfile(self, host, log, log_dir):
         t = paramiko.Transport(host, "22")
@@ -104,25 +107,62 @@ class SysInfo(object):
         self.get_logfile(host, 'sar.log', log_dir)
         self.get_logfile(host, 'iostat.log', log_dir)
         self.get_logfile(host, 'ceph.log', log_dir)
-        self.get_logfile(host, 'perfdump.log', log_dir)
-        #self.get_logfile(host, 'ceph_config.log', log_dir)
 
     def get_all_host_logfile(self, log_dir):
         self.cleanup_all()
         for host in self.host_list:
+            host_ip = self.nodes[host]['public_ip']
             print 'get sysinfo logs from {}'.format(host)
-            self.get_all_logfile(self.nodes[host]['public_ip'], log_dir)
-            self.get_ceph_conf(self.nodes[host]['public_ip'], log_dir)
+            self.get_all_logfile(host_ip, log_dir)
+            self.get_ceph_perfdump(host_ip, log_dir)
+            self.get_ceph_conf(host_ip, log_dir)
 
-    def get_ceph_perfdump(self, host):
-        #cmds = ['while true; do find /var/run/ceph -name \'*osd*asok\' | while read path; do ceph --admin-daemon $path perf dump; done; sleep 1; done >/tmp/perfdump.log &']
-        cmds = ['find /var/run/ceph -name \'*osd*asok\' | while read path; do ceph --admin-daemon $path perf dump; done >/tmp/perfdump.log']
-        self.run_sshcmds(host, cmds)
+    def get_ceph_perfdump(self, host, log_dir):
+        ssh = paramiko.SSHClient()
+        ssh.load_system_host_keys()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.connect(
+            hostname = host,
+            port = 22,
+            username = 'root',
+            password = 'passw0rd'
+        )
+        cmd = 'find /var/run/ceph -name \'*osd*asok\''
+        stdin, stdout, stderr = ssh.exec_command(cmd)
+        osd_list = stdout.readlines()
+        ceph_perfdump_file_list = []
+        for osd in osd_list:
+            osd = osd.strip()
+            cmd = 'ceph --admin-daemon {} perf dump > /tmp/{}_ceph_perfdump.json'.format(
+                osd,
+                re.search('(osd\.\d+)', osd).group(1)
+            )
+            ssh.exec_command(cmd)
+            ceph_perfdump_file_list.append('{}_ceph_perfdump.json'.format(
+                re.search('(osd\.\d+)', osd).group(1)
+            ))
+        ssh.close()
+
+        t = paramiko.Transport(host, "22")
+        t.connect(username = "root", password = "passw0rd")
+        sftp = paramiko.SFTPClient.from_transport(t)
+        if not os.path.exists(log_dir):
+            try:
+                os.makedirs(log_dir)
+            except Exception, e:
+                print "make sysinfo log dir fail:{}".format(e)
+                sys.exit(1)
+        for log in ceph_perfdump_file_list:
+            remotepath = '/tmp/{}'.format(log)
+            localpath = '{}/{}_{}'.format(log_dir, host, log)
+            print host, remotepath, localpath
+            sftp.get(remotepath, localpath)
+        t.close()
 
     def cleanup_ceph_perf(self):
         for host in self.host_list:
             cmds = ['find /var/run/ceph -name \'*osd*asok\' | while read path; do ceph --admin-daemon $path perf reset all; done']
-            self.run_sshcmds(host, cmds)
+            self.run_sshcmds(self.nodes[host]['public_ip'], cmds)
 
     def get_ceph_conf(self, host, log_dir):
         ssh = paramiko.SSHClient()
@@ -165,11 +205,6 @@ class SysInfo(object):
             print host, remotepath, localpath
             sftp.get(remotepath, localpath)
         t.close()
-
-    def deal_with_sysinfo_logfile(self, log_dir, ceph_info):
-        self.deal_with_sarlog(log_dir, ceph_info)
-        self.deal_with_iostatlog(log_dir, ceph_info)
-        self.deal_with_cephconfiglog(log_dir)
 
     def close_db(self):
         if self.havedb:
@@ -336,8 +371,6 @@ class SysInfo(object):
         return both_result
 
     def deal_with_sarlog(self, log_dir, ceph_info):
-        org_dir = os.getcwd()
-        os.chdir(log_dir)
         dir_list = os.getcwd().split('/')
         casename = re.match('sysinfo_(.*)', dir_list[-1]).group(1)
 
@@ -353,8 +386,6 @@ class SysInfo(object):
         for host in self.host_list:
             all_result[host] = self.deal_with_sarlog_nic(self.nodes[host]['public_ip'], casename, ceph_info)
         json.dump(all_result, open('./sar_nic.json', 'w'), indent=2)
-
-        os.chdir(org_dir)
 
     def get_datetime_fordb_iostatlog(self, casename, time, n):
         time_match = re.match('(.*):(.*):(.*)', time)
@@ -389,8 +420,6 @@ class SysInfo(object):
             ceph_info = yaml.load(f)
         nodes = ceph_info['ceph-node']
 
-        org_dir = os.getcwd()
-        os.chdir(log_dir)
         dir_list = os.getcwd().split('/')
         casename = re.match('sysinfo_(.*)', dir_list[-1]).group(1)
 
@@ -434,26 +463,26 @@ class SysInfo(object):
                         disk_result.append(result)
                         if self.havedb:
                             self.db.insert_tb_iostatdata(casename, host, osd_num, disk_name, **result)
-                        n = n + 1
+                        n = n + self.intervaltime
                     oj_result[disk_name] = disk_result
                 osd_result[osd_num] = oj_result
             all_result[host] = osd_result
         json.dump(all_result, open('./iostat.json', 'w'), indent=2)
-        os.chdir(org_dir)
 
     def deal_with_perfdumplog(self, log_dir):
         if self.havedb:
-            os.chdir(log_dir)
             dir_list = os.getcwd().split('/')
             casename = re.match('sysinfo_(.*)', dir_list[-1]).group(1)
-            for host in self.host_list:
-                with open('{}_perfdump.log'.format(self.nodes[host]['public_ip'])) as f:
-                    perfdump = json.load(f)
-                    #self.db.insert_tb_perfdumpdata(casename, host, **perfdump)
+            log_files = os.popen('ls *ceph_perfdump.json').readlines()
+            for log_file in log_files:
+                log_file = log_file.strip()
+                host = log_file.split('_')[0]
+                log_osd = log_file.split('_')[1]
+                perfdump = json.load(open(log_file))
+                self.db.insert_tb_perfdumpdata(casename, host, log_osd, **perfdump)
 
     def deal_with_cephconfiglog(self, log_dir):
         if self.havedb:
-            os.chdir(log_dir)
             dir_list = os.getcwd().split('/')
             casename = re.match('sysinfo_(.*)', dir_list[-1]).group(1)
             log_files = os.popen('ls *ceph_config.json').readlines()
@@ -463,6 +492,52 @@ class SysInfo(object):
                 osd = log_file.split('_')[1]
                 ceph_configs = json.load(open(log_file))
                 self.db.insert_tb_cephconfigdata(casename, host, osd, **ceph_configs)
+
+    def deal_with_cephstatuslog(self, log_dir):
+        if self.havedb:
+            dir_list = os.getcwd().split('/')
+            casename = re.match('sysinfo_(.*)', dir_list[-1]).group(1)
+            log_files = os.popen('ls *ceph.log').readlines()
+            log_file = log_files[0].strip()
+            with open(log_file, 'r') as f:
+                json_start = False
+                rawtime = f.readline()
+                rawtime = re.search(' (\S*:.*:\S*) ', rawtime).group(1)
+                n = 0
+                for line in f.readlines():
+                    time = self.get_datetime_fordb_iostatlog(casename, rawtime, n)
+                    n = n+self.ceph_intervaltime
+                    if re.match('{', line):
+                        json_start = True
+                        line_to_file = []
+                    if json_start:
+                        line_to_file.append(line)
+                    if re.match('}', line):
+                        json_start = False
+                        with open('/tmp/ceph_tmp.log', 'w') as output_f:
+                            for output_line in line_to_file:
+                                output_f.write(output_line)
+                        ceph_status = json.load(open('/tmp/ceph_tmp.log'))
+                        ceph_mon = str(ceph_status['monmap']['mons'])
+                        ceph_map = str(ceph_status['pgmap']['pgs_by_state'])
+                        print "++++++++++++++++++++++++++++++"
+                        ceph_mon = re.sub('\'', '\\\'', ceph_mon)
+                        ceph_map = re.sub('\'', '\\\'', ceph_map)
+                        print ceph_mon
+                        print "++++++++++++++++++++++++++++++"
+                        ceph_status['monmap']['mons'] = ceph_mon
+                        ceph_status['pgmap']['pgs_by_state'] = ceph_map
+                        self.db.insert_tb_cephstatusdata(casename, time, **ceph_status)
+
+    def deal_with_sysinfo_logfile(self, log_dir, ceph_info):
+        org_dir = os.getcwd()
+        os.chdir(log_dir)
+        self.deal_with_sarlog(log_dir, ceph_info)
+        self.deal_with_iostatlog(log_dir, ceph_info)
+        self.deal_with_cephconfiglog(log_dir)
+        self.deal_with_perfdumplog(log_dir)
+        self.deal_with_cephstatuslog(log_dir)
+        os.chdir(org_dir)
 
 
 def format_subnet(subnet_input):  

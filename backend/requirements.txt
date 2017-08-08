@@ -1,1 +1,5 @@
 Django==1.11.3
+openpyxl
+paramiko
+pyyaml
+mysql-python

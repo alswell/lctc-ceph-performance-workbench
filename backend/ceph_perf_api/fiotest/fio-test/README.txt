@@ -72,6 +72,10 @@ fio -v
 fio-2.21
 
 
+#
+ceph_hw_info.yml.sample ceph_hw_info.yml
+
+#
 ./run-fio [init-image|build-suite|list-suites|run ${suite_name} [-d]]
 
 For the new ceph env, please run "init-image" to create new rbds for testing.
