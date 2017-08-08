@@ -9,6 +9,7 @@ import time
 import platform
 import paramiko
 import json
+import yaml
 
 from result import Result
 from collect_system_status import SysInfo
@@ -22,7 +23,13 @@ class RunFIO(object):
             clients = f.readlines()
             client = clients[0].strip()
             self.sysinfo = SysInfo(client, havedb=todb)
-            self.nodes = get_ceph_config_file(path, client)['ceph-node']
+            #self.nodes = get_ceph_config_file(path, client)['ceph-node']
+
+        self.hwinfo_file = '{}/../../ceph_hw_info.yml'.format(os.getcwd())
+        with open(self.hwinfo_file, 'r') as f:
+            ceph_info = yaml.load(f)
+        self.nodes = ceph_info['ceph-node']
+
         self.todb = todb
 
     def checkandstart_fioser(self, path, suitename):

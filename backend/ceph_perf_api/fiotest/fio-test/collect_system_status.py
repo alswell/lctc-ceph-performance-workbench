@@ -9,6 +9,7 @@ import time
 import paramiko
 from multiprocessing import Process
 import json
+import yaml
 import socket,struct
 
 
@@ -35,7 +36,12 @@ class SysInfo(object):
             match = re.search('host (\S*)\s+', item)
             self.host_list.append(match.group(1))
 
-        self.nodes = get_ceph_config_file('/tmp/', client)['ceph-node']
+        self.hwinfo_file = '{}/../../ceph_hw_info.yml'.format(os.getcwd())
+        with open(self.hwinfo_file, 'r') as f:
+            ceph_info = yaml.load(f)
+        self.nodes = ceph_info['ceph-node']
+        self.network = ceph_info['ceph-network']
+        #self.nodes = get_ceph_config_file('/tmp/', client)['ceph-node']
 
     def run_sshcmds(self, host, cmds):
         ssh = paramiko.SSHClient()
@@ -310,7 +316,7 @@ class SysInfo(object):
             ip = match.group(2)
             if self.nodes[host]['public_ip'] == ip:
                 public_n = match.group(1)
-            elif self.nodes[host]['cluster_ip'] == ip:
+            elif ip_in_subnet(ip, self.network['cluster_network']):
                 cluster_n = match.group(1)
 
         return cluster_n, public_n
@@ -434,7 +440,8 @@ class SysInfo(object):
             for osd_num,osd in self.nodes[host]['osd'].items():
                 oj_result = {}
                 for disk_name,disk in osd.items():
-                    osd_disk = re.match('/dev/(.*)', disk).group(1)
+                    osd_disk = disk.split('/')[-1]
+                    #osd_disk = re.match('/dev/(.*)', disk).group(1)
                     disk_result = []
                     cmd = 'grep "{}" {}_iostat.log'.format(osd_disk, self.nodes[host]['public_ip'])
                     disk_data_list = subprocess.check_output(cmd, shell=True).split('\n')
@@ -536,7 +543,56 @@ class SysInfo(object):
         self.deal_with_cephstatuslog(log_dir)
         os.chdir(org_dir)
 
-def get_ceph_config_file(log_dir, client):
+def format_subnet(subnet_input):
+    if subnet_input.find("/") == -1:
+        return subnet_input + "/255.255.255.255"
+
+    else:
+        subnet = subnet_input.split("/")
+        if len(subnet[1]) < 3:
+            mask_num = int(subnet[1])
+            last_mask_num = mask_num % 8
+            last_mask_str = ""
+            for i in range(last_mask_num):
+                last_mask_str += "1"
+            if len(last_mask_str) < 8:
+                for i in range(8-len(last_mask_str)):
+                    last_mask_str += "0"
+            last_mask_str = str(int(last_mask_str,2))
+            if mask_num / 8 == 0:
+                subnet = subnet[0] + "/" + last_mask_str +"0.0.0"
+            elif mask_num / 8 == 1:
+                subnet = subnet[0] + "/255." + last_mask_str +".0.0"
+            elif mask_num / 8 == 2 :
+                subnet = subnet[0] + "/255.255." + last_mask_str +".0"
+            elif mask_num / 8 == 3:
+                subnet = subnet[0] + "/255.255.255." + last_mask_str
+            elif mask_num / 8 == 4:
+                subnet = subnet[0] + "/255.255.255.255"
+            subnet_input = subnet
+
+        subnet_array = subnet_input.split("/")
+        subnet_true = socket.inet_ntoa(
+            struct.pack(
+                "!I",
+                struct.unpack(
+                    "!I",
+                    socket.inet_aton(subnet_array[0])
+                )[0] & struct.unpack(
+                    "!I",
+                    socket.inet_aton(subnet_array[1])
+                )[0]
+            )
+        ) + "/" + subnet_array[1]
+        return subnet_true
+
+def ip_in_subnet(ip,subnet):
+    subnet = format_subnet(str(subnet))
+    subnet_array = subnet.split("/")
+    ip = format_subnet(ip + "/" + subnet_array[1])
+    return ip == subnet
+
+def get_ceph_config_file_sds(log_dir, client):
     t = paramiko.Transport(client, "22")
     t.connect(username = "root", password = "passw0rd")
     sftp = paramiko.SFTPClient.from_transport(t)
@@ -590,6 +646,17 @@ def get_ceph_config_file(log_dir, client):
     output['ceph-node'] = nodes
     return output
 
+def get_ceph_config_file(client):
+    osds_num_list = subprocess.check_output('ceph osd ls', shell=True).split('\n')
+    del osds_num_list[-1]
+
+    for osd_num in osds_num_list:
+        subprocess.check_output('ceph osd find {} >/tmp/osd_tmp.json'.format(osd_num), shell=True)
+        output = json.dumps(output)
+        print "++++++++++++++++++++++++++"
+        print output
+        print "++++++++++++++++++++++++++"
+
 def main():
     parser = argparse.ArgumentParser(
         prog="sysinfo",
@@ -602,7 +669,7 @@ def main():
     args = parser.parse_args()
 
     client = '10.240.217.101'
-    sysinfo = SysInfo(client)
+    #sysinfo = SysInfo(client)
     '''
     #sysinfo.get_sys_info()
     #sysinfo.cleanup_all()
@@ -610,7 +677,8 @@ def main():
         sysinfo_dir,
     )
     '''
-    sysinfo.deal_with_perfdumplog('/root/fio-zelin/test-suites/test2/log_2017_07_28_15_00_39/sysinfo_rbd_rw_4k_runtime30_iodepth1_numjob1_imagenum2_test2_%70_2017_07_28_15_00_39')
+    #sysinfo.deal_with_perfdumplog('/root/fio-zelin/test-suites/test2/log_2017_07_28_15_00_39/sysinfo_rbd_rw_4k_runtime30_iodepth1_numjob1_imagenum2_test2_%70_2017_07_28_15_00_39')
+    get_ceph_config_file(client)
 
 if __name__ == '__main__':
     main()
