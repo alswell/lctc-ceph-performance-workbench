@@ -9,7 +9,6 @@ import time
 from openpyxl import Workbook
 from openpyxl.styles import Font, Border, Side
 
-from todb import ToDB
 from collect_system_status import SysInfo
 
 
@@ -23,15 +22,16 @@ class Result(object):
             top=Side(border_style='thin', color='000000'),
             bottom=Side(border_style='thin', color='000000'))
         if self.havedb:
+            from todb import ToDB
             self.db = ToDB()
 
-    def get_log_list(self, suitename, timetag):
+    def get_log_list(self, suitename, tag):
         result = []
         pwd_path = os.getcwd().split('/')
         if pwd_path[-1] == suitename and pwd_path[-2] == 'test-suites':
-            path = "{}/log_{}".format(os.getcwd(), timetag)
+            path = "{}/{}".format(os.getcwd(), tag)
         else:
-            path = "{}/test-suites/{}/log_{}".format(os.getcwd(), suitename, timetag)
+            path = "{}/test-suites/{}/{}".format(os.getcwd(), suitename, tag)
         os.chdir(path)
         logs = subprocess.check_output('ls {}/*.log'.format(path), shell=True)
         logs = logs.split('\n')
@@ -175,7 +175,7 @@ class Result(object):
 
         pwd_dir = os.getcwd().split('/')
         pwd_log_dir = pwd_dir[-1].split('_')
-        suite_time = '{}-{}-{} {}:{}:{}'.format(
+        job_start_time = '{}-{}-{} {}:{}:{}'.format(
             pwd_log_dir[-6],
             pwd_log_dir[-5],
             pwd_log_dir[-4],
@@ -183,6 +183,16 @@ class Result(object):
             pwd_log_dir[-2],
             pwd_log_dir[-1],
         )
+        for i in range(6):
+            del pwd_log_dir[-1]
+        jobname = pwd_log_dir[0]
+        del pwd_log_dir[0]
+
+        cephconfig = ''
+        for c in pwd_log_dir:
+            cephconfig = cephconfig + c
+        if cephconfig == '':
+            cephconfig = 'Default'
 
         for log in logs:
             #rbd_randrw_4k_runtime30_iodepth1_numjob1_imagenum2_hahaha_%100_2017_07_18_17_27_04
@@ -219,7 +229,9 @@ class Result(object):
             log_list = []
             with open('{}.log'.format(log), 'r') as f:
                 begin_to = False
-                for line in f:
+                lines = f.readlines()
+                case_status = lines[-1].strip()
+                for line in lines:
                     if begin_to:
                         log_list.append(line)
                     if re.match('All clients', line):
@@ -240,9 +252,10 @@ class Result(object):
                     config_log[14]
                 )
                 result_to_db = {
-                    #'job_name': jobname,
-                    'suite_time': suite_time,
+                    'jobtime': job_start_time,
+                    'ceph_config': cephconfig,
                     'time': time,
+                    'status': case_status,
                     'case_name': log,
                     'blocksize': bs,
                     'iodepth': iodepth,
@@ -254,10 +267,11 @@ class Result(object):
                     'lat': lat,
                 }
                 self.db.insert_tb_result(**result_to_db)
-        self.db.close_db()
+        if self.havedb:
+            self.db.close_db()
 
-    def deal_with_fio_data(self, suitename, timetag, file_name):
-        log_dir, logs = self.get_log_list(suitename, timetag)
+    def deal_with_fio_data(self, suitename, jobtag, file_name):
+        log_dir, logs = self.get_log_list(suitename, jobtag)
 
         result_table = Workbook()
         sheet_list = self.create_sheets(logs, result_table)

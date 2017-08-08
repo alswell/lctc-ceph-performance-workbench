@@ -9,14 +9,28 @@ class ToDB(object):
         self.cursor = self.db.cursor()
 
     def insert_tb_result(self, **kwargs):
-        sql = "INSERT INTO fiotest_result(case_name, time, suite_time, \
-            blocksize, iodepth, numberjob, imagenum, \
+        sql = "SELECT * FROM fiotest_jobs \
+            WHERE time = '{}'".format(kwargs['jobtime'])
+        try:
+            self.cursor.execute(sql)
+            results = self.cursor.fetchall()
+            for row in results:
+                jobid = row[0]
+        except:
+            print sql
+            self.db.rollback()
+
+        sql = "INSERT INTO fiotest_result(jobid_id, case_name, ceph_config, time, \
+            status, blocksize, iodepth, numberjob, imagenum, \
             clientnum, iops, readwrite, lat ) \
-            VALUES ('{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', \
-            '{}', '{}', '{}' )".format(
+            VALUES ('{}', '{}', '{}', '{}', \
+            '{}', '{}', '{}', '{}', '{}', \
+            '{}', '{}', '{}', '{}' )".format(
+                jobid,
                 kwargs['case_name'],
+                kwargs['ceph_config'],
                 kwargs['time'],
-                kwargs['suite_time'],
+                kwargs['status'],
                 kwargs['blocksize'],
                 kwargs['iodepth'],
                 kwargs['numberjob'],
@@ -30,6 +44,7 @@ class ToDB(object):
             self.cursor.execute(sql)
             self.db.commit()
         except:
+            print sql
             self.db.rollback()
 
     def insert_tb_sarmemdata(self, casename, node, **kwargs):
@@ -41,6 +56,7 @@ class ToDB(object):
             for row in results:
                 caseid = row[0]
         except:
+            print sql
             self.db.rollback()
         sql = "INSERT INTO fiotest_sarmem(caseid_id, node, time, \
             kbmemfree, kbmemused, memused, kbbuffers, kbcached, \
@@ -67,6 +83,7 @@ class ToDB(object):
             self.cursor.execute(sql)
             self.db.commit()
         except:
+            print sql
             self.db.rollback()
 
     def insert_tb_sarcpudata(self, casename, node, **kwargs):
@@ -78,6 +95,7 @@ class ToDB(object):
             for row in results:
                 caseid = row[0]
         except:
+            print sql
             self.db.rollback()
         sql = "INSERT INTO fiotest_sarcpu(caseid_id, node, \
             time, usr, nice, sys, iowait, steal, \
@@ -102,6 +120,7 @@ class ToDB(object):
             self.cursor.execute(sql)
             self.db.commit()
         except:
+            print sql
             self.db.rollback()
 
     def insert_tb_sarnicdata(self, casename, node, network, **kwargs):
@@ -135,6 +154,7 @@ class ToDB(object):
             self.cursor.execute(sql)
             self.db.commit()
         except:
+            print sql
             self.db.rollback()
 
     def insert_tb_iostatdata(self, casename, node, osdnum, disk_name, **kwargs):
@@ -146,6 +166,7 @@ class ToDB(object):
             for row in results:
                 caseid = row[0]
         except:
+            print sql
             self.db.rollback()
         sql = "INSERT INTO fiotest_iostat(caseid_id, node, osdnum, diskname, \
             time, wrqms, avgrqsz, r_await, await, ws, avgqusz, \
@@ -177,6 +198,7 @@ class ToDB(object):
             self.cursor.execute(sql)
             self.db.commit()
         except:
+            print sql
             self.db.rollback()
 
     def insert_tb_cephconfigdata(self, casename, node, osd, **kwargs):
@@ -188,6 +210,7 @@ class ToDB(object):
             for row in results:
                 caseid = row[0]
         except:
+            print sql
             self.db.rollback()
         sql = "INSERT INTO fiotest_cephconfig(caseid_id, node, osd, \
             max_open_files, filestore_expected_throughput_bytes, \
@@ -290,6 +313,7 @@ class ToDB(object):
             self.cursor.execute(sql)
             self.db.commit()
         except:
+            print sql
             self.db.rollback()
 
     def insert_tb_perfdumpdata(self, casename, node, log_osd, **kwargs):
@@ -301,6 +325,7 @@ class ToDB(object):
             for row in results:
                 caseid = row[0]
         except:
+            print sql
             self.db.rollback()
         sql = "INSERT INTO fiotest_perfdump(caseid_id, node, osd, \
             filestore_queue_transaction_latency_avg_avgcount, \
@@ -436,6 +461,7 @@ class ToDB(object):
             self.cursor.execute(sql)
             self.db.commit()
         except:
+            print sql
             self.db.rollback()
 
     def insert_tb_cephstatusdata(self, casename, time, **kwargs):
@@ -447,6 +473,7 @@ class ToDB(object):
             for row in results:
                 caseid = row[0]
         except:
+            print sql
             self.db.rollback()
         sql = "INSERT INTO fiotest_cephstatus(caseid_id, time, \
             health_overall_status, \
@@ -484,254 +511,43 @@ class ToDB(object):
                 kwargs['pgmap']['bytes_avail'],
                 kwargs['pgmap']['bytes_total'],
             )
-        print sql
         try:
             self.cursor.execute(sql)
             self.db.commit()
         except:
+            print sql
             self.db.rollback()
 
+    def insert_tb_jobs(self, name, time, status):
+        sql = "INSERT INTO fiotest_jobs(name, time, status ) \
+            VALUES ('{}', '{}', '{}' )".format(
+                name,
+                time,
+                status
+            )
+        try:
+            self.cursor.execute(sql)
+            self.db.commit()
+        except:
+            print sql
+            self.db.rollback()
 
-    def create_tb_result(self):
-        sql = """CREATE TABLE fiotest_result (
-            id  int auto_increment primary key,
-            case_name  CHAR(100) NOT NULL,
-            time datetime,
-            blocksize  CHAR(20),
-            iodepth  int,
-            numberjob  int,
-            imagenum  int,
-            clientnum  int,
-            iops  int,
-            readwrite  CHAR(20),
-            lat  float ) ENGINE=MyISAM"""
-        self.cursor.execute(sql)
-
-    def create_tb_sarcpudata(self):
-        sql = """CREATE TABLE fiotest_sarcpu (
-            id int auto_increment primary key,
-            caseid_id int not null,
-            node  char(20),
-            time  datetime,
-            usr float,
-            nice float,
-            sys float,
-            iowait float,
-            steal float,
-            irq float,
-            soft float,
-            guest float,
-            gnice float,
-            idle float,
-            foreign key(caseid_id) references fiotest_result(id) ) ENGINE=MyISAM"""
-        self.cursor.execute(sql)
-
-    def create_tb_sarmemdata(self):
-        sql = """CREATE TABLE fiotest_sarmem (
-            id int auto_increment primary key,
-            caseid_id int not null,
-            node  char(20),
-            time  datetime,
-            kbmemfree int,
-            kbmemused int,
-            memused float,
-            kbbuffers int,
-            kbcached int,
-            kbcommit int,
-            commit float,
-            kbactive int,
-            kbinact int,
-            kbdirty int,
-            foreign key(caseid_id) references fiotest_result(id) ) ENGINE=MyISAM"""
-        self.cursor.execute(sql)
-
-
-    def create_tb_sarnicdata(self):
-        sql = """CREATE TABLE fiotest_sarnic (
-            id int auto_increment primary key,
-            caseid_id int not null,
-            node  char(20),
-            network char(20),
-            time datetime,
-            rxpcks float,
-            txpcks float,
-            rxkBs float,
-            txkBs float,
-            rxcmps float,
-            txcmps float,
-            rxmcsts float,
-            foreign key(caseid_id) references fiotest_result(id) ) ENGINE=MyISAM"""
-        self.cursor.execute(sql)
-
-    def create_tb_iostatdata(self):
-        sql = """CREATE TABLE fiotest_iostat (
-            id int auto_increment primary key,
-            caseid_id int not null,
-            node char(20),
-            osdnum char(20),
-            diskname char(20),
-            time datetime,
-            wrqms float,
-            avgrqsz float,
-            r_await float,
-            await float,
-            ws float,
-            avgqusz float,
-            svctm float,
-            rMBs float,
-            wMBs float,
-            rrqms float,
-            rs float,
-            tps float,
-            util float,
-            w_await float,
-            foreign key(caseid_id) references fiotest_result(id) ) ENGINE=MyISAM"""
-        self.cursor.execute(sql)
-
-    def create_tb_cephconfigfilestonedata(self):
-        sql = """CREATE TABLE CEPHCONFIGFSDATA (
-            id int auto_increment primary key,
-            caseid_id int not null,
-            node  char(20),
-            osd  char(20),
-            max_open_files char(20),
-            filestore_expected_throughput_bytes char(20),
-            filestore_expected_throughput_ops char(20),
-            filestore_max_sync_interval char(20),
-            filestore_min_sync_interval char(20),
-            filestore_queue_max_bytes char(20),
-            filestore_queue_max_ops char(20),
-            filestore_queue_high_delay_multiple char(20),
-            filestore_queue_max_delay_multiple char(20),
-            filestore_ondisk_finisher_threads char(20),
-            filestore_apply_finisher_threads char(20),
-            filestore_commit_timeout char(20),
-            filestore_fd_cache_shards char(20),
-            filestore_fd_cache_size char(20),
-            filestore_wbthrottle_enable char(20),
-            filestore_op_threads char(20),
-            filestore_op_thread_timeout char(20),
-            filestore_op_thread_suicide_timeout char(20),
-            foreign key(caseid_id) references fiotest_result(id) ) ENGINE=MyISAM"""
-        self.cursor.execute(sql)
-
-    def create_tb_cephconfigjournaldata(self):
-        sql = """CREATE TABLE CEPHCONFIGJDATA (
-            id int auto_increment primary key,
-            caseid_id int not null,
-            node  char(20),
-            osd  char(20),
-            osd_journal_size char(20),
-            journal_max_write_bytes char(20),
-            journal_max_write_entries char(20),
-            journal_throttle_high_multiple char(20),
-            journal_throttle_max_multiple char(20),
-            foreign key(caseid_id) references fiotest_result(id) ) ENGINE=MyISAM"""
-        self.cursor.execute(sql)
-
-    def create_tb_cephconfigrbddata(self):
-        sql = """CREATE TABLE CEPHCONFIGRBDDATA (
-            id int auto_increment primary key,
-            caseid_id int not null,
-            node  char(20),
-            osd  char(20),
-            rbd_cache char(20),
-            rbd_cache_size char(20),
-            rbd_cache_target_dirty char(20),
-            rbd_cache_max_dirty char(20),
-            rbd_cache_max_dirty_age char(20),
-            rbd_cache_writethrough_until_flush char(20),
-            foreign key(caseid_id) references fiotest_result(id) ) ENGINE=MyISAM"""
-        self.cursor.execute(sql)
-
-    def create_tb_cephconfigosddata(self):
-        sql = """CREATE TABLE CEPHCONFIGOSDATA (
-            id int auto_increment primary key,
-            caseid_id int not null,
-            node  char(20),
-            osd  char(20),
-            osd_max_write_size char(20),
-            osd_num_op_tracker_shard char(20),
-            osd_client_message_size_cap char(20),
-            osd_client_message_cap char(20),
-            osd_deep_scrub_stride char(20),
-            osd_op_num_threads_per_shard char(20),
-            osd_op_num_shards char(20),
-            osd_op_threads char(20),
-            osd_op_thread_timeout char(20),
-            osd_op_thread_suicide_timeout char(20),
-            osd_recovery_thread_timeout char(20),
-            osd_recovery_thread_suicide_timeout char(20),
-            osd_disk_threads char(20),
-            osd_map_cache_size char(20),
-            osd_recovery_threads char(20),
-            osd_recovery_op_priority char(20),
-            osd_recovery_max_active char(20),
-            osd_max_backfills char(20),
-            osd_scrub_begin_hour char(20),
-            osd_scrub_end_hour char(20),
-            osd_scrub_sleep char(20),
-            osd_scrub_load_threshold char(20),
-            osd_scrub_chunk_max char(20),
-            osd_scrub_chunk_min char(20),
-            foreign key(caseid_id) references fiotest_result(id) ) ENGINE=MyISAM"""
-        self.cursor.execute(sql)
-
-    def create_tb_cephconfigclientdata(self):
-        sql = """CREATE TABLE CEPHCONFIGCDATA (
-            id int auto_increment primary key,
-            caseid_id int not null,
-            node  char(20),
-            osd  char(20),
-            objecter_inflight_ops char(20),
-            objecter_inflight_op_bytes char(20),
-            foreign key(caseid_id) references fiotest_result(id) ) ENGINE=MyISAM"""
-        self.cursor.execute(sql)
-
-    def create_tb_perfdumpdata(self):
-        sql = """CREATE TABLE PERFDUMPDATA (
-            id int auto_increment primary key,
-            caseid_id int not null,
-            node  char(20),
-            filestore__queue_transaction_latency_avg char(20),
-            filestore__bytes char(20),
-            foreign key(caseid_id) references fiotest_result(id) ) ENGINE=MyISAM"""
-        self.cursor.execute(sql)
-
+    def update_jobs_status(self, jobtime, status):
+        sql = "UPDATE fiotest_jobs SET status = '{}' WHERE time = '{}'".format(status, jobtime)
+        try:
+            self.cursor.execute(sql)
+            self.db.commit()
+        except:
+            print sql
+            self.db.rollback()
 
 
     def close_db(self):
         self.db.close()
 
-    def cleanup_db(self):
-        self.cursor.execute("DROP TABLE IF EXISTS PERFDUMPDATA")
-        self.cursor.execute("DROP TABLE IF EXISTS CEPHCONFIGFSDATA")
-        self.cursor.execute("DROP TABLE IF EXISTS CEPHCONFIGJDATA")
-        self.cursor.execute("DROP TABLE IF EXISTS CEPHCONFIGRBDDATA")
-        self.cursor.execute("DROP TABLE IF EXISTS CEPHCONFIGOSDATA")
-        self.cursor.execute("DROP TABLE IF EXISTS CEPHCONFIGCDATA")
-        self.cursor.execute("DROP TABLE IF EXISTS fiotest_iostat")
-        self.cursor.execute("DROP TABLE IF EXISTS fiotest_sarcpu")
-        self.cursor.execute("DROP TABLE IF EXISTS fiotest_sarmem")
-        self.cursor.execute("DROP TABLE IF EXISTS fiotest_sarnic")
-        self.cursor.execute("DROP TABLE IF EXISTS fiotest_result")
-
 
 def main():
-
     todb = ToDB()
-    todb.cleanup_db()
-    todb.create_tb_result()
-    todb.create_tb_sarcpudata()
-    todb.create_tb_sarmemdata()
-    todb.create_tb_iostatdata()
-    todb.create_tb_sarnicdata()
-    todb.create_tb_cephconfigfilestonedata()
-    todb.create_tb_cephconfigjournaldata()
-    todb.create_tb_cephconfigrbddata()
-    todb.create_tb_cephconfigosddata()
-    todb.create_tb_cephconfigclientdata()
-    todb.create_tb_perfdumpdata()
     todb.close_db()
 
 if __name__ == '__main__':

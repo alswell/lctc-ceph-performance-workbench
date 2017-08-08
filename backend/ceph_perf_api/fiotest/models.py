@@ -7,9 +7,10 @@ from django.db import models
 # Create your models here.
 class Result(models.Model):
     id = models.AutoField(primary_key=True)
+    jobid = models.ForeignKey("Jobs",to_field='id', null=True)
     case_name = models.CharField(max_length=100)
+    ceph_config = models.CharField(max_length=100, default='default')
     time = models.DateTimeField(null=True)
-    suite_time = models.DateTimeField(null=True)
     blocksize = models.CharField(max_length=20, null=True)
     iodepth = models.IntegerField(null=True)
     numberjob = models.IntegerField(null=True)
@@ -18,6 +19,7 @@ class Result(models.Model):
     iops = models.IntegerField(null=True)
     readwrite = models.CharField(max_length=20, null=True)
     lat = models.FloatField(null=True)
+    status = models.CharField(max_length=20, null=True)
 
 
 class SarCPU(models.Model):
@@ -249,3 +251,9 @@ class CephStatus(models.Model):
     pgmap_bytes_used = models.BigIntegerField(null=True)
     pgmap_bytes_avail = models.BigIntegerField(null=True)
     pgmap_bytes_total = models.BigIntegerField(null=True)
+
+class Jobs(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=20)
+    time = models.DateTimeField(null=True)
+    status = models.CharField(max_length=20, null=True)

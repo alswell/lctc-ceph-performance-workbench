@@ -232,7 +232,7 @@ def main():
     
     print "readwritetypes are {}".format(readwritetypes)
     print "blocksizes are {}".format(blocksizes)
-    print "iodepths are ".format(iodepths)
+    print "iodepths are {}".format(iodepths)
     print "numjobs are {}".format(numjobs)
     print "imagecounts are {}".format(imagecounts)
     print "rwmixreads are {}".format(rwmixreads)
