@@ -19,6 +19,7 @@ class Result(models.Model):
     iops = models.IntegerField(null=True)
     readwrite = models.CharField(max_length=20, null=True)
     lat = models.FloatField(null=True)
+    bw = models.FloatField(null=True)
     status = models.CharField(max_length=20, null=True)
 
 

@@ -22,10 +22,10 @@ class ToDB(object):
 
         sql = "INSERT INTO fiotest_result(jobid_id, case_name, ceph_config, time, \
             status, blocksize, iodepth, numberjob, imagenum, \
-            clientnum, iops, readwrite, lat ) \
+            clientnum, iops, readwrite, lat, bw ) \
             VALUES ('{}', '{}', '{}', '{}', \
             '{}', '{}', '{}', '{}', '{}', \
-            '{}', '{}', '{}', '{}' )".format(
+            '{}', '{}', '{}', '{}', '{}' )".format(
                 jobid,
                 kwargs['case_name'],
                 kwargs['ceph_config'],
@@ -38,7 +38,8 @@ class ToDB(object):
                 kwargs['clientnum'],
                 kwargs['iops'],
                 kwargs['readwrite'],
-                kwargs['lat']
+                kwargs['lat'],
+                kwargs['bw'],
         )
         try:
             self.cursor.execute(sql)

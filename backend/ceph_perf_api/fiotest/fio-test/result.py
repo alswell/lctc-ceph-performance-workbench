@@ -61,7 +61,7 @@ class Result(object):
         return config_types
     
     def fill_first_line(self, wb):
-        first_line = ['casename', 'case', 'blocksize', 'iodepth', 'numberjob', 'imagenum/client', 'iops', 'read_write', 'latency(ms)', 'iops_community', 'latency(ms)_community', 'IOPS compare', 'Latency compare']
+        first_line = ['casename', 'case', 'blocksize', 'iodepth', 'numberjob', 'imagenum/client', 'iops', 'read_write', 'latency(ms)', 'bw(MB/s)', 'iops_community', 'latency(ms)_community', 'IOPS compare', 'Latency compare']
         for ws in wb:
             for i in range(len(first_line)):
                 c = ws.cell(row = 1, column = (i+1))
@@ -139,16 +139,44 @@ class Result(object):
         write_iops = 0
         for i in range(len(log_list)):
             if re.match(r'   read:', log_list[i]):
-                match = re.match(r'   read: IOPS=(\d+),', log_list[i])
+                match = re.match(r'\s*read: IOPS=(\d+),', log_list[i])
                 read_iops = int(match.group(1))
             elif re.match(r'  write:', log_list[i]):
-                match = re.match(r'  write: IOPS=(\d+),', log_list[i])
+                match = re.match(r'\s*write: IOPS=(\d+),', log_list[i])
                 write_iops = int(match.group(1))
     
         iops = read_iops + write_iops
         ws.cell(row = row, column = 7).value = iops
         ws.cell(row = row, column = 7).border = self.border
         return iops
+
+    def fill_bw_J(self, log_list, ws, row):
+        read_bw = 0
+        write_bw = 0
+        for i in range(len(log_list)):
+            if re.match(r'   read:', log_list[i]):
+                match = re.match(r'\s*read: IOPS=\d+, BW=(\d+)(\S+) ', log_list[i])
+                if match.group(2) == 'KiB/s':
+                    read_bw = float(match.group(1)) / 1000
+                elif match.group(2) == 'MiB/s':
+                    read_bw = float(match.group(1))
+                else:
+                    print "Error: Unrecognized BW unit {}.".format(match.group(2))
+                    sys.exit(1)
+            elif re.match(r'  write:', log_list[i]):
+                match = re.match(r'\s*write: IOPS=\d+, BW=(\d+)(\S+)', log_list[i])
+                if match.group(2) == 'KiB/s':
+                    write_bw = float(match.group(1)) / 1000
+                elif match.group(2) == 'MiB/s':
+                    write_bw = float(match.group(1))
+                else:
+                    print "Error: Unrecognized BW unit {}.".format(match.group(2))
+                    sys.exit(1)
+    
+        bw = read_bw + write_bw
+        ws.cell(row = row, column = 10).value = bw
+        ws.cell(row = row, column = 10).border = self.border
+        return bw
     
     def fill_lat_I(self, log_list, ws, row):
         lat = 0
@@ -241,6 +269,7 @@ class Result(object):
                     log_list = f.readlines()
             iops = self.fill_iops_G(log_list, ws, row)
             lat = self.fill_lat_I(log_list, ws, row)
+            bw = self.fill_bw_J(log_list, ws, row)
 
             if self.havedb:
                 time = '{}-{}-{} {}:{}:{}'.format(
@@ -265,6 +294,7 @@ class Result(object):
                     'iops': iops,
                     'readwrite': readwrite,
                     'lat': lat,
+                    'bw': bw
                 }
                 self.db.insert_tb_result(**result_to_db)
         if self.havedb:

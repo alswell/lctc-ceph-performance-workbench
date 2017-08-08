@@ -2,12 +2,12 @@
 
 usage (){
   echo
-  echo "./run-fio [init-image|build-suite|list-suites|run \${suite_name} [--nodb]]"
+  echo "./run-fio [init-image|build-suite|list-suites|run suite_name jobname [--nodb]]"
   echo 
   echo "For the new ceph env, please run \"init-image\" to create new rbds for testing."
   echo "Or use \"build-suite\" to create new test config file for FIO."
   echo "Or use \"list-suites\" to show the previous created test."
-  echo "Or use \"run \$test_suite_name\" to run test."
+  echo "Or use \"run test_suite_name jobname\" to run test."
   echo 
   exit 0
 }
