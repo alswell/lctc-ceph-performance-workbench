@@ -11,7 +11,12 @@ class FIOTEST(generic.View):
 
     @utils.json_response
     def get(self, request):
-        result = models.Result.objects.all()
+        print dict(request.GET)
+	f = {}
+	for key, value in dict(request.GET).items():
+	    f[key] = value[0]
+	print f
+        result = models.Result.objects.filter(**f).all()
         d = utils.query_to_dict(result)
         return {"total": len(d), "data": d}
 
