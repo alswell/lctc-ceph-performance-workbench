@@ -99,8 +99,11 @@ if [ $1 == "build-suite" ]; then
 
   while [ ! -n "$runtime" ]; do
     echo -n "
-        Runtime(s):"
+        Runtime(s)[120]:"
     read runtime
+    if [ ! -n "$runtime" ]; then
+        runtime=120
+    fi
   done
 
   while [ ! -n "$pool" ]; do
