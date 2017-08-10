@@ -63,12 +63,18 @@ def fullfill(path, size, client):
     child3 = subprocess.Popen(["grep", "server"],stdin=child2.stdout, stdout=subprocess.PIPE)
     output = child3.communicate()[0].replace('\n', '')
     if output == '':
+        print "===={} without fio server".format(client)
+        print "====Please run \"nohup fio --server &\" in {}".format(client)
+        sys.exit(1)
+
+        '''
         try:
             os.system("ssh {} nohup fio --server &".format(client))
             time.sleep(5)
         except Exception, e:
             print e
             sys.exit(1)
+        '''
 
     for config in os.listdir(path):
         cmd = ['fio', '--client', client, '{}/{}'.format(path, config)]

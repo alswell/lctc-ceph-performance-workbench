@@ -9,7 +9,6 @@ import time
 from openpyxl import Workbook
 from openpyxl.styles import Font, Border, Side
 
-from todb import ToDB
 from collect_system_status import SysInfo
 
 
@@ -23,22 +22,23 @@ class Result(object):
             top=Side(border_style='thin', color='000000'),
             bottom=Side(border_style='thin', color='000000'))
         if self.havedb:
+            from todb import ToDB
             self.db = ToDB()
 
-    def get_log_list(self, suitename, timetag):
+    def get_log_list(self, suitename, tag):
         result = []
         pwd_path = os.getcwd().split('/')
         if pwd_path[-1] == suitename and pwd_path[-2] == 'test-suites':
-            path = "{}/log_{}".format(os.getcwd(), timetag)
+            path = "{}/{}".format(os.getcwd(), tag)
         else:
-            path = "{}/test-suites/{}/log_{}".format(os.getcwd(), suitename, timetag)
+            path = "{}/test-suites/{}/{}".format(os.getcwd(), suitename, tag)
         os.chdir(path)
-        logs = subprocess.check_output('ls {}/*.log'.format(path), shell=True)
+        logs = subprocess.check_output('ls {}/*.txt'.format(path), shell=True)
         logs = logs.split('\n')
         del logs[-1]
     
         for log in logs:
-            log = re.match('{}/(.+)\.log'.format(path), log).group(1)
+            log = re.match('{}/(.+)\.txt'.format(path), log).group(1)
             result.append(log)
     
         return path, result
@@ -61,7 +61,7 @@ class Result(object):
         return config_types
     
     def fill_first_line(self, wb):
-        first_line = ['casename', 'case', 'blocksize', 'iodepth', 'numberjob', 'imagenum/client', 'iops', 'read_write', 'latency(ms)', 'iops_community', 'latency(ms)_community', 'IOPS compare', 'Latency compare']
+        first_line = ['casename', 'case', 'blocksize', 'iodepth', 'numberjob', 'imagenum/client', 'iops', 'read_write', 'latency(ms)', 'bw(MB/s)', 'iops_community', 'latency(ms)_community', 'IOPS compare', 'Latency compare']
         for ws in wb:
             for i in range(len(first_line)):
                 c = ws.cell(row = 1, column = (i+1))
@@ -139,16 +139,46 @@ class Result(object):
         write_iops = 0
         for i in range(len(log_list)):
             if re.match(r'   read:', log_list[i]):
-                match = re.match(r'   read: IOPS=(\d+),', log_list[i])
+                match = re.match(r'\s*read: IOPS=(\d+),', log_list[i])
                 read_iops = int(match.group(1))
             elif re.match(r'  write:', log_list[i]):
-                match = re.match(r'  write: IOPS=(\d+),', log_list[i])
+                match = re.match(r'\s*write: IOPS=(\d+),', log_list[i])
                 write_iops = int(match.group(1))
     
         iops = read_iops + write_iops
         ws.cell(row = row, column = 7).value = iops
         ws.cell(row = row, column = 7).border = self.border
         return iops
+
+    def fill_bw_J(self, log_list, ws, row):
+        read_bw = 0
+        write_bw = 0
+        for i in range(len(log_list)):
+            if re.match(r'   read:', log_list[i]):
+                match = re.match(r'\s*read: IOPS=\d+, BW=(\d+)(\S+) ', log_list[i])
+                if match.group(2) == 'B/s':
+                    read_bw = float(match.group(1)) / 1000000
+                elif match.group(2) == 'KiB/s':
+                    read_bw = float(match.group(1)) / 1000
+                elif match.group(2) == 'MiB/s':
+                    read_bw = float(match.group(1))
+                else:
+                    print "Error: Unrecognized BW unit {}.".format(match.group(2))
+                    sys.exit(1)
+            elif re.match(r'  write:', log_list[i]):
+                match = re.match(r'\s*write: IOPS=\d+, BW=(\d+)(\S+)', log_list[i])
+                if match.group(2) == 'KiB/s':
+                    write_bw = float(match.group(1)) / 1000
+                elif match.group(2) == 'MiB/s':
+                    write_bw = float(match.group(1))
+                else:
+                    print "Error: Unrecognized BW unit {}.".format(match.group(2))
+                    sys.exit(1)
+    
+        bw = read_bw + write_bw
+        ws.cell(row = row, column = 10).value = bw
+        ws.cell(row = row, column = 10).border = self.border
+        return bw
     
     def fill_lat_I(self, log_list, ws, row):
         lat = 0
@@ -175,7 +205,7 @@ class Result(object):
 
         pwd_dir = os.getcwd().split('/')
         pwd_log_dir = pwd_dir[-1].split('_')
-        suite_time = '{}-{}-{} {}:{}:{}'.format(
+        job_start_time = '{}-{}-{} {}:{}:{}'.format(
             pwd_log_dir[-6],
             pwd_log_dir[-5],
             pwd_log_dir[-4],
@@ -183,6 +213,16 @@ class Result(object):
             pwd_log_dir[-2],
             pwd_log_dir[-1],
         )
+        for i in range(6):
+            del pwd_log_dir[-1]
+        jobname = pwd_log_dir[0]
+        del pwd_log_dir[0]
+
+        cephconfig = ''
+        for c in pwd_log_dir:
+            cephconfig = cephconfig + c
+        if cephconfig == '':
+            cephconfig = 'Default'
 
         for log in logs:
             #rbd_randrw_4k_runtime30_iodepth1_numjob1_imagenum2_hahaha_%100_2017_07_18_17_27_04
@@ -193,7 +233,7 @@ class Result(object):
             row_dic[config_type] = row_dic[config_type] +1
     
             #fill imagenum, readwrite, bs, iodepth
-            results = subprocess.check_output('grep iodepth {}.log'.format(log), shell=True).split('\n')
+            results = subprocess.check_output('grep iodepth {}.txt'.format(log), shell=True).split('\n')
             del results[-1]
             result_match = re.search(r'rbd_image\d+:.*rw=(.*), bs=\(R\) (.*)-.*-.*-.*, ioengine=(.*), iodepth=(.*)', results[0])
     
@@ -206,7 +246,7 @@ class Result(object):
             iodepth = self.fill_iodepth_D(result_match.group(4), config_log, ws, row)
     
             #fill numberjob    
-            results = subprocess.check_output('grep jobs= {}.log'.format(log), shell=True).split('\n')
+            results = subprocess.check_output('grep jobs= {}.txt'.format(log), shell=True).split('\n')
             result_match = re.search(r'jobs=(\d+)\)', results[0])
     
             numjob = self.fill_numjob_E(result_match.group(1), config_log, ws, row)
@@ -217,18 +257,21 @@ class Result(object):
             ws.cell(row = row, column = 1).border = self.border
             #fill iops and lat
             log_list = []
-            with open('{}.log'.format(log), 'r') as f:
+            with open('{}.txt'.format(log), 'r') as f:
                 begin_to = False
-                for line in f:
+                lines = f.readlines()
+                case_status = lines[-1].strip()
+                for line in lines:
                     if begin_to:
                         log_list.append(line)
                     if re.match('All clients', line):
                         begin_to = True
             if len(log_list) == 0:
-                with open('{}.log'.format(log), 'r') as f:
+                with open('{}.txt'.format(log), 'r') as f:
                     log_list = f.readlines()
             iops = self.fill_iops_G(log_list, ws, row)
             lat = self.fill_lat_I(log_list, ws, row)
+            bw = self.fill_bw_J(log_list, ws, row)
 
             if self.havedb:
                 time = '{}-{}-{} {}:{}:{}'.format(
@@ -240,9 +283,10 @@ class Result(object):
                     config_log[14]
                 )
                 result_to_db = {
-                    #'job_name': jobname,
-                    'suite_time': suite_time,
+                    'jobtime': job_start_time,
+                    'ceph_config': cephconfig,
                     'time': time,
+                    'status': case_status,
                     'case_name': log,
                     'blocksize': bs,
                     'iodepth': iodepth,
@@ -252,12 +296,14 @@ class Result(object):
                     'iops': iops,
                     'readwrite': readwrite,
                     'lat': lat,
+                    'bw': bw
                 }
                 self.db.insert_tb_result(**result_to_db)
-        self.db.close_db()
+        if self.havedb:
+            self.db.close_db()
 
-    def deal_with_fio_data(self, suitename, timetag, file_name):
-        log_dir, logs = self.get_log_list(suitename, timetag)
+    def deal_with_fio_data(self, suitename, jobtag, file_name):
+        log_dir, logs = self.get_log_list(suitename, jobtag)
 
         result_table = Workbook()
         sheet_list = self.create_sheets(logs, result_table)

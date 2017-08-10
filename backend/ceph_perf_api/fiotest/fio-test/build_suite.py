@@ -94,7 +94,20 @@ def generate_run_config(path):
             f.write(config)
             f.write('\n')
 
-def case(pool, rw, bs, runtime, iodepth, numjobs, image_num, case_num, rwmixread, imagename, clientslists):
+def case(
+    pool,
+    rw,
+    bs,
+    runtime,
+    iodepth,
+    numjobs,
+    image_num,
+    case_num,
+    rwmixread,
+    imagename,
+    clientslists,
+    other_fio_config
+):
     for i in range(len(clientslists)):
         config_para = pool+'_'+rw+'_'+bs+'_runtime'+runtime+'_iodepth'+iodepth+'_numjob'+numjobs+'_imagenum'+image_num+'_'+case_num+'_%'+rwmixread+'_'+str(i)
         config_filename = config_para+'.config'
@@ -112,6 +125,8 @@ def case(pool, rw, bs, runtime, iodepth, numjobs, image_num, case_num, rwmixread
             f.write("rwmixread={}\n".format(rwmixread))
             f.write("new_group\n")
             f.write("group_reporting\n")
+            for fioconfig in other_fio_config:
+                f.write("{}\n".format(fioconfig))
             # $image_start $image_end: Different fio server run in different image
             image_start = i*int(image_num)
             image_end = image_start + int(image_num)
@@ -201,7 +216,10 @@ def main():
                     help='''ceph pool name''')
     parser.add_argument('--cephconfig', dest="cephconfig",
                 metavar="setup ceph config", action="store",
-                    help='''ceph pool name''')
+                    help='''setup ceph config''')
+    parser.add_argument('--otherfioconfig', dest="fioconfig",
+                metavar="addon fio config", action="store",
+                    help='''addon fio config''')
     parser.add_argument('-N', '--suitename', dest="suitename",
                 metavar="test suite name", action="store",
                     help='''test suite name''')
@@ -229,10 +247,14 @@ def main():
                 f.write('\n')
 
     ceph_config = gen_setup_ceph_config(args.cephconfig)
+    if args.fioconfig == "None":
+        other_fio_config = []
+    else:
+        other_fio_config = args.fioconfig.split(',')
     
     print "readwritetypes are {}".format(readwritetypes)
     print "blocksizes are {}".format(blocksizes)
-    print "iodepths are ".format(iodepths)
+    print "iodepths are {}".format(iodepths)
     print "numjobs are {}".format(numjobs)
     print "imagecounts are {}".format(imagecounts)
     print "rwmixreads are {}".format(rwmixreads)
@@ -259,7 +281,8 @@ def main():
                                 args.suitename,
                                 rwmixread,
                                 args.imagename,
-                                clientslists
+                                clientslists,
+                                other_fio_config,
                             )
     #generate_run_config(path)
 
