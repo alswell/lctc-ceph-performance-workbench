@@ -156,20 +156,24 @@ class Result(object):
         for i in range(len(log_list)):
             if re.match(r'   read:', log_list[i]):
                 match = re.match(r'\s*read: IOPS=\d+, BW=(\d+)(\S+) ', log_list[i])
-                if match.group(2) == 'B/s':
+                unit = match.group(2)
+                if unit == 'B/s':
                     read_bw = float(match.group(1)) / 1000000
-                elif match.group(2) == 'KiB/s':
+                elif re.match(r'Ki', unit):
                     read_bw = float(match.group(1)) / 1000
-                elif match.group(2) == 'MiB/s':
+                elif re.match(r'Mi', unit):
                     read_bw = float(match.group(1))
                 else:
-                    print "Error: Unrecognized BW unit {}.".format(match.group(2))
+                    print "Error: Unrecognized BW unit {}.".format(unit)
                     sys.exit(1)
             elif re.match(r'  write:', log_list[i]):
                 match = re.match(r'\s*write: IOPS=\d+, BW=(\d+)(\S+)', log_list[i])
-                if match.group(2) == 'KiB/s':
+                unit = match.group(2)
+                if unit == 'B/s':
+                    read_bw = float(match.group(1)) / 1000000
+                elif re.match(r'Ki', unit):
                     write_bw = float(match.group(1)) / 1000
-                elif match.group(2) == 'MiB/s':
+                elif re.match(r'Mi', unit):
                     write_bw = float(match.group(1))
                 else:
                     print "Error: Unrecognized BW unit {}.".format(match.group(2))
