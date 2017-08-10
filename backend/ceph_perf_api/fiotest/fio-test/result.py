@@ -33,12 +33,12 @@ class Result(object):
         else:
             path = "{}/test-suites/{}/{}".format(os.getcwd(), suitename, tag)
         os.chdir(path)
-        logs = subprocess.check_output('ls {}/*.log'.format(path), shell=True)
+        logs = subprocess.check_output('ls {}/*.txt'.format(path), shell=True)
         logs = logs.split('\n')
         del logs[-1]
     
         for log in logs:
-            log = re.match('{}/(.+)\.log'.format(path), log).group(1)
+            log = re.match('{}/(.+)\.txt'.format(path), log).group(1)
             result.append(log)
     
         return path, result
@@ -156,7 +156,9 @@ class Result(object):
         for i in range(len(log_list)):
             if re.match(r'   read:', log_list[i]):
                 match = re.match(r'\s*read: IOPS=\d+, BW=(\d+)(\S+) ', log_list[i])
-                if match.group(2) == 'KiB/s':
+                if match.group(2) == 'B/s':
+                    read_bw = float(match.group(1)) / 1000000
+                elif match.group(2) == 'KiB/s':
                     read_bw = float(match.group(1)) / 1000
                 elif match.group(2) == 'MiB/s':
                     read_bw = float(match.group(1))
@@ -231,7 +233,7 @@ class Result(object):
             row_dic[config_type] = row_dic[config_type] +1
     
             #fill imagenum, readwrite, bs, iodepth
-            results = subprocess.check_output('grep iodepth {}.log'.format(log), shell=True).split('\n')
+            results = subprocess.check_output('grep iodepth {}.txt'.format(log), shell=True).split('\n')
             del results[-1]
             result_match = re.search(r'rbd_image\d+:.*rw=(.*), bs=\(R\) (.*)-.*-.*-.*, ioengine=(.*), iodepth=(.*)', results[0])
     
@@ -244,7 +246,7 @@ class Result(object):
             iodepth = self.fill_iodepth_D(result_match.group(4), config_log, ws, row)
     
             #fill numberjob    
-            results = subprocess.check_output('grep jobs= {}.log'.format(log), shell=True).split('\n')
+            results = subprocess.check_output('grep jobs= {}.txt'.format(log), shell=True).split('\n')
             result_match = re.search(r'jobs=(\d+)\)', results[0])
     
             numjob = self.fill_numjob_E(result_match.group(1), config_log, ws, row)
@@ -255,7 +257,7 @@ class Result(object):
             ws.cell(row = row, column = 1).border = self.border
             #fill iops and lat
             log_list = []
-            with open('{}.log'.format(log), 'r') as f:
+            with open('{}.txt'.format(log), 'r') as f:
                 begin_to = False
                 lines = f.readlines()
                 case_status = lines[-1].strip()
@@ -265,7 +267,7 @@ class Result(object):
                     if re.match('All clients', line):
                         begin_to = True
             if len(log_list) == 0:
-                with open('{}.log'.format(log), 'r') as f:
+                with open('{}.txt'.format(log), 'r') as f:
                     log_list = f.readlines()
             iops = self.fill_iops_G(log_list, ws, row)
             lat = self.fill_lat_I(log_list, ws, row)

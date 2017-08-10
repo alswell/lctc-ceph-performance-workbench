@@ -18,6 +18,10 @@ fi
 
 LOG="/var/log/fiorun.log"
 
+if [ ! -f "/usr/bin/sshpass" ]; then
+  yum install -y epel-release
+  yum install -y sshpass
+fi
 
 if [ $1 == "build-suite" ]; then
   while [ ! -n "$suite_name" ]; do
@@ -133,9 +137,17 @@ if [ $1 == "build-suite" ]; then
     fi
   done
 
+  echo -n "
+    Please Enter other fio config parameters if have, separate \",\"[]:"
+  read otherfioconfig
+  if [ ! -n "$otherfioconfig" ]; then
+    otherfioconfig="None"
+  fi
+
+
   date >> $LOG
-  echo python build_suite.py -C $clients_ip --readwritetype $rw_type --blocksize $bs --runtime $runtime --iodepth $iodepth --numjob $numjob --imagecount $imagecount --rwmixread $rwmixread --imagename $imagename -N $suite_name --pool $pool --cephconfig $cephconfig | tee -a $LOG
-  python build_suite.py -C $clients_ip --readwritetype $rw_type --blocksize $bs --runtime $runtime --iodepth $iodepth --numjob $numjob --imagecount $imagecount --rwmixread $rwmixread --imagename $imagename -N $suite_name --pool $pool --cephconfig $cephconfig | tee -a $LOG
+  echo python build_suite.py -C $clients_ip --readwritetype $rw_type --blocksize $bs --runtime $runtime --iodepth $iodepth --numjob $numjob --imagecount $imagecount --rwmixread $rwmixread --imagename $imagename -N $suite_name --pool $pool --cephconfig $cephconfig --otherfioconfig $otherfioconfig | tee -a $LOG
+  python build_suite.py -C $clients_ip --readwritetype $rw_type --blocksize $bs --runtime $runtime --iodepth $iodepth --numjob $numjob --imagecount $imagecount --rwmixread $rwmixread --imagename $imagename -N $suite_name --pool $pool --cephconfig $cephconfig --otherfioconfig $otherfioconfig | tee -a $LOG
 
 elif [ $1 == "run" ]; then
   if [ $# -lt 2 ]; then

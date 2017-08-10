@@ -234,7 +234,7 @@ class ToDB(object):
             osd_map_cache_size, osd_recovery_threads, osd_recovery_op_priority, \
             osd_recovery_max_active, osd_max_backfills, osd_scrub_begin_hour, \
             osd_scrub_end_hour, osd_scrub_sleep, osd_scrub_load_threshold, \
-            osd_scrub_chunk_max, osd_scrub_chunk_min, \
+            osd_scrub_chunk_max, osd_scrub_chunk_min, osd_objectstore,\
             osd_journal_size, journal_max_write_bytes, \
             journal_max_write_entries, journal_throttle_high_multiple, \
             journal_throttle_max_multiple, \
@@ -248,7 +248,7 @@ class ToDB(object):
             '{}', '{}', '{}', '{}', '{}', \
             '{}', '{}', '{}', '{}', '{}', \
             '{}', '{}', '{}', '{}', '{}', \
-            '{}', '{}', '{}', '{}', \
+            '{}', '{}', '{}', '{}', '{}', \
             '{}', '{}', '{}', '{}', '{}', \
             '{}', '{}')".format(
                 caseid,
@@ -302,6 +302,7 @@ class ToDB(object):
                 kwargs['osd_scrub_load_threshold'],
                 kwargs['osd_scrub_chunk_max'],
                 kwargs['osd_scrub_chunk_min'],
+                kwargs['osd_objectstore'],
                 kwargs['osd_journal_size'],
                 kwargs['journal_max_write_bytes'],
                 kwargs['journal_max_write_entries'],
@@ -541,6 +542,179 @@ class ToDB(object):
         except:
             print sql
             self.db.rollback()
+
+    def insert_tb_diskinfo(self,
+        casename,
+        host,
+        disk_name,
+        disk_size,
+        disk_model,
+        disk_speed
+    ):
+        sql = "SELECT * FROM fiotest_result \
+            WHERE case_name = '{}'".format(casename)
+        try:
+            self.cursor.execute(sql)
+            results = self.cursor.fetchall()
+            for row in results:
+                caseid = row[0]
+        except:
+            print sql
+            self.db.rollback()
+
+        sql = "INSERT INTO fiotest_diskinfo(caseid_id, \
+        node, disk_name, disk_size, \
+        disk_model, disk_speed ) \
+            VALUES ('{}', '{}', '{}', \
+            '{}', '{}', '{}' )".format(
+                caseid,
+                host,
+                disk_name,
+                disk_size,
+                disk_model,
+                disk_speed
+            )
+        try:
+            self.cursor.execute(sql)
+            self.db.commit()
+        except:
+            print sql
+            self.db.rollback()
+
+    def insert_tb_hwinfo(self, casename, host, **kwargs):
+        sql = "SELECT * FROM fiotest_result \
+            WHERE case_name = '{}'".format(casename)
+        try:
+            self.cursor.execute(sql)
+            results = self.cursor.fetchall()
+            for row in results:
+                caseid = row[0]
+        except:
+            print sql
+            self.db.rollback()
+
+        sql = "INSERT INTO fiotest_hwinfo(caseid_id, \
+        node, HyperThreading, VirtualTechnology, \
+        NUMA, OperatingModes, \
+        CPUType, CPUCores, CPUMaxSpeed, CPUNum, \
+        MemNum, MemType, MemSize ) \
+            VALUES ('{}', '{}', '{}', '{}', \
+            '{}', '{}', '{}', '{}', '{}', \
+            '{}', '{}', '{}', '{}')".format(
+                caseid,
+                host,
+                kwargs['HyperThreading'],
+                kwargs['VirtualTechnology'],
+                kwargs['NUMA'],
+                kwargs['OperatingModes'],
+                kwargs['cputype'],
+                kwargs['percpucores'],
+                kwargs['cpuspeed'],
+                kwargs['cpunum'],
+                kwargs['memnum'],
+                kwargs['memtype'],
+                kwargs['totalsize'],
+            )
+        try:
+            self.cursor.execute(sql)
+            self.db.commit()
+        except:
+            print sql
+            self.db.rollback()
+
+    def insert_tb_osinfo(self, casename, host, **kwargs):
+        sql = "SELECT * FROM fiotest_result \
+            WHERE case_name = '{}'".format(casename)
+        try:
+            self.cursor.execute(sql)
+            results = self.cursor.fetchall()
+            for row in results:
+                caseid = row[0]
+        except:
+            print sql
+            self.db.rollback()
+
+        sql = "INSERT INTO fiotest_osinfo(caseid_id, \
+        node, PIDnumber, read_ahead, \
+        IOscheduler, dirty_background_ratio, \
+        dirty_ratio, MTU ) \
+            VALUES ('{}', '{}', '{}', '{}', \
+            '{}', '{}', '{}', '{}')".format(
+                caseid,
+                host,
+                kwargs['PIDnumber'],
+                kwargs['read_ahead'],
+                kwargs['IOscheduler'],
+                kwargs['dirty_background_ratio'],
+                kwargs['dirty_ratio'],
+                kwargs['MTU'],
+            )
+        try:
+            self.cursor.execute(sql)
+            self.db.commit()
+        except:
+            print sql
+            self.db.rollback()
+
+    def insert_tb_cephinfo(self, casename, **kwargs):
+        sql = "SELECT * FROM fiotest_result \
+            WHERE case_name = '{}'".format(casename)
+        try:
+            self.cursor.execute(sql)
+            results = self.cursor.fetchall()
+            for row in results:
+                caseid = row[0]
+        except:
+            print sql
+            self.db.rollback()
+
+        sql = "INSERT INTO fiotest_cephinfo(caseid_id, \
+        monnum, nodenum, version, osdnum, \
+        globalrawused ) \
+            VALUES ('{}', '{}', '{}', '{}', \
+            '{}', '{}' )".format(
+                caseid,
+                kwargs['monnum'],
+                kwargs['nodenum'],
+                kwargs['version'],
+                kwargs['osdnum'],
+                kwargs['stats']['total_used_bytes'],
+            )
+        try:
+            self.cursor.execute(sql)
+            self.db.commit()
+        except:
+            print sql
+            self.db.rollback()
+
+    def insert_tb_poolinfo(self, casename, pool, **kwargs):
+        sql = "SELECT * FROM fiotest_result \
+            WHERE case_name = '{}'".format(casename)
+        try:
+            self.cursor.execute(sql)
+            results = self.cursor.fetchall()
+            for row in results:
+                caseid = row[0]
+        except:
+            print sql
+            self.db.rollback()
+
+        sql = "INSERT INTO fiotest_cephpoolinfo(caseid_id, \
+        name, pgnum, size ) \
+            VALUES ('{}', '{}', \
+            '{}', '{}' )".format(
+                caseid,
+                pool,
+                kwargs['pgnum'],
+                kwargs['size'],
+            )
+        try:
+            self.cursor.execute(sql)
+            self.db.commit()
+        except:
+            print sql
+            self.db.rollback()
+
 
 
     def close_db(self):

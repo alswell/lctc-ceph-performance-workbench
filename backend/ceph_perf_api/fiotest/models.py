@@ -74,7 +74,7 @@ class Iostat(models.Model):
     caseid = models.ForeignKey("Result",to_field='id')
     node = models.CharField(max_length=20)
     osdnum = models.CharField(max_length=20, null=True)
-    diskname = models.CharField(max_length=20, null=True)
+    diskname = models.CharField(max_length=50, null=True)
     time = models.DateTimeField(null=True)
     wrqms = models.FloatField(null=True)
     avgrqsz = models.FloatField(null=True)
@@ -149,6 +149,7 @@ class CephConfig(models.Model):
     osd_scrub_load_threshold = models.CharField(max_length=20, null=True)
     osd_scrub_chunk_max = models.CharField(max_length=20, null=True)
     osd_scrub_chunk_min = models.CharField(max_length=20, null=True)
+    osd_objectstore = models.CharField(max_length=20, null=True)
     objecter_inflight_ops = models.CharField(max_length=20, null=True)
     objecter_inflight_op_bytes = models.CharField(max_length=20, null=True)
 
@@ -222,6 +223,22 @@ class HWInfo(models.Model):
     VirtualTechnology = models.CharField(max_length=20, null=True)
     NUMA = models.CharField(max_length=20, null=True)
     OperatingModes = models.CharField(max_length=20, null=True)
+    CPUType = models.CharField(max_length=50, null=True)
+    CPUCores = models.IntegerField(null=True)
+    CPUMaxSpeed = models.CharField(max_length=50, null=True)
+    CPUNum = models.IntegerField(null=True)
+    MemNum = models.IntegerField(null=True)
+    MemType = models.CharField(max_length=50, null=True)
+    MemSize = models.CharField(max_length=50, null=True)
+
+class DiskInfo(models.Model):
+    id = models.AutoField(primary_key=True)
+    caseid = models.ForeignKey("Result",to_field='id')
+    node = models.CharField(max_length=20)
+    disk_name = models.CharField(max_length=20)
+    disk_size = models.CharField(max_length=20)
+    disk_model = models.CharField(max_length=20)
+    disk_speed = models.CharField(max_length=20)
 
 class OSInfo(models.Model):
     id = models.AutoField(primary_key=True)
@@ -258,3 +275,19 @@ class Jobs(models.Model):
     name = models.CharField(max_length=20)
     time = models.DateTimeField(null=True)
     status = models.CharField(max_length=20, null=True)
+
+class CephInfo(models.Model):
+    id = models.AutoField(primary_key=True)
+    caseid = models.ForeignKey("Result",to_field='id')
+    monnum = models.IntegerField(null=True)
+    nodenum = models.IntegerField(null=True)
+    version = models.CharField(max_length=100, null=True)
+    osdnum = models.IntegerField(null=True)
+    globalrawused = models.CharField(max_length=20, null=True)
+
+class CephPoolInfo(models.Model):
+    id = models.AutoField(primary_key=True)
+    caseid = models.ForeignKey("Result",to_field='id')
+    name = models.CharField(max_length=20)
+    pgnum = models.IntegerField(null=True)
+    size = models.IntegerField(null=True) 

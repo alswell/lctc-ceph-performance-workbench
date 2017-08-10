@@ -33,6 +33,58 @@ class RunFIO(object):
         self.todb = todb
 
     def checkandstart_fioser(self, path, suitename):
+        fionoserver = False
+        with open('{}/fioserver_list.conf'.format(path, suitename), 'r') as f:
+            for client in f:
+                client = client.strip()
+                try:
+                    subprocess.check_output('sshpass -p passw0rd ssh {} ps -ef | grep fio | grep server | grep -v grep'.format(client), shell=True)
+                except subprocess.CalledProcessError, result:
+                    output = result.output
+                    if result.output == '' and result.returncode == 1:
+                        print "===={} without fio server".format(client)
+                        print "====Please run \"nohup fio --server &\" in {}".format(client)
+                        fionoserver = True
+            if fionoserver:
+                sys.exit(1)
+
+    def __checkandstart_fioser(self, path, suitename):
+        with open('{}/fioserver_list.conf'.format(path, suitename), 'r') as f:
+            for client in f:
+                client = client.strip()
+                output =''
+                while output == '':
+                    try:
+                        output = subprocess.check_output('sshpass -p passw0rd ssh {} ps -ef | grep fio | grep server | grep -v grep | grep -v ssh'.format(client), shell=True)
+                    except subprocess.CalledProcessError, result:
+                        output = result.output
+                        if result.output == '' and result.returncode == 1:
+                            print "================={} without fio server".format(client)
+                            try:
+                                os.system(
+                                    "sshpass -p passw0rd ssh {} fio --server &".format(client)
+                                )
+                            except Exception, e:
+                                print e
+                                sys.exit(1)
+                            continue
+                        else:
+                            print result
+                            sys.exit(1)
+                    else:
+                        match = re.match('\S+\s+(\d+)', output)
+                        platform_type = platform.platform()
+                        if re.search('ubuntu', platform_type, re.I):
+                            process_id = match.group(1)
+                        elif re.search('centos', platform_type, re.I):
+                            process_id = match.group(1)
+                        else:
+                            print "unsupport system os {}".format(platform_type)
+                            sys.exit(0)
+    
+                        print "process_id: {}".format(process_id)
+
+    def _checkandstart_fioser(self, path, suitename):
         with open('{}/fioserver_list.conf'.format(path, suitename), 'r') as f:
             for client in f:
                 client = client.strip()
@@ -127,7 +179,7 @@ class RunFIO(object):
                         match_config.group(1),
                         time.strftime('%Y_%m_%d_%H_%M_%S', time.localtime(time.time()))
                     )
-                    log_file = '{}/{}.log'.format(
+                    log_file = '{}/{}.txt'.format(
                         log_dir,
                         log_file_name
                     )
@@ -199,7 +251,6 @@ class RunFIO(object):
                 self.sysinfo.deal_with_sysinfo_logfile(
                     sysinfo_dir,
                 )
-            self.sysinfo.close_db()
     
     def update_ceph_conffile(self, host, ceph_config):
         t = paramiko.Transport(host, "22")
@@ -285,6 +336,16 @@ class RunFIO(object):
                     ssh.exec_command(cmd)
             ssh.close()
 
+    def store_logfile_FS(self, log_dir):
+        if log_dir[-1] == '/':
+            del log_dir[-1]
+        dir_name = log_dir.split('/')[-1]
+
+        FShost = "10.240.217.74"
+        cmd = ['sshpass', '-p', 'passw0rd', 'scp', '-r', log_dir, 'root@{}:/usr/share/fiotest/'.format(FShost)]
+        subprocess.check_call(cmd)
+
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -333,10 +394,12 @@ def main():
             log_dir  = runfio.run(path, args.jobname, ceph_config=ceph_config)
             time.sleep(2)
             runfio.gen_result(log_dir)
+            runfio.store_logfile_FS(log_dir)
     else:
         log_dir = runfio.run(path, args.jobname)
         time.sleep(2)
         runfio.gen_result(log_dir)
+        runfio.store_logfile_FS(log_dir)
 
 
 
