@@ -1,0 +1,62 @@
+[global]
+public_network = 192.168.3.0/24
+cluster_network = 172.2.100.0/24
+
+osd objectstore = filestore
+
+ms crc data = false
+ms crc header = false
+#osd pool default size = 3
+#osd pool default min size = 2
+journal entry footer = false
+journal repop optimize = false
+
+filestore fd cache size = 12800
+filestore fd cache shards = 16
+throttler perf counter = false
+
+max open files = 262144
+mon osd down out subtree limit = host
+mon compact on start = true
+mon pg warn max per osd = 2048
+sd optimize data write min size = 4096
+
+filestore wbthrottle enable = false
+
+filestore_queue_max_ops = 1024 # ori=50
+journal_max_write_entries= 1024 # ori=100
+objecter_inflight_ops= 2048  # ori=1024
+
+filestore_queue_max_bytes= 262144000 # ori=100M
+journal_max_write_bytes= 262144000 # ori=10M
+ms_dispatch_throttle_bytes= 262144000 # ori=100M
+##objecter_infilght_op_bytes= 262144000
+
+filestore fadvise = false
+filestore ondisk finisher threads = 2
+filestore apply finisher threads = 2
+filestore op threads = 4
+
+filestore max sync interval = 10
+filestore min sync interval = 5
+
+[client]
+rbd cache = false
+client cache size = 16384000
+client_oc_size = 838860800
+
+[mon]
+mon clock drift allowed = 2
+#mon debug dump transactions = false
+#mon osd max split count = 10000
+
+[osd]
+bluestore = false
+osd crush update on start = false
+osd journal size = 20480
+#osd max backfills = 1
+#osd recovery op priority = 2
+#osd recovery max active = 3
+#osd deep scrub primary write = true
+#osd deep scrub replica write = true
+osd op threads = 4
