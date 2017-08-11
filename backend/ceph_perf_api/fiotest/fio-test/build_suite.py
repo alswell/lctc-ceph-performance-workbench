@@ -59,9 +59,10 @@ def create_suite_dir(suitename):
     print "=================================="
     print "test suite dir is: {}/test-suites/{}".format(os.getcwd(), suitename)
     print "=================================="
-    if os.path.exists(path):
+    suite_dir = "{}/test-suites/{}".format(os.getcwd(), suitename)
+    if os.path.exists(suite_dir):
         try:
-            shutil.rmtree(path)
+            shutil.rmtree(suite_dir)
         except Exception, e:
             print "remove the previous test suite dir fail:{}".format(e)
             sys.exit(1)
@@ -70,7 +71,7 @@ def create_suite_dir(suitename):
     except Exception, e:
         print "make test suite dir fail:{}".format(e)
         sys.exit(1)
-    return "{}/test-suites/{}".format(os.getcwd(), suitename)
+    return suite_dir
 
 def getlist(data):
     result = data.split(',')
@@ -109,7 +110,10 @@ def case(
     other_fio_config
 ):
     for i in range(len(clientslists)):
-        config_para = pool+'_'+rw+'_'+bs+'_runtime'+runtime+'_iodepth'+iodepth+'_numjob'+numjobs+'_imagenum'+image_num+'_'+case_num+'_%'+rwmixread+'_'+str(i)
+        config_para = 'pool'+pool+'_'+rw+'_'+bs+'_runtime'+runtime+'_iodepth'+iodepth+'_numjob'+numjobs+'_imagenum'+image_num+'_'+case_num+'_%'+rwmixread+'_'+str(i)
+        for fioconfig in other_fio_config:
+             fioconfig = re.sub('=', '', fioconfig)
+             config_para = config_para + '_' + fioconfig
         config_filename = config_para+'.config'
         with open('./config/{}'.format(config_filename), 'aw') as f:
             f.write("[global]\n")

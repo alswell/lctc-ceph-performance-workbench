@@ -22,8 +22,9 @@ class ToDB(object):
 
         sql = "INSERT INTO fiotest_result(jobid_id, case_name, ceph_config, time, \
             status, blocksize, iodepth, numberjob, imagenum, \
-            clientnum, iops, readwrite, lat, bw ) \
+            clientnum, r_iops, w_iops, iops, readwrite, lat, r_bw, w_bw, bw ) \
             VALUES ('{}', '{}', '{}', '{}', \
+            '{}', '{}', '{}', '{}', \
             '{}', '{}', '{}', '{}', '{}', \
             '{}', '{}', '{}', '{}', '{}' )".format(
                 jobid,
@@ -36,9 +37,13 @@ class ToDB(object):
                 kwargs['numberjob'],
                 kwargs['imagenum'],
                 kwargs['clientnum'],
+                kwargs['r_iops'],
+                kwargs['w_iops'],
                 kwargs['iops'],
                 kwargs['readwrite'],
                 kwargs['lat'],
+                kwargs['r_bw'],
+                kwargs['w_bw'],
                 kwargs['bw'],
         )
         try:
@@ -214,7 +219,7 @@ class ToDB(object):
             print sql
             self.db.rollback()
         sql = "INSERT INTO fiotest_cephconfig(caseid_id, node, osd, \
-            max_open_files, filestore_expected_throughput_bytes, \
+            filestore_expected_throughput_bytes, \
             filestore_expected_throughput_ops, filestore_max_sync_interval, \
             filestore_min_sync_interval, filestore_queue_max_bytes, \
             filestore_queue_max_ops, filestore_queue_high_delay_multiple, \
@@ -228,10 +233,10 @@ class ToDB(object):
             osd_max_write_size, osd_num_op_tracker_shard, \
             osd_client_message_size_cap, osd_client_message_cap, \
             osd_deep_scrub_stride, osd_op_num_threads_per_shard, \
-            osd_op_num_shards, osd_op_threads, osd_op_thread_timeout, \
+            osd_op_num_shards, osd_op_thread_timeout, \
             osd_op_thread_suicide_timeout, osd_recovery_thread_timeout, \
             osd_recovery_thread_suicide_timeout, osd_disk_threads, \
-            osd_map_cache_size, osd_recovery_threads, osd_recovery_op_priority, \
+            osd_map_cache_size, osd_recovery_op_priority, \
             osd_recovery_max_active, osd_max_backfills, osd_scrub_begin_hour, \
             osd_scrub_end_hour, osd_scrub_sleep, osd_scrub_load_threshold, \
             osd_scrub_chunk_max, osd_scrub_chunk_min, osd_objectstore,\
@@ -240,21 +245,21 @@ class ToDB(object):
             journal_throttle_max_multiple, \
             objecter_inflight_ops, objecter_inflight_op_bytes ) \
             VALUES ('{}', '{}', '{}', \
-            '{}', '{}', '{}','{}', '{}', \
+            '{}', '{}','{}', '{}', \
             '{}', '{}', '{}','{}', '{}', \
             '{}', '{}', '{}','{}', '{}', '{}', '{}', '{}', \
             '{}', '{}', '{}', '{}', '{}', '{}', \
             '{}', '{}', '{}', '{}', '{}', \
             '{}', '{}', '{}', '{}', '{}', \
             '{}', '{}', '{}', '{}', '{}', \
-            '{}', '{}', '{}', '{}', '{}', \
-            '{}', '{}', '{}', '{}', '{}', \
+            '{}', '{}', '{}', '{}', \
+            '{}', '{}', '{}', '{}', \
             '{}', '{}', '{}', '{}', '{}', \
             '{}', '{}')".format(
                 caseid,
                 node,
                 osd,
-                kwargs['max_open_files'],
+                #kwargs['max_open_files'],
                 kwargs['filestore_expected_throughput_bytes'],
                 kwargs['filestore_expected_throughput_ops'],
                 kwargs['filestore_max_sync_interval'],
@@ -285,14 +290,14 @@ class ToDB(object):
                 kwargs['osd_deep_scrub_stride'],
                 kwargs['osd_op_num_threads_per_shard'],
                 kwargs['osd_op_num_shards'],
-                kwargs['osd_op_threads'],
+                #kwargs['osd_op_threads'],
                 kwargs['osd_op_thread_timeout'],
                 kwargs['osd_op_thread_suicide_timeout'],
                 kwargs['osd_recovery_thread_timeout'],
                 kwargs['osd_recovery_thread_suicide_timeout'],
                 kwargs['osd_disk_threads'],
                 kwargs['osd_map_cache_size'],
-                kwargs['osd_recovery_threads'],
+                #kwargs['osd_recovery_threads'],
                 kwargs['osd_recovery_op_priority'],
                 kwargs['osd_recovery_max_active'],
                 kwargs['osd_max_backfills'],
@@ -347,12 +352,6 @@ class ToDB(object):
             filestore_commitcycle, \
             filestore_commitcycle_latency_avgcount, \
             filestore_commitcycle_sum, \
-            leveldb_leveldb_submit_sync_latency_avgcount, \
-            leveldb_leveldb_submit_sync_latency_sum, \
-            leveldb_leveldb_get_latency_avgcount, \
-            leveldb_leveldb_get_latency_sum, \
-            leveldb_leveldb_submit_latency_avgcount, \
-            leveldb_leveldb_submit_latency_sum, \
             osd_op, \
             osd_op_wip, \
             osd_op_in_bytes, \
@@ -375,8 +374,6 @@ class ToDB(object):
             osd_op_w_latency_sum, \
             osd_op_w_process_latency_avgcount, \
             osd_op_w_process_latency_sum, \
-            osd_op_w_rlat_avgcount, \
-            osd_op_w_rlat_sum, \
             osd_stat_bytes_used, \
             osd_stat_bytes_avail, \
             osd_buffer_bytes, \
@@ -394,8 +391,7 @@ class ToDB(object):
             '{}', '{}', '{}', '{}', '{}', \
             '{}', '{}', '{}', '{}', '{}', \
             '{}', '{}', '{}', '{}', '{}', \
-            '{}', '{}', '{}', '{}', '{}', \
-            '{}', '{}', '{}', '{}', '{}', \
+            '{}', '{}', \
             '{}', '{}', '{}', '{}', '{}', \
             '{}', '{}', '{}', '{}', '{}', \
             '{}')".format(
@@ -419,12 +415,12 @@ class ToDB(object):
                 kwargs['filestore']['commitcycle'],
                 kwargs['filestore']['commitcycle_latency']['avgcount'],
                 kwargs['filestore']['commitcycle_latency']['sum'],
-                kwargs['leveldb']['leveldb_submit_sync_latency']['avgcount'],
-                kwargs['leveldb']['leveldb_submit_sync_latency']['sum'],
-                kwargs['leveldb']['leveldb_get_latency']['avgcount'],
-                kwargs['leveldb']['leveldb_get_latency']['sum'],
-                kwargs['leveldb']['leveldb_submit_latency']['avgcount'],
-                kwargs['leveldb']['leveldb_submit_latency']['sum'],
+                #kwargs['leveldb']['leveldb_submit_sync_latency']['avgcount'],
+                #kwargs['leveldb']['leveldb_submit_sync_latency']['sum'],
+                #kwargs['leveldb']['leveldb_get_latency']['avgcount'],
+                #kwargs['leveldb']['leveldb_get_latency']['sum'],
+                #kwargs['leveldb']['leveldb_submit_latency']['avgcount'],
+                #kwargs['leveldb']['leveldb_submit_latency']['sum'],
                 kwargs['osd']['op'],
                 kwargs['osd']['op_wip'],
                 kwargs['osd']['op_in_bytes'],
@@ -447,8 +443,8 @@ class ToDB(object):
                 kwargs['osd']['op_w_latency']['sum'],
                 kwargs['osd']['op_w_process_latency']['avgcount'],
                 kwargs['osd']['op_w_process_latency']['sum'],
-                kwargs['osd']['op_w_rlat']['avgcount'],
-                kwargs['osd']['op_w_rlat']['sum'],
+                #kwargs['osd']['op_w_rlat']['avgcount'],
+                #kwargs['osd']['op_w_rlat']['sum'],
                 kwargs['osd']['stat_bytes_used'],
                 kwargs['osd']['stat_bytes_avail'],
                 kwargs['osd']['buffer_bytes'],
@@ -479,8 +475,6 @@ class ToDB(object):
             self.db.rollback()
         sql = "INSERT INTO fiotest_cephstatus(caseid_id, time, \
             health_overall_status, \
-            health_summary, \
-            health_detail, \
             fsid, \
             monmap_mons, \
             osdmap_osdmap_num_osds, \
@@ -493,14 +487,15 @@ class ToDB(object):
             pgmap_bytes_avail, \
             pgmap_bytes_total ) \
             VALUES ('{}', '{}', \
-            '{}', '{}', '{}', '{}', '{}', \
+            '{}', '{}', '{}', \
             '{}', '{}', '{}', '{}', '{}', \
             '{}', '{}', '{}', '{}' )".format(
                 caseid,
                 time,
-                kwargs['health']['overall_status'],
-                kwargs['health']['summary'],
-                kwargs['health']['detail'],
+                #kwargs['health']['overall_status'],
+                kwargs['health']['status'],
+                #kwargs['health']['summary'],
+                #kwargs['health']['detail'],
                 kwargs['fsid'],
                 kwargs['monmap']['mons'],
                 kwargs['osdmap']['osdmap']['num_osds'],

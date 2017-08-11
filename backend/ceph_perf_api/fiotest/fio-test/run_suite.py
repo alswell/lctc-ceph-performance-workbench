@@ -18,6 +18,7 @@ from collect_system_status import get_ceph_config_file
 class RunFIO(object):
 
     def __init__(self, path, todb=False):
+        self.todb = todb
         os.chdir(path)
         with open('fioserver_list.conf', 'r') as f:
             clients = f.readlines()
@@ -25,12 +26,9 @@ class RunFIO(object):
             self.sysinfo = SysInfo(client, havedb=todb)
             #self.nodes = get_ceph_config_file(path, client)['ceph-node']
 
-        self.hwinfo_file = '{}/../../ceph_hw_info.yml'.format(os.getcwd())
-        with open(self.hwinfo_file, 'r') as f:
-            ceph_info = yaml.load(f)
-        self.nodes = ceph_info['ceph-node']
-
-        self.todb = todb
+        self.nodes = self.sysinfo.nodes
+        self.client_password = self.sysinfo.client_password
+        self.host_password = self.sysinfo.host_password
 
     def checkandstart_fioser(self, path, suitename):
         fionoserver = False
@@ -38,7 +36,7 @@ class RunFIO(object):
             for client in f:
                 client = client.strip()
                 try:
-                    subprocess.check_output('sshpass -p passw0rd ssh {} ps -ef | grep fio | grep server | grep -v grep'.format(client), shell=True)
+                    subprocess.check_output('sshpass -p {} ssh {} ps -ef | grep fio | grep server | grep -v grep'.format(self.client_password, client), shell=True)
                 except subprocess.CalledProcessError, result:
                     output = result.output
                     if result.output == '' and result.returncode == 1:
@@ -55,14 +53,14 @@ class RunFIO(object):
                 output =''
                 while output == '':
                     try:
-                        output = subprocess.check_output('sshpass -p passw0rd ssh {} ps -ef | grep fio | grep server | grep -v grep | grep -v ssh'.format(client), shell=True)
+                        output = subprocess.check_output('sshpass -p {} ssh {} ps -ef | grep fio | grep server | grep -v grep | grep -v ssh'.format(self.client_password, client), shell=True)
                     except subprocess.CalledProcessError, result:
                         output = result.output
                         if result.output == '' and result.returncode == 1:
                             print "================={} without fio server".format(client)
                             try:
                                 os.system(
-                                    "sshpass -p passw0rd ssh {} fio --server &".format(client)
+                                    "sshpass -p {} ssh {} fio --server &".format(self.client_password, client)
                                 )
                             except Exception, e:
                                 print e
@@ -94,7 +92,7 @@ class RunFIO(object):
                     ssh.load_system_host_keys()
                     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                     
-                    ssh.connect(hostname=client, port=22, username='root', password='passw0rd')
+                    ssh.connect(hostname=client, port=22, username='root', password=self.client_password)
                     cmd = 'ps -ef | grep fio | grep server | grep -v grep'
                     stdin, stdout, stderr = ssh.exec_command(cmd)
                     output = stdout.readlines()
@@ -254,7 +252,7 @@ class RunFIO(object):
     
     def update_ceph_conffile(self, host, ceph_config):
         t = paramiko.Transport(host, "22")
-        t.connect(username = "root", password = "passw0rd")
+        t.connect(username = "root", password = self.host_password)
         sftp = paramiko.SFTPClient.from_transport(t)
         remotepath = '/etc/ceph/ceph.conf'
         sftp.get(remotepath, './ceph.conf.org')
@@ -287,7 +285,7 @@ class RunFIO(object):
                 hostname = self.nodes[host]['public_ip'],
                 port = 22,
                 username = 'root',
-                password = 'passw0rd'
+                password = self.host_password
             )
             cmd = 'find /var/run/ceph -name \'*osd*asok\''
             stdin, stdout, stderr = ssh.exec_command(cmd)
@@ -326,7 +324,7 @@ class RunFIO(object):
                 hostname = self.nodes[host]['public_ip'],
                 port = 22,
                 username = 'root',
-                password = 'passw0rd'
+                password = self.host_password
             )
             for osd, osd_config in host_config.items():
                 for cephkey, value in osd_config.items():

@@ -61,7 +61,7 @@ class Result(object):
         return config_types
     
     def fill_first_line(self, wb):
-        first_line = ['casename', 'case', 'blocksize', 'iodepth', 'numberjob', 'imagenum/client', 'iops', 'read_write', 'latency(ms)', 'bw(MB/s)', 'iops_community', 'latency(ms)_community', 'IOPS compare', 'Latency compare']
+        first_line = ['casename', 'case', 'blocksize', 'iodepth', 'numberjob', 'imagenum/client', 'read iops', 'write iops', 'total iops', 'read_write', 'latency(ms)', 'read bw(MB/s)', 'write bw(MB/s)', 'total bw(MB/s)', 'iops_community', 'latency(ms)_community', 'IOPS compare', 'Latency compare']
         for ws in wb:
             for i in range(len(first_line)):
                 c = ws.cell(row = 1, column = (i+1))
@@ -70,9 +70,9 @@ class Result(object):
                 c.font = Font(size=9)
     
             ws.column_dimensions["A"].width = 50.0
-            ws.column_dimensions["B"].width = 15.0
+            ws.column_dimensions["B"].width = 10.0
     
-    def fill_bs_C(self, result, config_log, ws, row):
+    def fill_bs(self, result, bs_log, ws, row, column):
         match_nuit = re.match('(.*\d)(\w+)', result)
     
         if match_nuit.group(2) == 'B':
@@ -80,77 +80,88 @@ class Result(object):
         elif match_nuit.group(2) == 'KiB':
             result = '{}k'.format(int(float(match_nuit.group(1))))
     
-        if result == config_log[2]:
-            ws.cell(row = row, column = 3).value = config_log[2]
-            ws.cell(row = row, column = 3).border = self.border
-            ws.cell(row = row, column = 3).number_format = 'General'
+        if result == bs_log:
+            ws.cell(row = row, column = column).value = bs_log
+            ws.cell(row = row, column = column).border = self.border
+            ws.cell(row = row, column = column).number_format = 'General'
         else:
             print "Error: block size in log does not match log file name!"
             sys.exit(1)
         return result
     
-    def fill_iodepth_D(self, result, config_log, ws, row):
-        match_iodepth = re.match('iodepth(\d+)', config_log[4])
+    def fill_iodepth(self, result, iodepth_log, ws, row, column):
+        match_iodepth = re.match('iodepth(\d+)', iodepth_log)
         if result == match_iodepth.group(1):
-            ws.cell(row = row, column = 4).value = int(result)
-            ws.cell(row = row, column = 4).border = self.border
-            ws.cell(row = row, column = 4).number_format = 'General'
+            ws.cell(row = row, column = column).value = int(result)
+            ws.cell(row = row, column = column).border = self.border
+            ws.cell(row = row, column = column).number_format = 'General'
         else:
             print "Error: iodepth in log does not match log file name!"
             sys.exit(1)
         return result
     
-    def fill_numjob_E(self, result, config_log, ws, row):
-        match_numjob = re.match('numjob(\d+)', config_log[5])
+    def fill_numjob(self, result, numjob_log, ws, row, column):
+        match_numjob = re.match('numjob(\d+)', numjob_log)
         if result == match_numjob.group(1):
-            ws.cell(row = row, column = 5).value = int(result)
-            ws.cell(row = row, column = 5).border = self.border
-            ws.cell(row = row, column = 5).number_format = 'General'
+            ws.cell(row = row, column = column).value = int(result)
+            ws.cell(row = row, column = column).border = self.border
+            ws.cell(row = row, column = column).number_format = 'General'
         else:
             print "Error: numberjob in log does not match log file name!"
             sys.exit(1)
         return result
     
-    def fill_imagenum_F(self, results, config_log, ws, row):
-        match_imagenum = re.match('imagenum(\d+)', config_log[6])
+    def fill_imagenum(self, results, imagenum_log, ws, row, column):
+        match_imagenum = re.match('imagenum(\d+)', imagenum_log)
         with open('../fioserver_list.conf', 'r') as f:
             clients = f.readlines()
             num_clients = len(clients)
     
         if len(results) == int(match_imagenum.group(1)) * num_clients:
-            ws.cell(row = row, column = 6).value = '{}/{}'.format(match_imagenum.group(1), num_clients)
-            ws.cell(row = row, column = 6).border = self.border
+            ws.cell(row = row, column = column).value = '{}/{}'.format(match_imagenum.group(1), num_clients)
+            ws.cell(row = row, column = column).border = self.border
         else:
             print "Error: image number in log does not match log file name!"
             sys.exit(1)
         return match_imagenum.group(1), num_clients
     
-    def fill_readwrite_H(self, result, config_log, ws, row):
-        if result.lower() == config_log[1].lower():
-            ws.cell(row = row, column = 8).value = '{}{}'.format(config_log[1], config_log[8])
-            ws.cell(row = row, column = 8).border = self.border
+    def fill_readwrite(self, result, rw_log, rpercent_log, ws, row, column):
+        if result.lower() == rw_log.lower():
+            ws.cell(row = row, column = column).value = '{}{}'.format(rw_log, rpercent_log)
+            ws.cell(row = row, column = column).border = self.border
         else:
             print "Error: rw in log does not match log file name!"
             sys.exit(1)
-        return config_log[1]+config_log[8]
+        rpercent_log = re.sub('%', '', rpercent_log)
+        return rw_log+rpercent_log
     
-    def fill_iops_G(self, log_list, ws, row):
-        read_iops = 0
-        write_iops = 0
+    def fill_iops(self, log_list, ws, row, column):
+        r_iops = 0
+        w_iops = 0
         for i in range(len(log_list)):
             if re.match(r'   read:', log_list[i]):
-                match = re.match(r'\s*read: IOPS=(\d+),', log_list[i])
-                read_iops = int(match.group(1))
+                match = re.match(r'\s*read: IOPS=(.+)(k?),', log_list[i])
+                if re.search('k', match.group(2)):
+                    r_iops = int(float(match.group(1)) * 1000)
+                else:
+                    r_iops = int(match.group(1))
             elif re.match(r'  write:', log_list[i]):
-                match = re.match(r'\s*write: IOPS=(\d+),', log_list[i])
-                write_iops = int(match.group(1))
+                match = re.match(r'\s*write: IOPS=(.+)(k?),', log_list[i])
+                if re.search('k', match.group(2)):
+                    w_iops = int(float(match.group(1)) * 1000)
+                else:
+                    w_iops = int(match.group(1))
     
-        iops = read_iops + write_iops
-        ws.cell(row = row, column = 7).value = iops
-        ws.cell(row = row, column = 7).border = self.border
-        return iops
+        iops = r_iops + w_iops
+        ws.cell(row = row, column = column).value = r_iops
+        ws.cell(row = row, column = column).border = self.border
+        ws.cell(row = row, column = column + 1).value = w_iops
+        ws.cell(row = row, column = column + 1).border = self.border
+        ws.cell(row = row, column = column + 2).value = iops
+        ws.cell(row = row, column = column + 2).border = self.border
+        return r_iops, w_iops, iops
 
-    def fill_bw_J(self, log_list, ws, row):
+    def fill_bw(self, log_list, ws, row, column):
         read_bw = 0
         write_bw = 0
         for i in range(len(log_list)):
@@ -180,11 +191,15 @@ class Result(object):
                     sys.exit(1)
     
         bw = read_bw + write_bw
-        ws.cell(row = row, column = 10).value = bw
-        ws.cell(row = row, column = 10).border = self.border
-        return bw
+        ws.cell(row = row, column = column).value = read_bw
+        ws.cell(row = row, column = column).border = self.border
+        ws.cell(row = row, column = column + 1).value = write_bw
+        ws.cell(row = row, column = column + 1).border = self.border
+        ws.cell(row = row, column = column + 2).value = bw
+        ws.cell(row = row, column = column + 2).border = self.border
+        return read_bw, write_bw, bw
     
-    def fill_lat_I(self, log_list, ws, row):
+    def fill_lat(self, log_list, ws, row, column):
         lat = 0
         for i in range(len(log_list)):
             match_lat = re.match(r'     lat \((.*)\):.*avg=(.*),', log_list[i])
@@ -194,11 +209,14 @@ class Result(object):
                     _lat = float(match_lat.group(2))
                 elif match_lat.group(1) == 'usec':
                     _lat = float(match_lat.group(2)) / 1000
+                else:
+                    print "Error: Unrecognized lat unit {}.".format(match_lat.group(1))
+                    sys.exit(1)
             if _lat > lat:
                 lat = _lat
     
-        ws.cell(row = row, column = 9).value = lat
-        ws.cell(row = row, column = 9).border = self.border
+        ws.cell(row = row, column = column).value = lat
+        ws.cell(row = row, column = column).border = self.border
         return lat
     
     
@@ -208,19 +226,23 @@ class Result(object):
             row_dic[sheet] = 2
 
         pwd_dir = os.getcwd().split('/')
-        pwd_log_dir = pwd_dir[-1].split('_')
+        jobtime_match = re.search('_(\d{4})_(\d{2})_(\d{2})_(\d{2})_(\d{2})_(\d{2})', pwd_dir[-1])
         job_start_time = '{}-{}-{} {}:{}:{}'.format(
-            pwd_log_dir[-6],
-            pwd_log_dir[-5],
-            pwd_log_dir[-4],
-            pwd_log_dir[-3],
-            pwd_log_dir[-2],
-            pwd_log_dir[-1],
+            jobtime_match.group(1),
+            jobtime_match.group(2),
+            jobtime_match.group(3),
+            jobtime_match.group(4),
+            jobtime_match.group(5),
+            jobtime_match.group(6),
         )
-        for i in range(6):
-            del pwd_log_dir[-1]
+
+        pwd_dir[-1] = re.sub('_(\d{4})_(\d{2})_(\d{2})_(\d{2})_(\d{2})_(\d{2})', '', pwd_dir[-1])
+
+        pwd_log_dir = pwd_dir[-1].split('_')
         jobname = pwd_log_dir[0]
         del pwd_log_dir[0]
+
+        casename = pwd_dir[-2]
 
         cephconfig = ''
         for c in pwd_log_dir:
@@ -230,8 +252,56 @@ class Result(object):
 
         for log in logs:
             #rbd_randrw_4k_runtime30_iodepth1_numjob1_imagenum2_hahaha_%100_2017_07_18_17_27_04
-            config_log = log.split('_')
-            config_type = '{}_{}{}'.format(config_log[2], config_log[8], config_log[1])
+            time_match = re.search('_(\d{4})_(\d{2})_(\d{2})_(\d{2})_(\d{2})_(\d{2})', log)
+
+            time = '{}-{}-{} {}:{}:{}'.format(
+                time_match.group(1),
+                time_match.group(2),
+                time_match.group(3),
+                time_match.group(4),
+                time_match.group(5),
+                time_match.group(6),
+            )
+
+            #log = re.sub('_(\d{4})_(\d{2})_(\d{2})_(\d{2})_(\d{2})_(\d{2})', '', log)
+            configs_log = log.split('_')
+            for configs in configs_log:
+                if re.match('pool', configs):
+                    pool_log = configs
+                elif re.match('\d+[kM]', configs):
+                    bs_log = configs
+                elif re.match('%', configs):
+                    rpercent_log = configs
+                elif re.match('runtime', configs):
+                    runtime_log = configs
+                elif re.match('rw|randrw', configs):
+                    rw_log = configs
+                elif re.match('imagenum', configs):
+                    imagenum_log = configs
+                elif re.match('iodepth', configs):
+                    iodepth_log = configs
+                elif re.match('numjob', configs):
+                    numjob_log = configs
+            
+            configs_log.remove(pool_log)
+            configs_log.remove(bs_log)
+            configs_log.remove(rpercent_log)
+            configs_log.remove(runtime_log)
+            configs_log.remove(rw_log)
+            configs_log.remove(imagenum_log)
+            configs_log.remove(iodepth_log)
+            configs_log.remove(numjob_log)
+            configs_log.remove(casename)
+            configs_log.remove(time_match.group(1))
+            configs_log.remove(time_match.group(2))
+            configs_log.remove(time_match.group(3))
+            configs_log.remove(time_match.group(4))
+            configs_log.remove(time_match.group(5))
+            configs_log.remove(time_match.group(6))
+
+            print configs_log
+
+            config_type = '{}_{}{}'.format(bs_log, rpercent_log, rw_log)
             ws = wb.get_sheet_by_name(config_type)
             row = row_dic[config_type]
             row_dic[config_type] = row_dic[config_type] +1
@@ -241,19 +311,19 @@ class Result(object):
             del results[-1]
             result_match = re.search(r'rbd_image\d+:.*rw=(.*), bs=\(R\) (.*)-.*-.*-.*, ioengine=(.*), iodepth=(.*)', results[0])
     
-            imagenum, clientnum = self.fill_imagenum_F(results, config_log, ws, row)
-            readwrite = self.fill_readwrite_H(result_match.group(1), config_log, ws, row)
-            bs = self.fill_bs_C(result_match.group(2), config_log, ws, row)
+            imagenum, clientnum = self.fill_imagenum(results, imagenum_log, ws, row, 6)
+            readwrite = self.fill_readwrite(result_match.group(1), rw_log, rpercent_log, ws, row, 10)
+            bs = self.fill_bs(result_match.group(2), bs_log, ws, row, 3)
             if result_match.group(3) != 'rbd':
                 print "Error: The ioengine in log is not 'rbd'!"
                 sys.exit(1)
-            iodepth = self.fill_iodepth_D(result_match.group(4), config_log, ws, row)
+            iodepth = self.fill_iodepth(result_match.group(4), iodepth_log, ws, row, 4)
     
             #fill numberjob    
             results = subprocess.check_output('grep jobs= {}.txt'.format(log), shell=True).split('\n')
             result_match = re.search(r'jobs=(\d+)\)', results[0])
     
-            numjob = self.fill_numjob_E(result_match.group(1), config_log, ws, row)
+            numjob = self.fill_numjob(result_match.group(1), numjob_log, ws, row, 5)
     
             ws.cell(row = row, column = 2).value = '{}_{}_{}_{}'.format(bs, iodepth, numjob, imagenum)
             ws.cell(row = row, column = 2).border = self.border
@@ -273,19 +343,11 @@ class Result(object):
             if len(log_list) == 0:
                 with open('{}.txt'.format(log), 'r') as f:
                     log_list = f.readlines()
-            iops = self.fill_iops_G(log_list, ws, row)
-            lat = self.fill_lat_I(log_list, ws, row)
-            bw = self.fill_bw_J(log_list, ws, row)
+            r_iops, w_iops, iops = self.fill_iops(log_list, ws, row, 7)
+            lat = self.fill_lat(log_list, ws, row, 11)
+            r_bw, w_bw, bw = self.fill_bw(log_list, ws, row, 12)
 
             if self.havedb:
-                time = '{}-{}-{} {}:{}:{}'.format(
-                    config_log[9],
-                    config_log[10],
-                    config_log[11],
-                    config_log[12],
-                    config_log[13],
-                    config_log[14]
-                )
                 result_to_db = {
                     'jobtime': job_start_time,
                     'ceph_config': cephconfig,
@@ -297,14 +359,16 @@ class Result(object):
                     'numberjob': numjob,
                     'imagenum': imagenum,
                     'clientnum': clientnum,
+                    'r_iops': r_iops,
+                    'w_iops': w_iops,
                     'iops': iops,
                     'readwrite': readwrite,
                     'lat': lat,
-                    'bw': bw
+                    'r_bw': r_bw,
+                    'w_bw': w_bw,
+                    'bw': bw,
                 }
                 self.db.insert_tb_result(**result_to_db)
-        if self.havedb:
-            self.db.close_db()
 
     def deal_with_fio_data(self, suitename, jobtag, file_name):
         log_dir, logs = self.get_log_list(suitename, jobtag)

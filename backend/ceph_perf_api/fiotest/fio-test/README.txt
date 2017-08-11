@@ -24,6 +24,7 @@ OR
 
 
 # install dependenies
+yum install gcc
 pip install --upgrade pip
 pip install -r requirement.txt
 
@@ -57,8 +58,8 @@ type=rpm-md
 gpgkey=https://download.ceph.com/keys/release.asc
 priority=1
 
-# install librbd1-devel
-yum install -y librbd1-devel
+# install dependenies  :   gcc librbd1-devel
+yum install -y librbd1-devel gcc
 
 # compile fio 2.21
 unzip fio-fio-2.21.zip
@@ -75,10 +76,10 @@ fio-2.21
 
 
 #
-./run-fio [init-image|build-suite|list-suites|run ${suite_name} [--nodb]]
+./run-fio [init-image|build-suite|list-suites|run $suitename $jobname [--nodb]]
 
 For the new ceph env, please run "init-image" to create new rbds for testing.
 Or use "build-suite" to create new test config file for FIO.
 Or use "list-suites" to show the previous created test.
-Or use "run $test_suite_name" to run test.
+Or use "run $suitename $jobname" to run test.
 

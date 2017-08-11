@@ -2,12 +2,12 @@
 
 usage (){
   echo
-  echo "./run-fio [init-image|build-suite|list-suites|run suite_name jobname [--nodb]]"
+  echo "./run-fio [init-image|build-suite|list-suites|run \$suitename \$jobname [--nodb]]"
   echo 
   echo "For the new ceph env, please run \"init-image\" to create new rbds for testing."
   echo "Or use \"build-suite\" to create new test config file for FIO."
   echo "Or use \"list-suites\" to show the previous created test."
-  echo "Or use \"run test_suite_name jobname\" to run test."
+  echo "Or use \"run \$suitename \$jobname\" to run test."
   echo 
   exit 0
 }
@@ -30,7 +30,7 @@ if [ $1 == "build-suite" ]; then
   done
 
   while [ ! -n "$clients_ip" ]; do
-    echo -n "Enter the clients ip, separate \",\":"
+    echo -n "Enter the clients, separate by \",\":"
     read clients_ip
   done
 
@@ -44,7 +44,7 @@ if [ $1 == "build-suite" ]; then
 
   while [ ! -n "$rwmixread" ]; do
     echo -n "
-      RW MixRead(%), separate \",\":"
+      RW MixRead(%), separate by \",\":"
     read rwmixread
   done
 
@@ -133,7 +133,7 @@ if [ $1 == "build-suite" ]; then
   cephconfig=""
   while [ "$cephconfig" == "" ]; do
     echo -n "
-      Enter the ceph config you want to modify, eg. \"debug_paxos:35,debug_paxos:[1-20]\"[Default]:"
+Enter the ceph config you want to modify, eg. \"debug_paxos:35,debug_paxos:[1-20]\"[Default]:"
     read cephconfig
     if [ ! -n "$cephconfig" ]; then
       cephconfig="default"
@@ -141,7 +141,7 @@ if [ $1 == "build-suite" ]; then
   done
 
   echo -n "
-    Please Enter other fio config parameters if have, separate \",\"[]:"
+Please Enter other fio config parameters if have, separate by \",\"[]:"
   read otherfioconfig
   if [ ! -n "$otherfioconfig" ]; then
     otherfioconfig="None"

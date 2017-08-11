@@ -1,22 +1,60 @@
+ceph-client:
+  client-1:
+    ip: 10.240.217.101
+    user: root
+    password: passw0rd
 ceph-node:
   worker-1:
     public_ip: 192.168.230.168
+    user: root
+    password: passw0rd
     osd:
       osd.0:
         osd-disk: /dev/sda
         journal-disk: /dev/sdb
+    hwinfo:
+      HyperThreading: 
+      VirtualTechnology:
+      NUMA:
+      OperatingModes:
+    osinfo:
+      read_ahead:
+      IOscheduler:
+      MTU:
   worker-2:
     public_ip: 192.168.230.140
+    user: root
+    password: passw0rd
     osd:
       osd.1:
         osd-disk: /dev/sda
         journal-disk: /dev/sdb
+    hwinfo:
+      HyperThreading: 
+      VirtualTechnology:
+      NUMA:
+      OperatingModes:
+    osinfo:
+      read_ahead:
+      IOscheduler:
+      MTU:
   worker-3:
     public_ip: 192.168.230.222
+    user: root
+    password: passw0rd
     osd:
       osd.2:
         osd-disk: /dev/sda
         journal-disk: /dev/sdb
+    hwinfo:
+      HyperThreading: 
+      VirtualTechnology:
+      NUMA:
+      OperatingModes:
+    osinfo:
+      read_ahead:
+      IOscheduler:
+      MTU:
 
 ceph-network:
   public_network: 192.168.230.0/24
