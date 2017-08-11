@@ -1,13 +1,13 @@
 #!/bin/bash
 
 
-# The sh file runs on admin node
+# The sh file runs on admin node.
 #
 # The args format:
 #   ./my_ceph-deploy-purge.sh <cluster_name> <host_list>
-#   host_list: host_name in host_list split joint by ','
+#   host_list: host_name in host_list split joint by ','.
 #
-# example:
+# Example:
 #   ./my_ceph-deploy-purge.sh mycluster1 ceph-1,ceph-2,ceph-3,client1
 
 

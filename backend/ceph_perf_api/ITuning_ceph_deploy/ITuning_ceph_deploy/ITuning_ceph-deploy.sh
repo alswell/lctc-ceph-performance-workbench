@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-# The sh file runs on admin node
+# The sh file runs on admin node.
 #
 # Prepare:
 #   1. Set password free landing on mon_nodes, osd_nodes and client_nodes to the deploy node.
@@ -9,14 +9,14 @@
 #
 # The args format:
 #   ./my_ceph-deploy.sh <-n cluster_name> <-m mon_list> <-o osd_node_list> <-d host_disk_journal_list> [-c client_list] [-f ceph_conf_file]
-#   mon_list: host_name in mon_list split joint by ','
-#   osd_node_list: host_name in osd_node_list split joint by ','
-#   host_disk_journal_list: host:disk:journal combination in host_disk_journal_list split joint by ','
+#   mon_list: host_name in mon_list split joint by ','.
+#   osd_node_list: host_name in osd_node_list split joint by ','.
+#   host_disk_journal_list: host:disk:journal combination in host_disk_journal_list split joint by ',';
 #                           host:disk:journal format: host_name:disk_name:journal_disk_path. "ceph-3:vdb:/dev/sdb" eg.
-#   client_list: host_name in client_list split joint by ','
-#   ceph_conf_file: conf format in the file is a 'key = value' per line
+#   client_list: host_name in client_list split joint by ','.
+#   ceph_conf_file: conf format in the file is a 'key = value' per line.
 #
-# example:
+# Example:
 #   ./my_ceph-deploy.sh -n mycluster1 -m ceph-1,ceph-2 -o ceph-1,ceph-2,ceph-3 -d ceph-1:vdc:/dev/sdc,ceph-3:vdb:/dev/sdb -c client1,client2 -f /root/ccz/a.conf
 
 
@@ -89,7 +89,6 @@ else
     cd ${DIR_MYCLUSTER}
 fi
 
-
 ceph-deploy new $mon_list
 error_check
 
@@ -98,7 +97,7 @@ error_check
 cat ${myconf_file} | sed -n '2,$p' >> ${DIR_MYCLUSTER}/ceph.conf
 
 
-# Get deploy_list and mgr_list
+# get deploy_list and mgr_list
 deploy_list=${mon_list}
 
 for osd_node in $osd_node_list
@@ -167,9 +166,3 @@ do
     ceph-deploy osd prepare --filestore $item
     error_check
 done
-
-
-
-
-
-
