@@ -4,11 +4,11 @@
 # The sh file runs on admin node.
 #
 # The args format:
-#   ./my_ceph-deploy-purge.sh <cluster_name> <host_list>
+#   ./ITuning_ceph-deploy-purge.sh <cluster_name> <host_list>
 #   host_list: host_name in host_list split joint by ','.
 #
 # Example:
-#   ./my_ceph-deploy-purge.sh mycluster1 ceph-1,ceph-2,ceph-3,client1
+#   ./ITuning_ceph-deploy-purge.sh mycluster1 ceph-1,ceph-2,ceph-3,client1
 
 
 function error_check {
@@ -19,7 +19,7 @@ function error_check {
 
 
 if [ ! $2 ]; then
-    echo "usage: my_ceph-deploy-purge.sh <cluster_name> <host_list>"
+    echo "usage: ITuning_ceph-deploy-purge.sh <cluster_name> <host_list>"
     exit
 fi
 

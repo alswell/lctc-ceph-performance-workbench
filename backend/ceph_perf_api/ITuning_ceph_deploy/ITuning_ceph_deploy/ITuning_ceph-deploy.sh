@@ -8,7 +8,7 @@
 #   2. User defined ceph_conf_file is needed. See the file ITuning_ceph.conf.example.
 #
 # The args format:
-#   ./my_ceph-deploy.sh <-n cluster_name> <-m mon_list> <-o osd_node_list> <-d host_disk_journal_list> [-c client_list] [-f ceph_conf_file]
+#   ./ITuning_ceph-deploy.sh <-n cluster_name> <-m mon_list> <-o osd_node_list> <-d host_disk_journal_list> [-c client_list] [-f ceph_conf_file]
 #   mon_list: host_name in mon_list split joint by ','.
 #   osd_node_list: host_name in osd_node_list split joint by ','.
 #   host_disk_journal_list: host:disk:journal combination in host_disk_journal_list split joint by ',';
@@ -17,7 +17,7 @@
 #   ceph_conf_file: conf format in the file is a 'key = value' per line.
 #
 # Example:
-#   ./my_ceph-deploy.sh -n mycluster1 -m ceph-1,ceph-2 -o ceph-1,ceph-2,ceph-3 -d ceph-1:vdc:/dev/sdc,ceph-3:vdb:/dev/sdb -c client1,client2 -f /root/ccz/a.conf
+#   ./ITuning_ceph-deploy.sh -n mycluster1 -m ceph-1,ceph-2 -o ceph-1,ceph-2,ceph-3 -d ceph-1:vdc:/dev/sdc,ceph-3:vdb:/dev/sdb -c client1,client2 -f /root/ccz/a.conf
 
 
 function error_check {
@@ -36,7 +36,7 @@ function ceph_deploy_prepare {
 
 
 if [ ! $8 ]; then
-    echo "usage: my_ceph-deploy.sh <-n cluster_name> <-m mon_list> <-o osd_node_list> <-d host_disk_journal_list> [-c client_list] [-f ceph_conf_file]"
+    echo "usage: ITuning_ceph-deploy.sh <-n cluster_name> <-m mon_list> <-o osd_node_list> <-d host_disk_journal_list> [-c client_list] [-f ceph_conf_file]"
     exit
 fi
 
