@@ -42,16 +42,20 @@ def json_response(func):
         return JSONResponse(data)
     return _wrapped
 
-def query_to_dict(obj):
+
+def query_to_dict(obj, foreign_key=None, foreign_convert=None):
     if isinstance(obj, QuerySet):
-    	data = json.loads(serializers.serialize("json", obj))
-	for i in range(len(data)):
-	    data[i] = data[i]["fields"]
+        data = json.loads(serializers.serialize("json", obj))
+        for i in range(len(data)):
+            pk = data[i]['pk']
+            data[i] = data[i]["fields"]
+            data[i]['id'] = pk
+            if foreign_key and foreign_convert:
+                data[i][foreign_key] = foreign_convert(obj[i])
         return data
 
     if isinstance(obj, Model):
-    	data = json.loads(serializers.serialize("json", [obj]))
-	if len(data) == 0:
-	    return None
-	return [data[0]["fields"]]
-    
+        data = json.loads(serializers.serialize("json", [obj]))
+        if len(data) == 0:
+            return None
+        return [data[0]["fields"]]

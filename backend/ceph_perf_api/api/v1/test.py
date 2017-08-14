@@ -11,12 +11,12 @@ class UserInfos(generic.View):
     @utils.json_response
     def get(self, request):
         result = models.UserInfo.objects.all()
-	d = utils.query_to_dict(result)
-	return {"value": d}
+        d = utils.query_to_dict(result)
+        return {"value": d}
 
     @utils.json_response
     def post(self, request):
-	body = request.DATA
+        body = request.DATA
         result = models.UserInfo.objects.create(**body)
         print result
 
@@ -27,8 +27,8 @@ class UserInfo(generic.View):
     @utils.json_response
     def get(self, request, id):
         result = models.UserInfo.objects.filter(id=id).first()
-	d = utils.query_to_dict(result)
-	return {"value": d}
+        d = utils.query_to_dict(result)
+        return {"value": d}
 
     @utils.json_response
     def delete(self, request, id):
@@ -36,7 +36,7 @@ class UserInfo(generic.View):
 
     @utils.json_response
     def put(self, request, id):
-	body = request.DATA
+        body = request.DATA
         result = models.UserInfo.objects.filter(id=id).update(**body)
 
 
@@ -56,12 +56,12 @@ class Test(generic.View):
         mem =  [3,    2,    3,    4,    3]
         disk = [2,    4,    2,    1,    3]
         data = [2008, 2009, 2010, 2011, 2012]
-	for i in range(len(name)):
-	    data[i] = {}
-	    data[i]["name"] = name[i]
-	    data[i]["cpu"] = cpu[i]
-	    data[i]["mem"] = mem[i]
-	    data[i]["disk"] = disk[i]
+        for i in range(len(name)):
+            data[i] = {}
+            data[i]["name"] = name[i]
+            data[i]["cpu"] = cpu[i]
+            data[i]["mem"] = mem[i]
+            data[i]["disk"] = disk[i]
 
         return mk_data(data)
 
