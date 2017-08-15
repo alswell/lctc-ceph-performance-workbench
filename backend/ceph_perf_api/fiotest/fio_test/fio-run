@@ -133,7 +133,7 @@ if [ $1 == "build-suite" ]; then
   cephconfig=""
   while [ "$cephconfig" == "" ]; do
     echo -n "
-Enter the ceph config you want to modify, eg. \"debug_paxos:35,debug_paxos:[1-20]\"[Default]:"
+Enter the ceph config you want to modify, eg. \"debug_paxos=35;rbd_cache=1,debug_paxos=[1-20]\"[Default]:"
     read cephconfig
     if [ ! -n "$cephconfig" ]; then
       cephconfig="default"
@@ -144,13 +144,13 @@ Enter the ceph config you want to modify, eg. \"debug_paxos:35,debug_paxos:[1-20
 Please Enter other fio config parameters if have, separate by \",\"[]:"
   read otherfioconfig
   if [ ! -n "$otherfioconfig" ]; then
-    otherfioconfig="None"
+    otherfioconfig="No"
   fi
 
 
   date >> $LOG
   echo python build_suite.py -C $clients_ip --readwritetype $rw_type --blocksize $bs --runtime $runtime --iodepth $iodepth --numjob $numjob --imagecount $imagecount --rwmixread $rwmixread --imagename $imagename -N $suite_name --pool $pool --cephconfig $cephconfig --otherfioconfig $otherfioconfig | tee -a $LOG
-  python build_suite.py -C $clients_ip --readwritetype $rw_type --blocksize $bs --runtime $runtime --iodepth $iodepth --numjob $numjob --imagecount $imagecount --rwmixread $rwmixread --imagename $imagename -N $suite_name --pool $pool --cephconfig $cephconfig --otherfioconfig $otherfioconfig | tee -a $LOG
+  python build_suite.py -C $clients_ip --readwritetype $rw_type --blocksize $bs --runtime $runtime --iodepth $iodepth --numjob $numjob --imagecount $imagecount --rwmixread $rwmixread --imagename $imagename -N $suite_name --pool $pool --cephconfig "$cephconfig" --otherfioconfig "$otherfioconfig" | tee -a $LOG
 
 elif [ $1 == "run" ]; then
   if [ $# -lt 2 ]; then

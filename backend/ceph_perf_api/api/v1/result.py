@@ -20,6 +20,20 @@ class FIOTEST(generic.View):
         d = utils.query_to_dict(result)
         return {"total": len(d), "data": d}
 
+@urls.register
+class FIOJOB(generic.View):
+    url_regex = r'^fiojobs$'
+
+    @utils.json_response
+    def get(self, request):
+        f = {}
+        for key, value in dict(request.GET).items():
+            f[key] = value[0]
+        result = models.Jobs.objects.filter(**f).all().order_by('-id')
+        d = utils.query_to_dict(result)
+        return {"total": len(d), "data": d}
+
+
 
 @urls.register
 class IoStat(generic.View):

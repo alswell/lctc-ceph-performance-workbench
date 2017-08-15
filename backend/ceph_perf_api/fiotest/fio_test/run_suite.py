@@ -19,11 +19,10 @@ class RunFIO(object):
 
     def __init__(self, path, todb=False):
         self.todb = todb
-        os.chdir(path)
-        with open('fioserver_list.conf', 'r') as f:
+        with open('{}/fioserver_list.conf'.format(path), 'r') as f:
             clients = f.readlines()
             client = clients[0].strip()
-            self.sysinfo = SysInfo(client, havedb=todb)
+            self.sysinfo = SysInfo(path, client, havedb=todb)
             #self.nodes = get_ceph_config_file(path, client)['ceph-node']
 
         self.nodes = self.sysinfo.nodes
@@ -121,7 +120,7 @@ class RunFIO(object):
     def create_log_dir(self, path, jobname, ceph_config):
         config = ''
         for key, value in ceph_config.items():
-            value = re.sub('\/', '', value)
+            value = re.sub('\/', '', str(value))
             key = re.sub('_', '', key)
             config = config + key + value + '_'
         
@@ -149,6 +148,7 @@ class RunFIO(object):
 
     def run(self, path, jobname, ceph_config={}):
         org_ceph_config = self.modify_ceph_config(ceph_config)
+        print org_ceph_config
         log_dir = self.create_log_dir(path, jobname, ceph_config)
         configs = os.listdir('{}/config/'.format(path))
         jobname = re.sub('_', '-', jobname)
@@ -156,7 +156,7 @@ class RunFIO(object):
             from todb import ToDB
             db = ToDB()
             jobtime = self.insert_job_todb(db, jobname)
-        with open('fioserver_list.conf', 'r') as f:
+        with open('{}/fioserver_list.conf'.format(path), 'r') as f:
             clients = f.readlines()
             num_clients = len(clients)
             i = 0
@@ -184,7 +184,7 @@ class RunFIO(object):
                     print cmd
 
                     fio_runtime = subprocess.check_output(
-                        'grep runtime= config/{}_0.config'.format(match_config.group(1)),
+                        'grep runtime= {}/config/{}_0.config'.format(path, match_config.group(1)),
                         shell=True)
                     match_runtime = re.match('runtime=(\d+)\D', fio_runtime)
                     timeout = int(match_runtime.group(1)) * 3
@@ -247,6 +247,7 @@ class RunFIO(object):
             del sysinfo_dir_list[-1]
             for sysinfo_dir in sysinfo_dir_list:
                 self.sysinfo.deal_with_sysinfo_logfile(
+                    log_dir,
                     sysinfo_dir,
                 )
     
@@ -273,6 +274,7 @@ class RunFIO(object):
     
     
     def modify_ceph_config(self, ceph_config):
+        print ceph_config
         org_all_config = {}
         for host in self.sysinfo.host_list:
             org_host_config = {}
@@ -294,7 +296,7 @@ class RunFIO(object):
                 org_osd_config = {}
                 osd = osd.strip()
                 for ceph_key, ceph_value in ceph_config.items():
-                    cmd = 'ceph --admin-daemon {} config show | grep {}'.format(osd, ceph_key)
+                    cmd = 'ceph --admin-daemon {} config show | grep -w {}'.format(osd, ceph_key)
                     stdin, stdout, stderr = ssh.exec_command(cmd)
                     output = stdout.readlines()
                     if len(output) < 1:
@@ -307,6 +309,7 @@ class RunFIO(object):
                         cephkey_match = re.search('".*": "(.*)",', output[0])
                         org_osd_config[ceph_key] = cephkey_match.group(1)
                     cmd = 'ceph --admin-daemon {} config set {} "{}"'.format(osd, ceph_key, ceph_value)
+                    print cmd
                     ssh.exec_command(cmd)
                 org_host_config[osd] = org_osd_config
             org_all_config[host] = org_host_config
@@ -385,7 +388,7 @@ def main():
     runfio.checkandstart_fioser(path, args.suitename)
 
 
-    ceph_config_file = './setup_ceph_config.json'
+    ceph_config_file = '{}/setup_ceph_config.json'.format(path)
     if os.path.exists(ceph_config_file): 
         ceph_configs = json.load(open(ceph_config_file))
         for ceph_config in ceph_configs:

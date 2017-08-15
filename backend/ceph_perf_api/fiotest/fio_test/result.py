@@ -9,8 +9,6 @@ import time
 from openpyxl import Workbook
 from openpyxl.styles import Font, Border, Side
 
-from collect_system_status import SysInfo
-
 
 class Result(object):
 
@@ -32,7 +30,7 @@ class Result(object):
             path = "{}/{}".format(os.getcwd(), tag)
         else:
             path = "{}/test-suites/{}/{}".format(os.getcwd(), suitename, tag)
-        os.chdir(path)
+        #os.chdir(path)
         logs = subprocess.check_output('ls {}/*.txt'.format(path), shell=True)
         logs = logs.split('\n')
         del logs[-1]
@@ -111,9 +109,9 @@ class Result(object):
             sys.exit(1)
         return result
     
-    def fill_imagenum(self, results, imagenum_log, ws, row, column):
+    def fill_imagenum(self, path, results, imagenum_log, ws, row, column):
         match_imagenum = re.match('imagenum(\d+)', imagenum_log)
-        with open('../fioserver_list.conf', 'r') as f:
+        with open('{}/../fioserver_list.conf'.format(path), 'r') as f:
             clients = f.readlines()
             num_clients = len(clients)
     
@@ -220,12 +218,13 @@ class Result(object):
         return lat
     
     
-    def fill_data_v2_21(self, logs, wb, sheet_list):
+    def fill_data_v2_21(self, log_dir, logs, wb, sheet_list):
         row_dic = {}
         for sheet in sheet_list:
             row_dic[sheet] = 2
 
-        pwd_dir = os.getcwd().split('/')
+        pwd_dir = log_dir.split('/')
+        print pwd_dir
         jobtime_match = re.search('_(\d{4})_(\d{2})_(\d{2})_(\d{2})_(\d{2})_(\d{2})', pwd_dir[-1])
         job_start_time = '{}-{}-{} {}:{}:{}'.format(
             jobtime_match.group(1),
@@ -307,11 +306,11 @@ class Result(object):
             row_dic[config_type] = row_dic[config_type] +1
     
             #fill imagenum, readwrite, bs, iodepth
-            results = subprocess.check_output('grep iodepth {}.txt'.format(log), shell=True).split('\n')
+            results = subprocess.check_output('grep iodepth {}/{}.txt'.format(log_dir, log), shell=True).split('\n')
             del results[-1]
             result_match = re.search(r'rbd_image\d+:.*rw=(.*), bs=\(R\) (.*)-.*-.*-.*, ioengine=(.*), iodepth=(.*)', results[0])
     
-            imagenum, clientnum = self.fill_imagenum(results, imagenum_log, ws, row, 6)
+            imagenum, clientnum = self.fill_imagenum(log_dir, results, imagenum_log, ws, row, 6)
             readwrite = self.fill_readwrite(result_match.group(1), rw_log, rpercent_log, ws, row, 10)
             bs = self.fill_bs(result_match.group(2), bs_log, ws, row, 3)
             if result_match.group(3) != 'rbd':
@@ -320,7 +319,7 @@ class Result(object):
             iodepth = self.fill_iodepth(result_match.group(4), iodepth_log, ws, row, 4)
     
             #fill numberjob    
-            results = subprocess.check_output('grep jobs= {}.txt'.format(log), shell=True).split('\n')
+            results = subprocess.check_output('grep jobs= {}/{}.txt'.format(log_dir, log), shell=True).split('\n')
             result_match = re.search(r'jobs=(\d+)\)', results[0])
     
             numjob = self.fill_numjob(result_match.group(1), numjob_log, ws, row, 5)
@@ -331,7 +330,7 @@ class Result(object):
             ws.cell(row = row, column = 1).border = self.border
             #fill iops and lat
             log_list = []
-            with open('{}.txt'.format(log), 'r') as f:
+            with open('{}/{}.txt'.format(log_dir, log), 'r') as f:
                 begin_to = False
                 lines = f.readlines()
                 case_status = lines[-1].strip()
@@ -341,7 +340,7 @@ class Result(object):
                     if re.match('All clients', line):
                         begin_to = True
             if len(log_list) == 0:
-                with open('{}.txt'.format(log), 'r') as f:
+                with open('{}/{}.txt'.format(log_dir, log), 'r') as f:
                     log_list = f.readlines()
             r_iops, w_iops, iops = self.fill_iops(log_list, ws, row, 7)
             lat = self.fill_lat(log_list, ws, row, 11)
@@ -375,9 +374,9 @@ class Result(object):
 
         result_table = Workbook()
         sheet_list = self.create_sheets(logs, result_table)
-        self.fill_data_v2_21(logs, result_table, sheet_list)
+        self.fill_data_v2_21(log_dir, logs, result_table, sheet_list)
 
-        result_table.save('./{}.xlsx'.format(file_name))
+        result_table.save('{}/{}.xlsx'.format(log_dir, file_name))
         return '{}/{}.xlsx'.format(log_dir, file_name)
 
 
