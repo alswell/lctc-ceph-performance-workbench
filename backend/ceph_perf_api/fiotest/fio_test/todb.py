@@ -492,8 +492,8 @@ class ToDB(object):
             '{}', '{}', '{}', '{}' )".format(
                 caseid,
                 time,
-                #kwargs['health']['overall_status'],
-                kwargs['health']['status'],
+                kwargs['health']['overall_status'],
+                #kwargs['health']['status'],
                 #kwargs['health']['summary'],
                 #kwargs['health']['detail'],
                 kwargs['fsid'],

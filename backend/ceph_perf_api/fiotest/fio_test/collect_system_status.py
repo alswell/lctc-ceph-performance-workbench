@@ -15,7 +15,7 @@ import socket,struct
 
 class SysInfo(object):
 
-    def __init__(self, client, havedb=False):
+    def __init__(self, path, client, havedb=False):
         if havedb:
             from todb import ToDB
             self.db = ToDB()
@@ -24,7 +24,7 @@ class SysInfo(object):
         self.ceph_intervaltime = 10
         self.monnum = 0
 
-        self.hwinfo_file = '{}/../../ceph_hw_info.yml'.format(os.getcwd())
+        self.hwinfo_file = '{}/../../ceph_hw_info.yml'.format(path)
         with open(self.hwinfo_file, 'r') as f:
             ceph_info = yaml.load(f)
         self.nodes = ceph_info['ceph-node']
@@ -765,9 +765,9 @@ class SysInfo(object):
                 self.db.insert_tb_osinfo(casename, host, **os_info)
 
 
-    def deal_with_sysinfo_logfile(self, log_dir):
+    def deal_with_sysinfo_logfile(self, log_dir, sysinfo_dir):
         org_dir = os.getcwd()
-        os.chdir(log_dir)
+        os.chdir('{}/{}'.format(log_dir, sysinfo_dir))
         dir_list = os.getcwd().split('/')
         casename = re.match('sysinfo_(.*)', dir_list[-1]).group(1)
 

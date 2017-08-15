@@ -10,6 +10,7 @@ import { Link } from 'dva/router'
 import DropOption from '../../components/DropOption/DropOption'
 import BatchModal from '../../components/modals/BatchModal'
 import { fetchAndNotification } from '../../services/restfulService'
+import { CollectionsPage } from '../../components/fiojobs/CreateModal'
 
 const confirm = Modal.confirm
 
@@ -79,9 +80,9 @@ class HostPage extends React.Component {
     this.tableDataProps = {
       columns: [
         {
-          title: 'Case Name',
-          dataIndex: 'case_name',
-          key: 'case_name',
+          title: 'Job Name',
+          dataIndex: 'name',
+          key: 'name',
           // width: 64,
           sorter: true,
         }, {
@@ -91,51 +92,11 @@ class HostPage extends React.Component {
           sorter: true,
           // width: 100,
         }, {
-          title: 'Sys data',
-          dataIndex: 'sysdata',
-          key: 'sysdate',
-          // width: 120,
-          render: (text, record) => <Link to={`sarcpu/${record.id}`}>sys data</Link>,
-        }, {
-          title: 'Block Size',
-          dataIndex: 'blocksize',
-          key: 'blocksize',
+          title: 'status',
+          dataIndex: 'status',
+          key: 'status',
           sorter: true,
           // width: 100,
-        }, {
-          title: 'IO Depth',
-          dataIndex: 'iodepth',
-          key: 'iodepth',
-          sorter: true,
-          // width: 64,
-        }, {
-          title: 'Number Job',
-          dataIndex: 'numberjob',
-          key: 'numberjob',
-          sorter: true,
-        },
-        {
-          title: 'Image Number',
-          dataIndex: 'imagenum',
-          key: 'imagenum',
-        }, {
-          title: 'clientnum',
-          dataIndex: 'clientnum',
-          key: 'clientnum',
-        }, {
-          title: 'readwrite',
-          dataIndex: 'readwrite',
-          key: 'readwrite',
-        },
-        {  
-          title: 'IOPS',
-          dataIndex: 'iops',
-          key: 'iops',
-        }, {
-          title: 'lat',
-          dataIndex: 'lat',
-          key: 'lat',
-        
         }, {
           title: 'Operation',
           key: 'operation',
@@ -148,7 +109,7 @@ class HostPage extends React.Component {
         },
       ],
       fetchData: {
-        url: 'fiotest',
+        url: 'fiojobs',
         params: null,
       },
       errorMsg: 'get host table error',
@@ -245,6 +206,7 @@ class HostPage extends React.Component {
                 <Button type="primary" onClick={this.showModal.bind(this, 'batchModalVisible')}
                   disabled={this.props.host.selectedItems.length === 0}
                 >Batch Action</Button>
+                <CollectionsPage />
               </div>
               <DataTable
                 {...this.tableDataProps}
@@ -260,9 +222,9 @@ class HostPage extends React.Component {
 }
 
 
-function mapStateToProps ({ fiotest }) {
+function mapStateToProps ({ fiojobs }) {
   return {
-    host:fiotest,
+    host:fiojobs,
   }
 }
 
