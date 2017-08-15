@@ -18,6 +18,7 @@ let iodepthid = 1;
 let clientid = 1;
 let fiotypeid = 1;
 let numjobid = 1;
+let rwmixreadid = 1;
 let cephconfigid = 0;
 let fioparaid = 0;
 class TestTestForm extends React.Component {
@@ -628,7 +629,8 @@ class TestTestForm extends React.Component {
                 </Button>
               </Col>
             </Row>
-         </FormItem>
+          </FormItem>
+          {rwmixreadformItems}
           <FormItem
             {...formItemLayout}
             label="Block Size"

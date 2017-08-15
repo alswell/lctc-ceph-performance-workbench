@@ -1,21 +1,19 @@
 # -*- coding: UTF-8 -*-
+import os
 import re
+import time
 import urls
 from django.views import generic
 from ceph_perf_api import utils
 from mysql import models
 from fiotest.fio_test import build_suite
+from fiotest.fio_test import run_suite
 
 @urls.register
 class UserInfos(generic.View):
     url_regex = r'^create$'
 
-    @utils.json_response
-    def post(self, request):
-	body = request.DATA
-        print body
-
-
+    def create_suite(self, body):
         body['clientkeys'].append(1)
         clientslist = []
         for clientkey in body['clientkeys']:
@@ -35,6 +33,8 @@ class UserInfos(generic.View):
                 f.write('\n')
 
         cephconfig = []
+        if len(body['cephconfigkeys']) == 0:
+            cephconfig.append('default')
         for key in body['cephconfigkeys']:
             config = re.sub('\n', ';', body['cephconfig-{}'.format(key)])
             cephconfig.append(config)
@@ -68,6 +68,31 @@ class UserInfos(generic.View):
                                 clientslist,
                                 other_fio_config,
                             )
+        return dir_path
+
+    @utils.json_response
+    def post(self, request):
+	body = request.DATA
+        print body
+
+        suite_dir = self.create_suite(body)
+
+        runfio = run_suite.RunFIO(suite_dir, todb=True)
+        runfio.checkandstart_fioser(suite_dir, body['jobname'])
+
+        ceph_config_file = '{}/setup_ceph_config.json'.format(suite_dir)
+        if os.path.exists(ceph_config_file):
+            ceph_configs = json.load(open(ceph_config_file))
+            for ceph_config in ceph_configs:
+                log_dir  = runfio.run(suite_dir, body['jobname'], ceph_config=ceph_config)
+                time.sleep(2)
+                runfio.gen_result(log_dir)
+                runfio.store_logfile_FS(log_dir)
+        else:
+            log_dir = runfio.run(suite_dir, body['jobname'])
+            time.sleep(2)
+            runfio.gen_result(log_dir)
+            runfio.store_logfile_FS(log_dir)
 
         return "pass"
 
