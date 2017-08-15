@@ -1,7 +1,8 @@
 from Tkinter import *
 import settings
 import fiotest
-from utils import get_data, parse_data, plot_all
+from utils import get_data, parse_data
+from figure import plot_all
 
 
 PAGE_SIZE = 10
@@ -99,12 +100,12 @@ class App(Frame):
         self._update_page_info()
         Button(self.frame, text='>>', command=self._next_page).grid(row=self.row, column=5, sticky=W)
 
-        Button(self.frame, text='QUERY', command=self._query).grid(row=self.row, column=10, sticky=E)
-        self.result_filter = {}
-        for i in range(2, 9):
-            v1 = StringVar()
-            Entry(self.frame, width=self.result_column[i]['width'], textvariable=v1).grid(row=self.row, column=10+i)
-            self.result_filter[self.result_column[i]['name']] = v1
+        # Button(self.frame, text='QUERY', command=self._query).grid(row=self.row, column=10, sticky=E)
+        # self.result_filter = {}
+        # for i in range(2, 9):
+        #     v1 = StringVar()
+        #     Entry(self.frame, width=self.result_column[i]['width'], textvariable=v1).grid(row=self.row, column=10+i)
+        #     self.result_filter[self.result_column[i]['name']] = v1
 
         self.row += 1
 
@@ -241,16 +242,20 @@ class App(Frame):
             for key, _ in all_data.items():
                 for node, node_value in get_data(key, case_id).items():
                     all_data[key][node] = parse_data(node_value)
-            plot_all(all_data, self.to_plot[0], 'time')
+            # plot_all(all_data, self.to_plot[0], 'time')
+            plot_all(all_data, self.to_plot[0])
         elif self.y_label.get() == 2:
-            legends = ['ro-', 'go-', 'bo-', 'co-', 'mo-', 'yo-', 'ko-']
+            result = [self.result[i] for i in range(len(self.result)) if self.result_check[i]]
+            if not result:
+                return
+            legends = settings.LEGEND
             legend_index = 0
-            keys = ['iodepth', 'numberjob', 'imagenum']
+            keys = ['iodepth', 'numberjob', 'imagenum', 'clientnum']
             iops = {}
             lat = {}
             bw = {}
             x_label = {}
-            for item in self.result:
+            for item in result:
                 name = item['blocksize']
                 for key in keys:
                     name += '_%s%s' % (key, item[key])

@@ -1,9 +1,10 @@
 from utils import get_data
+from settings import LEGEND
 
 
 def get_y_metric(use_local=True):
     if use_local:
-        return {
+        metric = {
             "iostat": {
                 'wrqms': 'r*-',
                 'avgrqsz': 'g*-',
@@ -55,7 +56,14 @@ def get_y_metric(use_local=True):
             },
          }
     else:
-        return get_data('dimension')
+        metric = get_data('dimension')
+
+    for key, value in metric.items():
+        i = 0
+        for m, legend in value.items():
+            metric[key][m] = LEGEND[i]
+            i += 1
+    return metric
 
 
 def query_result(result_filter):
