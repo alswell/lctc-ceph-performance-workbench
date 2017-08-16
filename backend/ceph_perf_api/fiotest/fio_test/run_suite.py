@@ -151,7 +151,7 @@ class RunFIO(object):
         print org_ceph_config
         log_dir = self.create_log_dir(path, jobname, ceph_config)
         configs = os.listdir('{}/config/'.format(path))
-        casenum = len(search('{}/config/'.format(path), '_0\.config'))
+        casenum = len(search('{}/config/'.format(path), '_0.config'))
         jobname = re.sub('_', '', jobname)
         if self.todb:
             from todb import ToDB

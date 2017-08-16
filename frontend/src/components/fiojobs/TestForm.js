@@ -251,8 +251,7 @@ class TestTestForm extends React.Component {
         console.log('Received values of form: ', values)
 
         this.props.onCancel()
-        fetch({
-        //fetchAndNotification({
+        fetchAndNotification({
           url: 'create',
           method: 'post',
           params: values,

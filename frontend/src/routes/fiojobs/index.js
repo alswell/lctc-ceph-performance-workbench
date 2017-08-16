@@ -99,9 +99,9 @@ class HostPage extends React.Component {
           // width: 100,
          }, {
           title: 'test cases',
-          //dataIndex: 'test cases',
-          //key: 'status',
-          render: (text, record) => <Link to={`fiotest?jobid=${record.id}`}>test cases</Link>,
+          dataIndex: 'casenum',
+          key: 'casenum',
+          render: (text, record) => <Link to={`fiotest?jobid=${record.id}`}>{text} test cases</Link>,
           // width: 100,
         }, {
           title: 'Operation',
