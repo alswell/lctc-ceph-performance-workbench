@@ -279,6 +279,7 @@ class Jobs(models.Model):
     name = models.CharField(max_length=20)
     time = models.DateTimeField(null=True)
     status = models.CharField(max_length=20, null=True)
+    casenum = models.IntegerField(null=True)
 
 class CephInfo(models.Model):
     id = models.AutoField(primary_key=True)

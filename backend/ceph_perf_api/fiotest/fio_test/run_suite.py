@@ -35,7 +35,7 @@ class RunFIO(object):
             for client in f:
                 client = client.strip()
                 try:
-                    subprocess.check_output('sshpass -p {} ssh {} ps -ef | grep fio | grep server | grep -v grep'.format(self.client_password, client), shell=True)
+                    subprocess.check_output('sshpass -p {} ssh -o StrictHostKeyChecking=no {} ps -ef | grep fio | grep server | grep -v grep'.format(self.client_password, client), shell=True)
                 except subprocess.CalledProcessError, result:
                     output = result.output
                     if result.output == '' and result.returncode == 1:
@@ -52,14 +52,14 @@ class RunFIO(object):
                 output =''
                 while output == '':
                     try:
-                        output = subprocess.check_output('sshpass -p {} ssh {} ps -ef | grep fio | grep server | grep -v grep | grep -v ssh'.format(self.client_password, client), shell=True)
+                        output = subprocess.check_output('sshpass -p {} ssh -o StrictHostKeyChecking=no {} ps -ef | grep fio | grep server | grep -v grep | grep -v ssh'.format(self.client_password, client), shell=True)
                     except subprocess.CalledProcessError, result:
                         output = result.output
                         if result.output == '' and result.returncode == 1:
                             print "================={} without fio server".format(client)
                             try:
                                 os.system(
-                                    "sshpass -p {} ssh {} fio --server &".format(self.client_password, client)
+                                    "sshpass -p {} ssh -o StrictHostKeyChecking=no {} fio --server &".format(self.client_password, client)
                                 )
                             except Exception, e:
                                 print e
@@ -138,9 +138,9 @@ class RunFIO(object):
                 sys.exit(1)
         return log_dir
 
-    def insert_job_todb(self, db, jobname):
+    def insert_job_todb(self, db, jobname, casenum):
         start_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
-        db.insert_tb_jobs(jobname, start_time, 'Running')
+        db.insert_tb_jobs(jobname, start_time, 'Running', casenum)
         return start_time
 
     def update_jobstatus_indb(self, db, jobtime):
@@ -151,11 +151,12 @@ class RunFIO(object):
         print org_ceph_config
         log_dir = self.create_log_dir(path, jobname, ceph_config)
         configs = os.listdir('{}/config/'.format(path))
-        jobname = re.sub('_', '-', jobname)
+        casenum = len(search('{}/config/'.format(path), '_0\.config'))
+        jobname = re.sub('_', '', jobname)
         if self.todb:
             from todb import ToDB
             db = ToDB()
-            jobtime = self.insert_job_todb(db, jobname)
+            jobtime = self.insert_job_todb(db, jobname, casenum)
         with open('{}/fioserver_list.conf'.format(path), 'r') as f:
             clients = f.readlines()
             num_clients = len(clients)
@@ -208,13 +209,15 @@ class RunFIO(object):
                                 break
                             print line
                             handle.write(line)
+                        time.sleep(1)
                         if time_out_status:
-                            handle.write('Timeout')
+                            handle.write('\nTimeout')
                             print "Error: Run fio test {} time out in {} s!".format(log_dir, timeout)
                         else:
-                            handle.write('Pass')
+                            handle.write('\nPass')
                     time.sleep(1)
                     self.sysinfo.get_all_host_logfile('{}/sysinfo_{}'.format(log_dir, log_file_name))
+                    time.sleep(10)
                 else:
                     i = i + 1
         if self.todb:
@@ -343,10 +346,19 @@ class RunFIO(object):
         dir_name = log_dir.split('/')[-1]
 
         FShost = "10.240.217.74"
-        cmd = ['sshpass', '-p', 'passw0rd', 'scp', '-r', log_dir, 'root@{}:/usr/share/fiotest/'.format(FShost)]
+        cmd = ['sshpass', '-p', 'passw0rd', 'scp', '-o', 'StrictHostKeyChecking=no', '-r', log_dir, 'root@{}:/usr/share/fiotest/'.format(FShost)]
+        print cmd
         subprocess.check_call(cmd)
 
-
+def search(path, word):
+    output = []
+    for filename in os.listdir(path):
+        fp = os.path.join(path, filename)
+        if os.path.isfile(fp) and word in filename:
+            output.append(fp)
+        elif os.path.isdir(fp):
+            search(fp, word)
+    return output
 
 def main():
     parser = argparse.ArgumentParser(

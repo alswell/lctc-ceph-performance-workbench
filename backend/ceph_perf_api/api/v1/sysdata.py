@@ -2,35 +2,131 @@
 import urls
 from django.views import generic
 from ceph_perf_api import utils
-
-DATA = {"data":
-[
-  {
-    "id":"1",
-    "key":"1",
-    "caseid":"1",
-    "node": "192.168.230.168",
-    "time":"2017-08-02 13:33:56",
-    "usr":"16",
-    "nice":"0",
-    "sys":"6",
-    "iowait":"3",
-    "steal":"0",
-    "irq":"0",
-    "soft":"0.5",
-    "guest":"0",
-    "gnice":"0",
-    "idle":"74.5"
-  },
-],
-"total":1
-}
+from fiotest import models
 
 @urls.register
-class SYSDATA(generic.View):
-    url_regex = r'^sysdata$'
+class SARCPUS(generic.View):
+    url_regex = r'^sarcpu$'
 
     @utils.json_response
     def get(self, request):
-        return DATA
+        print dict(request.GET)
+        f = {}
+        for key, value in dict(request.GET).items():
+            f[key] = value[0]
+        print f
+        result = models.SarCPU.objects.filter(**f).all()
+        d = utils.query_to_dict(result)
+        return {"total": len(d), "data": d}
+
+@urls.register
+class SARCPU(generic.View):
+    url_regex = r'^sarcpu/(?P<caseid>\d+)/$'
+
+    @utils.json_response
+    def get(self, request, caseid):
+        result = models.SarCPU.objects.filter(caseid=caseid).all()
+        d = utils.query_to_dict(result)
+        return {"total": len(d), "data": d}
+
+@urls.register
+class SARMEMS(generic.View):
+    url_regex = r'^sarmem$'
+
+    @utils.json_response
+    def get(self, request):
+        print dict(request.GET)
+        f = {}
+        for key, value in dict(request.GET).items():
+            f[key] = value[0]
+        print f
+        result = models.SarMem.objects.filter(**f).all()
+        d = utils.query_to_dict(result)
+        return {"total": len(d), "data": d}
+
+@urls.register
+class SARMEM(generic.View):
+    url_regex = r'^sarmem/(?P<caseid>\d+)/$'
+
+    @utils.json_response
+    def get(self, request, caseid):
+        result = models.SarMem.objects.filter(caseid=caseid).all()
+        d = utils.query_to_dict(result)
+        return {"total": len(d), "data": d}
+
+@urls.register
+class SARNICS(generic.View):
+    url_regex = r'^sarnic$'
+
+    @utils.json_response
+    def get(self, request):
+        print dict(request.GET)
+        f = {}
+        for key, value in dict(request.GET).items():
+            f[key] = value[0]
+        print f
+        result = models.SarNic.objects.filter(**f).all()
+        d = utils.query_to_dict(result)
+        return {"total": len(d), "data": d}
+
+@urls.register
+class SARNIC(generic.View):
+    url_regex = r'^sarnic/(?P<caseid>\d+)/$'
+
+    @utils.json_response
+    def get(self, request, caseid):
+        result = models.SarNic.objects.filter(caseid=caseid).all().order_by('network')
+        d = utils.query_to_dict(result)
+        return {"total": len(d), "data": d}
+
+@urls.register
+class Iostats(generic.View):
+    url_regex = r'^iostat$'
+
+    @utils.json_response
+    def get(self, request):
+        print dict(request.GET)
+        f = {}
+        for key, value in dict(request.GET).items():
+            f[key] = value[0]
+        print f
+        result = models.Iostat.objects.filter(**f).all()
+        d = utils.query_to_dict(result)
+        return {"total": len(d), "data": d}
+
+@urls.register
+class Iostat(generic.View):
+    url_regex = r'^iostat/(?P<caseid>\d+)/$'
+
+    @utils.json_response
+    def get(self, request, caseid):
+        result = models.Iostat.objects.filter(caseid=caseid).all().order_by('osdnum')
+        d = utils.query_to_dict(result)
+        return {"total": len(d), "data": d}
+
+@urls.register
+class CephStatuss(generic.View):
+    url_regex = r'^cephstatus$'
+
+    @utils.json_response
+    def get(self, request):
+        print dict(request.GET)
+        f = {}
+        for key, value in dict(request.GET).items():
+            f[key] = value[0]
+        print f
+        result = models.CephStatus.objects.filter(**f).all()
+        d = utils.query_to_dict(result)
+        return {"total": len(d), "data": d}
+
+@urls.register
+class CephStatus(generic.View):
+    url_regex = r'^cephstatus/(?P<caseid>\d+)/$'
+
+    @utils.json_response
+    def get(self, request, caseid):
+        result = models.CephStatus.objects.filter(caseid=caseid).all()
+        d = utils.query_to_dict(result)
+        return {"total": len(d), "data": d}
+
 

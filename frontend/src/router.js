@@ -140,8 +140,15 @@ const Routers = function ({ history, app }) {
               cb(null, require('./routes/host/'))
             }, 'host')
           },
-        },
-        {
+        },{
+          path: 'fiotest/:jobid',
+          getComponent (nextState, cb) {
+            require.ensure([], require => {
+              registerModel(app, require('./models/fiotest.model'))
+              cb(null, require('./routes/fiotest/'))
+            }, 'fiotest')
+          },
+        }, {
           path: 'fiotest',
           getComponent (nextState, cb) {
             require.ensure([], require => {
@@ -160,6 +167,14 @@ const Routers = function ({ history, app }) {
           },
         },
         {
+          path: 'sysdata/:caseid',
+          getComponent (nextState, cb) {
+            require.ensure([], require => {
+              registerModel(app, require('./models/sysdata.model'))
+              cb(null, require('./routes/sysdata/'))
+            }, 'sysdata')
+          },
+        },{
           path: 'sysdata',
           getComponent (nextState, cb) {
             require.ensure([], require => {
@@ -167,8 +182,7 @@ const Routers = function ({ history, app }) {
               cb(null, require('./routes/sysdata/'))
             }, 'sysdata')
           },
-        },
-        {
+        }, {
           path: 'test',
           getComponent (nextState, cb) {
             require.ensure([], require => {

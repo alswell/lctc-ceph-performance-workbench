@@ -45,8 +45,26 @@ class Result(object):
         config_types = []
         for log in logs:
             #rbd_randrw_4k_runtime30_iodepth1_numjob1_imagenum2_hahaha_%100_2017_07_18_17_27_04
-            config_list = log.split('_')
-            config_type = '{}_{}{}'.format(config_list[2], config_list[8], config_list[1])
+            configs_log = log.split('_')
+            for configs in configs_log:
+                if re.match('pool', configs):
+                    pool_log = configs
+                elif re.match('\d+[kM]', configs):
+                    bs_log = configs
+                elif re.match('%', configs):
+                    rpercent_log = configs
+                elif re.match('runtime', configs):
+                    runtime_log = configs
+                elif re.match('rw|randrw', configs):
+                    rw_log = configs
+                elif re.match('imagenum', configs):
+                    imagenum_log = configs
+                elif re.match('iodepth', configs):
+                    iodepth_log = configs
+                elif re.match('numjob', configs):
+                    numjob_log = configs
+
+            config_type = '{}_{}{}'.format(bs_log, rpercent_log, rw_log)
             if config_types.count(config_type) == 0:
                 config_types.append(config_type)
         print config_types
@@ -164,7 +182,7 @@ class Result(object):
         write_bw = 0
         for i in range(len(log_list)):
             if re.match(r'   read:', log_list[i]):
-                match = re.match(r'\s*read: IOPS=\d+, BW=(\d+)(\S+) ', log_list[i])
+                match = re.match(r'\s*read: IOPS=.+k?, BW=(\d+\.?\d*)(\S+) ', log_list[i])
                 unit = match.group(2)
                 if unit == 'B/s':
                     read_bw = float(match.group(1)) / 1000000
@@ -176,7 +194,7 @@ class Result(object):
                     print "Error: Unrecognized BW unit {}.".format(unit)
                     sys.exit(1)
             elif re.match(r'  write:', log_list[i]):
-                match = re.match(r'\s*write: IOPS=\d+, BW=(\d+)(\S+)', log_list[i])
+                match = re.match(r'\s*write: IOPS=.+k?, BW=(\d+\.?\d*)(\S+)', log_list[i])
                 unit = match.group(2)
                 if unit == 'B/s':
                     read_bw = float(match.group(1)) / 1000000
@@ -265,7 +283,9 @@ class Result(object):
             #log = re.sub('_(\d{4})_(\d{2})_(\d{2})_(\d{2})_(\d{2})_(\d{2})', '', log)
             configs_log = log.split('_')
             for configs in configs_log:
-                if re.match('pool', configs):
+                if re.match('case\d+', configs):
+                    casenum_log = configs
+                elif re.match('pool', configs):
                     pool_log = configs
                 elif re.match('\d+[kM]', configs):
                     bs_log = configs
@@ -282,6 +302,7 @@ class Result(object):
                 elif re.match('numjob', configs):
                     numjob_log = configs
             
+            configs_log.remove(casenum_log)
             configs_log.remove(pool_log)
             configs_log.remove(bs_log)
             configs_log.remove(rpercent_log)

@@ -3,11 +3,28 @@
  */
 import lodash from 'lodash'
 import basicTableModel from './basic/basicTable.model'
+import { parse } from 'qs'
 
 const model = lodash.cloneDeep(basicTableModel)
 
 export default {
   namespace: 'sysdata',
+  subscriptions: {
+   setup ({ dispatch,history }) {
+    
+    history.listen(location => {
+        // console.log(location)
+        let param = parse(window.location.search,{
+        ignoreQueryPrefix:true
+      })
+
+      dispatch({type:'setId',payload:param})
+      })
+      
+      // console.log(location)
+    },
+    
+  },
   state: {
     ...model.state,
     modalVisible: false,
@@ -21,5 +38,11 @@ export default {
 
   reducers: {
     ...model.reducers,
+    setId(state,{payload:param}){
+      return {
+        ...state,
+        caseid:param.caseid
+      }
+    }
   },
 }

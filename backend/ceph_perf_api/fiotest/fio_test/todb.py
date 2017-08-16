@@ -515,12 +515,13 @@ class ToDB(object):
             print sql
             self.db.rollback()
 
-    def insert_tb_jobs(self, name, time, status):
-        sql = "INSERT INTO fiotest_jobs(name, time, status ) \
-            VALUES ('{}', '{}', '{}' )".format(
+    def insert_tb_jobs(self, name, time, status, casenum):
+        sql = "INSERT INTO fiotest_jobs(name, time, status, casenum ) \
+            VALUES ('{}', '{}', '{}', '{}' )".format(
                 name,
                 time,
-                status
+                status,
+                casenum
             )
         try:
             self.cursor.execute(sql)

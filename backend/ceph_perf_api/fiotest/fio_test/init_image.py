@@ -15,13 +15,13 @@ def create_image(image_size, image_count, image_pool, client, client_password):
         rbd_name = 'testimage_{}_{}'.format(image_size, i)
         need_rbd_list.append(rbd_name)
         if exist_rbd_list.count(rbd_name) == 1:
-            cmd = ['sshpass', '-p', client_password, 'ssh', client, 'rbd', 'rm', rbd_name]
+            cmd = ['sshpass', '-p', client_password, 'ssh', '-o', 'StrictHostKeyChecking=no', client, 'rbd', 'rm', rbd_name]
             subprocess.check_call(cmd)
     
     for rbd in need_rbd_list:
-        cmd = ['sshpass', '-p', client_password, 'ssh', client, 'rbd', 'create', rbd, '--image-format', '2', '--size', str(image_size), '--pool', image_pool]
+        cmd = ['sshpass', '-p', client_password, 'ssh', '-o', 'StrictHostKeyChecking=no', client, 'rbd', 'create', rbd, '--image-format', '2', '--size', str(image_size), '--pool', image_pool]
         print subprocess.check_output(cmd)
-        cmd = ['sshpass', '-p', client_password, 'ssh', client, 'rbd', 'info', '-p', image_pool, '--image', rbd]
+        cmd = ['sshpass', '-p', client_password, 'ssh', '-o', 'StrictHostKeyChecking=no', client, 'rbd', 'info', '-p', image_pool, '--image', rbd]
         print subprocess.check_output(cmd)
 
 def fullfill_file(image_size, image_count, image_pool):
@@ -58,7 +58,7 @@ def fullfill_file(image_size, image_count, image_pool):
     return dir_path
 
 def fullfill(path, size, client, client_password):
-    cmd = ['sshpass', '-p', client_password, 'ssh', client, 'ps', '-ef']
+    cmd = ['sshpass', '-p', client_password, 'ssh', '-o', 'StrictHostKeyChecking=no', client, 'ps', '-ef']
     child1 = subprocess.Popen(cmd, stdout=subprocess.PIPE)
     child2 = subprocess.Popen(["grep", "fio"],stdin=child1.stdout, stdout=subprocess.PIPE)
     child3 = subprocess.Popen(["grep", "server"],stdin=child2.stdout, stdout=subprocess.PIPE)
@@ -70,7 +70,7 @@ def fullfill(path, size, client, client_password):
 
         '''
         try:
-            os.system("ssh {} nohup fio --server &".format(client))
+            os.system("ssh -o StrictHostKeyChecking=no {} nohup fio --server &".format(client))
             time.sleep(5)
         except Exception, e:
             print e
@@ -87,7 +87,7 @@ def fullfill(path, size, client, client_password):
                 break
             print line
 
-    cmd = ['sshpass', '-p', client_password, 'ssh', client, 'rbd', 'du']
+    cmd = ['sshpass', '-p', client_password, 'ssh', '-o', 'StrictHostKeyChecking=no', client, 'rbd', 'du']
     status = subprocess.check_output(cmd).split('\n')
     del status[0]
     del status[-1]
@@ -104,7 +104,7 @@ def fullfill(path, size, client, client_password):
 
 
 def get_rbd_list(client, client_password):
-    cmd = ['sshpass', '-p', client_password, 'ssh', client, 'rbd', 'list']
+    cmd = ['sshpass', '-p', client_password, 'ssh', '-o', 'StrictHostKeyChecking=no', client, 'rbd', 'list']
     rbds = subprocess.check_output(cmd)
     rbd_list =  rbds.split('\n')
     return rbd_list

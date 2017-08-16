@@ -97,6 +97,12 @@ class HostPage extends React.Component {
           key: 'status',
           sorter: true,
           // width: 100,
+         }, {
+          title: 'test cases',
+          //dataIndex: 'test cases',
+          //key: 'status',
+          render: (text, record) => <Link to={`fiotest?jobid=${record.id}`}>test cases</Link>,
+          // width: 100,
         }, {
           title: 'Operation',
           key: 'operation',
@@ -109,10 +115,10 @@ class HostPage extends React.Component {
         },
       ],
       fetchData: {
-        url: 'fiojobs',
+        url: `fiojobs`,
         params: null,
       },
-      errorMsg: 'get host table error',
+      //errorMsg: 'get host table error',
       refresh: this.props.host.refresh,
       handleSelectItems: (selectedRows) => {
         this.props.dispatch({ type: 'host/updateSelectItems', payload: selectedRows })

@@ -2,6 +2,8 @@
 import os
 import re
 import time
+import json
+
 import urls
 from django.views import generic
 from ceph_perf_api import utils
@@ -48,6 +50,7 @@ class UserInfos(generic.View):
         body['numjobkeys'].append(1)
         body['rwmixreadkeys'].append(1)
 
+        casenum = 1
         for rwkey in body['fiotypekeys']:
             for bskey in body['bskeys']:
                 for iodepthkey in body['iodepthkeys']:
@@ -55,6 +58,7 @@ class UserInfos(generic.View):
                         for rwmixreadkey in body['rwmixreadkeys']:
                             fiotest.case(
                                 dir_path,
+                                casenum,
                                 body['PoolName'],
                                 body['fiotype-{}'.format(rwkey)],
                                 body['bs-{}'.format(bskey)],
@@ -68,12 +72,14 @@ class UserInfos(generic.View):
                                 clientslist,
                                 other_fio_config,
                             )
+                            casenum = casenum + 1
         return dir_path
 
     @utils.json_response
     def post(self, request):
 	body = request.DATA
         print body
+        print time.localtime(time.time())
 
         suite_dir = self.create_suite(body)
 
@@ -93,6 +99,7 @@ class UserInfos(generic.View):
             time.sleep(2)
             runfio.gen_result(log_dir)
             runfio.store_logfile_FS(log_dir)
+        print "finish"
 
         return "pass"
 

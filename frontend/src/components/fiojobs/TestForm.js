@@ -251,15 +251,16 @@ class TestTestForm extends React.Component {
         console.log('Received values of form: ', values)
 
         this.props.onCancel()
-        fetchAndNotification({
+        fetch({
+        //fetchAndNotification({
           url: 'create',
           method: 'post',
           params: values,
-          notifications: {
-            title: 'create Action',
-            success: `创建${values.jobname} 操作成功！`,
-            error: `创建${values.jobname} 操作失败！`,
-          },
+          //notifications: {
+            //title: 'create Action',
+            //success: `创建${values.jobname} 操作成功！`,
+            //error: `创建${values.jobname} 操作失败！`,
+          //},
         })
       }
     })

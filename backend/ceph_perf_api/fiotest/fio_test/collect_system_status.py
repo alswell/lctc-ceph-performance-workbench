@@ -278,10 +278,10 @@ class SysInfo(object):
         )
         return result_time
 
-    def deal_with_sarlog_cpu(self, host, casename):
+    def deal_with_sarlog_cpu(self, host, casename, path):
         #%usr     %nice      %sys   %iowait    %steal      %irq     %soft    %guest    %gnice     %idle
         cpu_result = []
-        cmd = 'grep "CPU      %usr" -A 1 {}_sar.txt | grep all'.format(self.nodes[host]['public_ip'])
+        cmd = 'grep "CPU      %usr" -A 1 {}/{}_sar.txt | grep all'.format(path, self.nodes[host]['public_ip'])
         cpu_data_list = subprocess.check_output(cmd, shell=True).split('\n')
         del cpu_data_list[-1]
         for cpu_data in cpu_data_list:
@@ -304,10 +304,10 @@ class SysInfo(object):
                 self.db.insert_tb_sarcpudata(casename, host, **result)
         return cpu_result
 
-    def deal_with_sarlog_memory(self, host, casename):
+    def deal_with_sarlog_memory(self, host, casename, path):
         #kbmemfree kbmemused  %memused kbbuffers  kbcached  kbcommit   %commit  kbactive   kbinact   kbdirty
         mem_result = []
-        with open('{}_sar.txt'.format(self.nodes[host]['public_ip']), 'r') as f:
+        with open('{}/{}_sar.txt'.format(path, self.nodes[host]['public_ip']), 'r') as f:
             lines = f.readlines()
             mem_data_list = []
             for n in range(len(lines)):
@@ -356,10 +356,10 @@ class SysInfo(object):
 
         return cluster_n, public_n
 
-    def deal_with_sarlog_nic(self, host, casename):
+    def deal_with_sarlog_nic(self, host, casename, path):
         #rxpck/s   txpck/s    rxkB/s    txkB/s   rxcmp/s   txcmp/s  rxmcst/s
         cluster_n, public_n = self.get_network_device(host)
-        with open('{}_sar.txt'.format(self.nodes[host]['public_ip']), 'r') as f:
+        with open('{}/{}_sar.txt'.format(path, self.nodes[host]['public_ip']), 'r') as f:
             lines = f.readlines()
             nic_data_list = []
             for n in range(len(lines)):
@@ -414,19 +414,19 @@ class SysInfo(object):
 
         return both_result
 
-    def deal_with_sarlog(self, casename):
+    def deal_with_sarlog(self, casename, path):
         all_result = {}
         for host in self.host_list:
-            all_result[host] = self.deal_with_sarlog_cpu(host, casename)
-        json.dump(all_result, open('./sar_cpu.json', 'w'), indent=2)
+            all_result[host] = self.deal_with_sarlog_cpu(host, casename, path)
+        json.dump(all_result, open('{}/sar_cpu.json'.format(path), 'w'), indent=2)
 
         for host in self.host_list:
-            all_result[host] = self.deal_with_sarlog_memory(host, casename)
-        json.dump(all_result, open('./sar_memory.json', 'w'), indent=2)
+            all_result[host] = self.deal_with_sarlog_memory(host, casename, path)
+        json.dump(all_result, open('{}/sar_memory.json'.format(path), 'w'), indent=2)
 
         for host in self.host_list:
-            all_result[host] = self.deal_with_sarlog_nic(host, casename)
-        json.dump(all_result, open('./sar_nic.json', 'w'), indent=2)
+            all_result[host] = self.deal_with_sarlog_nic(host, casename, path)
+        json.dump(all_result, open('{}/sar_nic.json'.format(path), 'w'), indent=2)
 
     def get_datetime_fordb_iostatlog(self, casename, time, n):
         time_match = re.match('(.*):(.*):(.*)', time)
@@ -454,14 +454,14 @@ class SysInfo(object):
         )
         return result_time
 
-    def deal_with_iostatlog(self, casename):
+    def deal_with_iostatlog(self, casename, path):
         #rrqm/s   wrqm/s     r/s     w/s    rMB/s    wMB/s avgrq-sz avgqu-sz   await r_await w_await  svctm  %util
 
         all_result = {}
         for host in self.host_list:
             osd_result = {}
 
-            with open('{}_iostat.txt'.format(self.nodes[host]['public_ip'])) as f:
+            with open('{}/{}_iostat.txt'.format(path, self.nodes[host]['public_ip'])) as f:
                 time = f.readline()
             osd_result['start_time'] = re.search(' (\S*:.*:\S*) ', time).group(1)
 
@@ -471,7 +471,7 @@ class SysInfo(object):
                     osd_disk = disk.split('/')[-1]
                     #osd_disk = re.match('/dev/(.*)', disk).group(1)
                     disk_result = []
-                    cmd = 'grep "{}" {}_iostat.txt'.format(osd_disk, self.nodes[host]['public_ip'])
+                    cmd = 'grep "{}" {}/{}_iostat.txt'.format(osd_disk, path, self.nodes[host]['public_ip'])
                     disk_data_list = subprocess.check_output(cmd, shell=True).split('\n')
                     del disk_data_list[0]
                     del disk_data_list[-1]
@@ -502,28 +502,30 @@ class SysInfo(object):
                     oj_result[disk_name] = disk_result
                 osd_result[osd_num] = oj_result
             all_result[host] = osd_result
-        json.dump(all_result, open('./iostat.json', 'w'), indent=2)
+        json.dump(all_result, open('{}/iostat.json'.format(path), 'w'), indent=2)
 
-    def deal_with_perfdumplog(self, casename):
-        log_files = os.popen('ls *ceph_perfdump.json').readlines()
+    def deal_with_perfdumplog(self, casename, path):
+        log_files = os.popen('ls {}/*ceph_perfdump.json'.format(path)).readlines()
         for log_file in log_files:
             log_file = log_file.strip()
+            perfdump = json.load(open(log_file))
+            log_file = log_file.split('/')[-1]
             host = log_file.split('_')[0]
             log_osd = log_file.split('_')[1]
-            perfdump = json.load(open(log_file))
             self.db.insert_tb_perfdumpdata(casename, host, log_osd, **perfdump)
 
-    def deal_with_cephconfiglog(self, casename):
-        log_files = os.popen('ls *ceph_config.json').readlines()
+    def deal_with_cephconfiglog(self, casename, path):
+        log_files = os.popen('ls {}/*ceph_config.json'.format(path)).readlines()
         for log_file in log_files:
             log_file = log_file.strip()
+            ceph_configs = json.load(open(log_file))
+            log_file = log_file.split('/')[-1]
             host = log_file.split('_')[0]
             osd = log_file.split('_')[1]
-            ceph_configs = json.load(open(log_file))
             self.db.insert_tb_cephconfigdata(casename, host, osd, **ceph_configs)
 
-    def deal_with_cephstatuslog(self, casename):
-        log_file = '{}_cephstatus.txt'.format(self.client)
+    def deal_with_cephstatuslog(self, casename, path):
+        log_file = '{}/{}_cephstatus.txt'.format(path, self.client)
         with open(log_file, 'r') as f:
             json_start = False
             rawtime = f.readline()
@@ -564,7 +566,7 @@ class SysInfo(object):
                 speed = speed_match.group(1)
         return model, speed
 
-    def deal_with_lsblk_log(self, casename):
+    def deal_with_lsblk_log(self, casename, path):
         disk_info = {}
         for host in self.host_list:
             ip = self.nodes[host]['public_ip']
@@ -578,7 +580,7 @@ class SysInfo(object):
                 password = self.host_password
             )
  
-            with open('{}_lsblk.txt'.format(ip), 'r') as f:
+            with open('{}/{}_lsblk.txt'.format(path, ip), 'r') as f:
                 f.readline()
                 for line in f.readlines():
                     match = re.match('(\w+)\s+\S+\s+\S+\s+(\S+)', line)
@@ -588,7 +590,7 @@ class SysInfo(object):
                         cmd = 'smartctl -i /dev/{}'.format(disk_name)
                         stdin, stdout, stderr = ssh.exec_command(cmd)
                         result = stdout.read()
-                        with open('{}_{}_smartctl.txt'.format(ip, disk_name), 'w') as smartctl_f:
+                        with open('{}/{}_{}_smartctl.txt'.format(path, ip, disk_name), 'w') as smartctl_f:
                             smartctl_f.write(result)
                         disk_model, disk_speed = self.deal_with_smartctl(result)
                         if self.havedb:
@@ -603,10 +605,10 @@ class SysInfo(object):
             ssh.close()
 
 
-    def deal_with_cpuinfo_log(self):
+    def deal_with_cpuinfo_log(self, path):
         cpu_info = {}
         for host in self.host_list:
-            with open('{}_cpuinfo.txt'.format(self.nodes[host]['public_ip']), 'r') as f:
+            with open('{}/{}_cpuinfo.txt'.format(path, self.nodes[host]['public_ip']), 'r') as f:
                 cpunum = 0
                 cputype = ''
                 cpuspeed = ''
@@ -630,10 +632,10 @@ class SysInfo(object):
             }
         return cpu_info 
 
-    def deal_with_meminfo_log(self):
+    def deal_with_meminfo_log(self, path):
         mem_info = {}
         for host in self.host_list:
-            with open('{}_dmidecode.txt'.format(self.nodes[host]['public_ip']), 'r') as f:
+            with open('{}/{}_dmidecode.txt'.format(path, self.nodes[host]['public_ip']), 'r') as f:
                 n = 0
                 memnum = 0
                 mem_match = False
@@ -654,7 +656,7 @@ class SysInfo(object):
                         if re.match('$', lines[n]):
                             mem_match = False
                     n = n+1
-            with open('{}_meminfo.txt'.format(self.nodes[host]['public_ip']), 'r') as f:
+            with open('{}/{}_meminfo.txt'.format(path, self.nodes[host]['public_ip']), 'r') as f:
                 for line in f:
                     maxsize_match = re.match('MemTotal:\s+(.*)$', line)
                     if maxsize_match:
@@ -662,15 +664,15 @@ class SysInfo(object):
             mem_info[host] = {'memtype': mem_M+':'+mem_S, 'totalsize': memsize, 'memnum': memnum}
         return mem_info 
 
-    def deal_with_hwinfo(self, casename):
-        cpu_info = self.deal_with_cpuinfo_log()
-        mem_info = self.deal_with_meminfo_log()
+    def deal_with_hwinfo(self, casename, path):
+        cpu_info = self.deal_with_cpuinfo_log(path)
+        mem_info = self.deal_with_meminfo_log(path)
         for host in self.host_list:
             hw_info = {}
             hw_info.update(cpu_info[host])
             hw_info.update(mem_info[host])
             hw_info.update(self.nodes[host]['hwinfo'])
-            json.dump(hw_info, open('./{}_hw_info.json'.format(host), 'w'), indent=2)
+            json.dump(hw_info, open('{}/{}_hw_info.json'.format(path, host), 'w'), indent=2)
             if self.havedb:
                 self.db.insert_tb_hwinfo(casename, host, **hw_info)
 
@@ -700,14 +702,14 @@ class SysInfo(object):
 
         return pool_info
 
-    def deal_with_cephinfo(self, casename):
+    def deal_with_cephinfo(self, casename, path):
         ceph_info = {'monnum': self.monnum, 'nodenum': len(self.host_list)}
 
-        version_file = '{}_cephv.txt'.format(self.client)
+        version_file = '{}/{}_cephv.txt'.format(path, self.client)
         with open(version_file, 'r') as f:
             ceph_info['version'] = f.readline().strip()
 
-        osdtree_file = '{}_cephosdtree.json'.format(self.client)
+        osdtree_file = '{}/{}_cephosdtree.json'.format(path, self.client)
         osdtree = json.load(open(osdtree_file))
         osdnum = 0
         for node in osdtree['nodes']:
@@ -716,20 +718,20 @@ class SysInfo(object):
         ceph_info['osdnum'] = osdnum
         #ceph_info.update(osdtree)
 
-        df_file = '{}_cephdf.json'.format(self.client)
+        df_file = '{}/{}_cephdf.json'.format(path, self.client)
         df = json.load(open(df_file))
         ceph_info.update(df)
 
         pools_info = self.get_pool_info(df['pools'])
 
         ceph_info['pool'] = pools_info
-        json.dump(ceph_info, open('./ceph_info.json', 'w'), indent=2)
+        json.dump(ceph_info, open('{}/ceph_info.json'.format(path), 'w'), indent=2)
         if self.havedb:
             self.db.insert_tb_cephinfo(casename, **ceph_info)
             for pool, pool_info in pools_info.items():
                 self.db.insert_tb_poolinfo(casename, pool, **pool_info)
 
-    def get_os_info(self, casename):
+    def get_os_info(self, casename, path):
         for host in self.host_list:
             os_info = {}
             ip = self.nodes[host]['public_ip']
@@ -760,28 +762,26 @@ class SysInfo(object):
 
             os_info.update(self.nodes[host]['osinfo'])
 
-            json.dump(os_info, open('./{}_os_info.json'.format(host), 'w'), indent=2)
+            json.dump(os_info, open('{}/{}_os_info.json'.format(path, host), 'w'), indent=2)
             if self.havedb:
                 self.db.insert_tb_osinfo(casename, host, **os_info)
 
 
     def deal_with_sysinfo_logfile(self, log_dir, sysinfo_dir):
-        org_dir = os.getcwd()
-        os.chdir('{}/{}'.format(log_dir, sysinfo_dir))
-        dir_list = os.getcwd().split('/')
+        path = '{}/{}'.format(log_dir, sysinfo_dir)
+        dir_list = path.split('/')
         casename = re.match('sysinfo_(.*)', dir_list[-1]).group(1)
 
-        self.deal_with_sarlog(casename)
-        self.deal_with_iostatlog(casename)
+        self.deal_with_sarlog(casename, path)
+        self.deal_with_iostatlog(casename, path)
         if self.havedb:
-            self.deal_with_cephconfiglog(casename)
-            self.deal_with_perfdumplog(casename)
-            self.deal_with_cephstatuslog(casename)
-        self.deal_with_lsblk_log(casename)
-        self.deal_with_hwinfo(casename)
-        self.get_os_info(casename)
-        self.deal_with_cephinfo(casename)
-        os.chdir(org_dir)
+            self.deal_with_cephconfiglog(casename, path)
+            self.deal_with_perfdumplog(casename, path)
+            self.deal_with_cephstatuslog(casename, path)
+        self.deal_with_lsblk_log(casename, path)
+        self.deal_with_hwinfo(casename, path)
+        self.get_os_info(casename, path)
+        self.deal_with_cephinfo(casename, path)
 
 def format_subnet(subnet_input):
     if subnet_input.find("/") == -1:

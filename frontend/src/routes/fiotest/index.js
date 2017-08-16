@@ -92,10 +92,10 @@ class HostPage extends React.Component {
           // width: 100,
         }, {
           title: 'Sys data',
-          dataIndex: 'sysdata',
-          key: 'sysdate',
+          //dataIndex: 'sysdata',
+          //key: 'sysdate',
           // width: 120,
-          render: (text, record) => <Link to={`sarcpu/${record.id}`}>sys data</Link>,
+          render: (text, record) => <Link to={`sysdata?caseid=${record.id}`}>sys data</Link>,
         }, {
           title: 'Block Size',
           dataIndex: 'blocksize',
@@ -148,7 +148,9 @@ class HostPage extends React.Component {
         },
       ],
       fetchData: {
-        url: 'fiotest',
+        // url: `fiotest`,
+        url: this.props.host.jobid ? `fiotest/${this.props.host.jobid}/`:`fiotest`,
+        //url: `fiotest/${this.props.host.jobid}/`,
         params: null,
       },
       errorMsg: 'get host table error',

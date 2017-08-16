@@ -54,6 +54,7 @@ class FIOTest(object):
         ]
 
     def create_suite_dir(self, suitename):
+        suitename = re.sub('_', '', suitename)
         path = "{}/test-suites/{}/config".format(os.getcwd(), suitename)
         print "=================================="
         print "test suite dir is: {}/test-suites/{}".format(os.getcwd(), suitename)
@@ -88,6 +89,7 @@ class FIOTest(object):
     def case(
         self,
         path,
+        casenum,
         pool,
         rw,
         bs,
@@ -95,14 +97,15 @@ class FIOTest(object):
         iodepth,
         numjobs,
         image_num,
-        case_num,
+        suitename,
         rwmixread,
         imagename,
         clientslist,
         other_fio_config
     ):
+        suitename = re.sub('_', '', suitename)
         for i in range(len(clientslist)):
-            config_para = 'pool'+pool+'_'+rw+'_'+bs+'_runtime'+runtime+'_iodepth'+iodepth+'_numjob'+numjobs+'_imagenum'+image_num+'_'+case_num+'_%'+rwmixread+'_'+str(i)
+            config_para = 'case'+str(casenum)+'_pool'+pool+'_'+rw+'_'+bs+'_runtime'+runtime+'_iodepth'+iodepth+'_numjob'+numjobs+'_imagenum'+image_num+'_'+suitename+'_%'+rwmixread+'_'+str(i)
             for fioconfig in other_fio_config:
                  fioconfig = re.sub('=', '', fioconfig)
                  config_para = config_para + '_' + fioconfig
@@ -269,14 +272,16 @@ def main():
     print "imagename is {}".format(args.imagename)
     print "ceph config will be modified as: {}".format(ceph_config)
 
+    casenum = 1
     for readwritetype in readwritetypes:
         for blocksize in blocksizes:
             for iodepth in iodepths:
                 for numjob in numjobs:
                     for imagecount in imagecounts:
                         for rwmixread in rwmixreads:
-                           fio_test.case(
+                            fio_test.case(
                                 path,
+                                casenum,
                                 args.pool,
                                 fio_test.rw[int(readwritetype)-1],
                                 fio_test.bs[int(blocksize)-1],
@@ -290,6 +295,7 @@ def main():
                                 clientslist,
                                 other_fio_config,
                             )
+                            casenum = casenum + 1
     #fio_test.generate_run_config(path)
 
 

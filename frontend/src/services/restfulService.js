@@ -7,7 +7,7 @@ import axios from 'axios'
 
 let instance = axios.create({
   baseURL: config.uri.api,
-  timeout: 1000,
+  timeout: 10000,
   // headers: {'X-Custom-Header': 'foobar'}
 })
 
