@@ -2,7 +2,7 @@ HOST = 'http://10.240.217.115:8866/api/v2/'
 
 RESULT_COLUMN = [
             {'name': 'jobid'     , 'width': 30},
-            {'name': 'case_name' , 'width': 80},
+            # {'name': 'case_name' , 'width': 80},
             {'name': 'time'      , 'width': 20},
             {'name': 'blocksize' , 'width': 10},
             {'name': 'iodepth'   , 'width': 10},

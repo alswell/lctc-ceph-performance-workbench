@@ -28,19 +28,3 @@ def parse_data(data):
                 all_data[k].append(v)
     return all_data
 
-
-class FormatTime(object):
-    def __init__(self, time_array):
-        self.time_array = time_array
-
-    def format_date(self, x, pos=None):
-        if x < 0 or x >= len(self.time_array):
-            return x
-        if pos is None:
-            return x
-
-        if x - int(x) == 0:
-            return self.time_array[int(x)]
-        else:
-            return ""
-

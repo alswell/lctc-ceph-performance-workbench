@@ -113,10 +113,15 @@ class App(Frame):
         column = 0
         y_metric = fiotest.get_y_metric()
         self.to_plot.append(y_metric)
+        key_map = {
+            'sarcpu': 'CPU',
+            'sarmem': 'Memory',
+            'sarnic': 'NIC',
+        }
         for key, value in y_metric.items():
             column += 1
             row = self.row
-            Label(self.frame, text=key).grid(row=row, column=column, sticky=W)
+            Label(self.frame, text=key_map.get(key, key)).grid(row=row, column=column, sticky=W)
             row += 1
             for k, v in value.items():
                 need_plot = BooleanVar()
@@ -244,6 +249,7 @@ class App(Frame):
                     all_data[key][node] = parse_data(node_value)
             # plot_all(all_data, self.to_plot[0], 'time')
             plot_all(all_data, self.to_plot[0])
+
         elif self.y_label.get() == 2:
             result = [self.result[i] for i in range(len(self.result)) if self.result_check[i]]
             if not result:
@@ -251,9 +257,10 @@ class App(Frame):
             legends = settings.LEGEND
             legend_index = 0
             keys = ['iodepth', 'numberjob', 'imagenum', 'clientnum']
-            iops = {}
-            lat = {}
-            bw = {}
+            all_data = {'result': {}}
+            for key, value in self.to_plot[2]['result'].items():
+                if value['need_plot'].get() == 1:
+                    all_data['result'][key] = {}
             x_label = {}
             for item in result:
                 name = item['blocksize']
@@ -268,29 +275,16 @@ class App(Frame):
                     self.to_plot[1]['result'][item['jobid']] = {'legend': legends[legend_index], 'need_plot': b}
                     legend_index += 1
 
-                try:
-                    iops[item['jobid']].update({name: item['iops']})
-                    lat[item['jobid']].update({name: item['lat']})
-                    bw[item['jobid']].update({name: item['bw']})
-                except KeyError:
-                    iops[item['jobid']] = {}
-                    iops[item['jobid']].update({name: item['iops']})
-                    lat[item['jobid']] = {}
-                    lat[item['jobid']].update({name: item['lat']})
-                    bw[item['jobid']] = {}
-                    bw[item['jobid']].update({name: item['bw']})
-            iops['name'] = [k for k, v in x_label.items()]
-            lat['name'] = [k for k, v in x_label.items()]
-            bw['name'] = [k for k, v in x_label.items()]
-            all_data = {'result': {}}
-            all_data['result']['iops'] = iops
-            all_data['result']['lat'] = lat
-            all_data['result']['bw'] = bw
-            print all_data
+                for key, _ in all_data['result'].items():
+                    try:
+                        all_data['result'][key][item['jobid']].update({name: item[key]})
+                    except KeyError:
+                        all_data['result'][key][item['jobid']] = {}
+                        all_data['result'][key][item['jobid']].update({name: item[key]})
+            names = [k for k, v in x_label.items()]
+            for key, _ in all_data['result'].items():
+                all_data['result'][key]['name'] = names
             plot_all(all_data, self.to_plot[1], 'name')
-
-            # for key, value in all_data.items():
-            #     all_data[key]
 
         elif self.y_label.get() == 3:
             result = [self.result[i] for i in range(len(self.result)) if self.result_check[i]]
