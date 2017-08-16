@@ -282,16 +282,17 @@ class App(Frame):
                         all_data['result'][key][item['jobid']] = {}
                         all_data['result'][key][item['jobid']].update({name: item[key]})
             names = [k for k, v in x_label.items()]
+            names.sort()
             for key, _ in all_data['result'].items():
                 all_data['result'][key]['name'] = names
-            plot_all(all_data, self.to_plot[1], 'name')
+            plot_all(all_data, self.to_plot[1], 'name', '')
 
         elif self.y_label.get() == 3:
             result = [self.result[i] for i in range(len(self.result)) if self.result_check[i]]
             if result:
                 all_data = {'result': {}}
                 all_data['result']['fiotest'] = parse_data(result)
-                plot_all(all_data, self.to_plot[2], 'case_name')
+                plot_all(all_data, self.to_plot[2], 'case_name', '')
 
 
 app = App(Tk())

@@ -1,4 +1,4 @@
-HOST = 'http://10.240.217.115:8866/api/v2/'
+HOST = 'http://10.240.217.45:8866/api/v2/'
 
 RESULT_COLUMN = [
             {'name': 'jobid'     , 'width': 30},

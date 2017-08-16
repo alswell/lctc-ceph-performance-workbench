@@ -18,15 +18,15 @@ class FormatTime(object):
             return ""
 
 
-def plot_all(all_data, data_to_plot, x_label=None):
+def plot_all(all_data, data_to_plot, x_label=None, y_label='rate'):
     for key, value in all_data.items():
         if value:
-            plot_time_y(value, data_to_plot[key], x_label)
+            plot_time_y(value, data_to_plot[key], x_label, y_label)
     # plt.savefig('test.png', dpi=160)
     plt.show()
 
 
-def plot_time_y(all_data, data_to_plot, x_label, y_label='rate'):
+def plot_time_y(all_data, data_to_plot, x_label, y_label):
     plt.figure()
 
     len_all_data = len(all_data)
