@@ -84,15 +84,14 @@ DATABASES = {
         'HOST': '127.0.0.1',
         'PORT': '3306',
     },
-    'mysql': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'mysql',
-        'USER': 'root',
-        'PASSWORD': '',
-        'HOST': '127.0.0.1',
-        'PORT': '3306',
-    },
-
+    # 'mysql': {
+    #    'ENGINE': 'django.db.backends.mysql',
+    #    'NAME': 'mysql',
+    #    'USER': 'root',
+    #    'PASSWORD': '',
+    #    'HOST': '127.0.0.1',
+    #    'PORT': '3306',
+    # },
 }
 
 DATABASE_ROUTERS = ['ceph_perf_api.db_route.MySqlRouter', 'ceph_perf_api.db_route.FioRouter']
