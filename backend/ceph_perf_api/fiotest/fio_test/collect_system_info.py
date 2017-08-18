@@ -11,7 +11,7 @@ from multiprocessing import Process
 import json
 import yaml
 import socket,struct
-from collect_system_status import SysData
+from collect_system_data import SysData
 
 
 class SysInfo(SysData):

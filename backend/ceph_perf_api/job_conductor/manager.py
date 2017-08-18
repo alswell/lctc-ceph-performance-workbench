@@ -23,27 +23,26 @@ class Manager(object):
 
     def run_fio(self, ctxt, body):
         LOG.info("run fio: %s", body)
-        #try:
-        runfio = run_suite.RunFIO(body['suite_dir'], todb=True)
-        if body.has_key('ceph_config'):
-            log_dir = runfio.run(
-                body['suite_dir'],
-                body['jobname'],
-                body['jobid'],
-                ceph_config=body['ceph_config']
-            )
-        else:
-            log_dir = runfio.run(
-                body['suite_dir'],
-                body['jobname'],
-                body['jobid']
-            )
+        try:
+            runfio = run_suite.RunFIO(body['suite_dir'], todb=True)
+            if body.has_key('ceph_config'):
+                log_dir = runfio.run(
+                    body['suite_dir'],
+                    body['jobname'],
+                    body['jobid'],
+                    ceph_config=body['ceph_config']
+                )
+            else:
+                log_dir = runfio.run(
+                    body['suite_dir'],
+                    body['jobname'],
+                    body['jobid']
+                )
 
-        runfio.store_logfile_FS(log_dir)
-        #except Exception, e:
-        #    jobinfo = {'status': "Failed"}
-        #    runfio.db.update_jobs(body['jobid'], **jobinfo)
-        #    print e
-        #else:
-        print "finish"
-        
+            runfio.store_logfile_FS(log_dir)
+        except Exception, e:
+            jobinfo = {'status': "Failed"}
+            runfio.db.update_jobs(body['jobid'], **jobinfo)
+            print e
+        else:
+            print "finish"
