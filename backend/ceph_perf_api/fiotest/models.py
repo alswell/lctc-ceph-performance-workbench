@@ -9,7 +9,6 @@ class Result(models.Model):
     id = models.AutoField(primary_key=True)
     jobid = models.ForeignKey("Jobs",to_field='id', null=True)
     case_name = models.CharField(max_length=100)
-    ceph_config = models.CharField(max_length=100, default='default')
     time = models.DateTimeField(null=True)
     blocksize = models.CharField(max_length=20, null=True)
     iodepth = models.IntegerField(null=True)
@@ -97,7 +96,7 @@ class Iostat(models.Model):
 
 class CephConfig(models.Model):
     id = models.AutoField(primary_key=True)
-    caseid = models.ForeignKey("Result",to_field='id')
+    jobid = models.ForeignKey("Jobs",to_field='id')
     node = models.CharField(max_length=20)
     osd  = models.CharField(max_length=20)
     max_open_files = models.CharField(max_length=20, null=True)
@@ -221,7 +220,7 @@ class PerfDump(models.Model):
 
 class HWInfo(models.Model):
     id = models.AutoField(primary_key=True)
-    caseid = models.ForeignKey("Result",to_field='id')
+    jobid = models.ForeignKey("Jobs",to_field='id')
     node = models.CharField(max_length=20)
     HyperThreading = models.CharField(max_length=20, null=True)
     VirtualTechnology = models.CharField(max_length=20, null=True)
@@ -237,7 +236,7 @@ class HWInfo(models.Model):
 
 class DiskInfo(models.Model):
     id = models.AutoField(primary_key=True)
-    caseid = models.ForeignKey("Result",to_field='id')
+    jobid = models.ForeignKey("Jobs",to_field='id')
     node = models.CharField(max_length=20)
     disk_name = models.CharField(max_length=20)
     disk_size = models.CharField(max_length=20)
@@ -246,7 +245,7 @@ class DiskInfo(models.Model):
 
 class OSInfo(models.Model):
     id = models.AutoField(primary_key=True)
-    caseid = models.ForeignKey("Result",to_field='id')
+    jobid = models.ForeignKey("Jobs",to_field='id')
     node = models.CharField(max_length=20)
     PIDnumber = models.IntegerField(null=True)
     read_ahead = models.CharField(max_length=20, null=True)
@@ -280,6 +279,7 @@ class Jobs(models.Model):
     time = models.DateTimeField(null=True)
     status = models.CharField(max_length=20, null=True)
     casenum = models.IntegerField(null=True)
+    ceph_config = models.CharField(max_length=100, default='default')
 
 class CephInfo(models.Model):
     id = models.AutoField(primary_key=True)

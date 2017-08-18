@@ -11,3 +11,7 @@ class JobAPI(object):
     def example_job(self, dict_args):
         print dict_args
         self.client.cast({}, 'example_job', body=dict_args)
+
+    def run_fio(self, dict_args):
+        print dict_args
+        self.client.cast({}, 'run_fio', body=dict_args)

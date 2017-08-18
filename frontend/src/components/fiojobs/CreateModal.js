@@ -40,6 +40,7 @@ export class CollectionsPage extends React.Component {
           visible={this.state.visible}
           onCancel={this.handleCancel}
           onCreate={this.handleCreate}
+          refresh={this.props.refresh}
         />
       </span>
     )

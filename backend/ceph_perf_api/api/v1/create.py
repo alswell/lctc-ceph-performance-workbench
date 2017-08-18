@@ -1,19 +1,25 @@
 # -*- coding: UTF-8 -*-
-import os
-import re
 import time
+import re
 import json
+import os
+import sys
 
 import urls
 from django.views import generic
 from ceph_perf_api import utils
-from mysql import models
+from fiotest import models
+from job_conductor import api as job_api
 from fiotest.fio_test import build_suite
 from fiotest.fio_test import run_suite
 
 @urls.register
 class UserInfos(generic.View):
     url_regex = r'^create$'
+
+
+    def __init__(self):
+        self.job_conductor = job_api.API()
 
     def create_suite(self, body):
         body['clientkeys'].append(1)
@@ -75,31 +81,31 @@ class UserInfos(generic.View):
                             casenum = casenum + 1
         return dir_path
 
+
     @utils.json_response
     def post(self, request):
-	body = request.DATA
-        print body
-        print time.localtime(time.time())
+        body = request.DATA
 
         suite_dir = self.create_suite(body)
-
         runfio = run_suite.RunFIO(suite_dir, todb=True)
         runfio.checkandstart_fioser(suite_dir, body['jobname'])
+
+        body['suite_dir'] = suite_dir
 
         ceph_config_file = '{}/setup_ceph_config.json'.format(suite_dir)
         if os.path.exists(ceph_config_file):
             ceph_configs = json.load(open(ceph_config_file))
             for ceph_config in ceph_configs:
-                log_dir  = runfio.run(suite_dir, body['jobname'], ceph_config=ceph_config)
-                time.sleep(2)
-                runfio.gen_result(log_dir)
-                runfio.store_logfile_FS(log_dir)
+                body['ceph_config'] = ceph_config
+                jobinfo = {'name': body['jobname'], 'status': "New"}
+                result = models.Jobs.objects.create(**jobinfo)
+                body['jobid'] = result.id
+                self.job_conductor.run_fio(body)
         else:
-            log_dir = runfio.run(suite_dir, body['jobname'])
-            time.sleep(2)
-            runfio.gen_result(log_dir)
-            runfio.store_logfile_FS(log_dir)
-        print "finish"
+            jobinfo = {'name': body['jobname'], 'status': "New"}
+            result = models.Jobs.objects.create(**jobinfo)
+            body['jobid'] = result.id
+            self.job_conductor.run_fio(body)
 
         return "pass"
 

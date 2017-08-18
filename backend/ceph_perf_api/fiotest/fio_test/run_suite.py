@@ -12,22 +12,27 @@ import json
 import yaml
 
 from result import Result
-from collect_system_status import SysInfo
-from collect_system_status import get_ceph_config_file
+from collect_system_data import SysData
+from collect_system_info import SysInfo
+from collect_system_info import get_ceph_config_file
 
 class RunFIO(object):
 
     def __init__(self, path, todb=False):
         self.todb = todb
+        if todb:
+            from todb import ToDB
+            self.db = ToDB()
         with open('{}/fioserver_list.conf'.format(path), 'r') as f:
             clients = f.readlines()
             client = clients[0].strip()
+            self.sysdata = SysData(path, client, havedb=todb)
             self.sysinfo = SysInfo(path, client, havedb=todb)
             #self.nodes = get_ceph_config_file(path, client)['ceph-node']
 
-        self.nodes = self.sysinfo.nodes
-        self.client_password = self.sysinfo.client_password
-        self.host_password = self.sysinfo.host_password
+        self.nodes = self.sysdata.nodes
+        self.client_password = self.sysdata.client_password
+        self.host_password = self.sysdata.host_password
 
     def checkandstart_fioser(self, path, suitename):
         fionoserver = False
@@ -117,18 +122,16 @@ class RunFIO(object):
                         print "process_id: {}".format(process_id)
                     ssh.close()
     
-    def create_log_dir(self, path, jobname, ceph_config):
-        config = ''
-        for key, value in ceph_config.items():
-            value = re.sub('\/', '', str(value))
-            key = re.sub('_', '', key)
-            config = config + key + value + '_'
+    def create_log_dir(self, path, jobname, config, jobtime):
+        jobtime = re.sub('-', '_', jobtime)
+        jobtime = re.sub(':', '_', jobtime)
+        jobtime = re.sub(' ', '_', jobtime)
         
         log_dir = '{}/{}_{}{}'.format(
             path,
             jobname,
             config,
-            time.strftime('%Y_%m_%d_%H_%M_%S', time.localtime(time.time()))
+            jobtime
         )
         if not os.path.exists(log_dir):
             try:
@@ -138,25 +141,30 @@ class RunFIO(object):
                 sys.exit(1)
         return log_dir
 
-    def insert_job_todb(self, db, jobname, casenum):
-        start_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
-        db.insert_tb_jobs(jobname, start_time, 'Running', casenum)
-        return start_time
+    def run(self, path, jobname, jobid, ceph_config={}):
+        jobname = re.sub('_', '', jobname)
+        casenum = len(search('{}/config/'.format(path), '_0.config'))
+        jobtime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+        cephconfig = ''
+        for key, value in ceph_config.items():
+            value = re.sub('\/', '', str(value))
+            key = re.sub('_', '', key)
+            cephconfig = cephconfig + key + value + '_'
+        if cephconfig == '':
+            cephconfig = 'default_'
+        if self.todb:
+            jobinfo = {
+                'status': 'Running',
+                'casenum': casenum,
+                'time': jobtime,
+                'ceph_config': re.sub('_', '', cephconfig)
+            }
+            self.db.update_jobs(jobid, **jobinfo)
 
-    def update_jobstatus_indb(self, db, jobtime):
-        db.update_jobs_status(jobtime, 'Finished')
-
-    def run(self, path, jobname, ceph_config={}):
         org_ceph_config = self.modify_ceph_config(ceph_config)
         print org_ceph_config
-        log_dir = self.create_log_dir(path, jobname, ceph_config)
+        log_dir = self.create_log_dir(path, jobname, cephconfig, jobtime)
         configs = os.listdir('{}/config/'.format(path))
-        casenum = len(search('{}/config/'.format(path), '_0.config'))
-        jobname = re.sub('_', '', jobname)
-        if self.todb:
-            from todb import ToDB
-            db = ToDB()
-            jobtime = self.insert_job_todb(db, jobname, casenum)
         with open('{}/fioserver_list.conf'.format(path), 'r') as f:
             clients = f.readlines()
             num_clients = len(clients)
@@ -192,12 +200,12 @@ class RunFIO(object):
                     time_start = time.time()
                     time_out_status = False
 
-                    self.sysinfo.cleanup_ceph_perf()
+                    self.sysdata.cleanup_ceph_perf()
                     child = subprocess.Popen(
                         cmd,
                         stdin=subprocess.PIPE,
                         stdout=subprocess.PIPE)
-                    self.sysinfo.get_sys_info()
+                    self.sysdata.get_sys_data()
                     with open(log_file, 'wt') as handle:
                         while True:
                             if time.time() - time_start > timeout:
@@ -216,16 +224,24 @@ class RunFIO(object):
                         else:
                             handle.write('\nPass')
                     time.sleep(1)
-                    self.sysinfo.get_all_host_logfile('{}/sysinfo_{}'.format(log_dir, log_file_name))
+                    self.sysdata.get_all_host_sysdata_logfile('{}/sysdata_{}'.format(log_dir, log_file_name))
                     time.sleep(10)
                 else:
                     i = i + 1
         if self.todb:
-            self.update_jobstatus_indb(db, jobtime)
+            job_info = {'status': "Processing logfiles"}
+            self.db.update_jobs(jobid, **job_info)
+
+        self.sysinfo.get_all_host_sysinfo_logfile('{}/sysinfo'.format(log_dir))
         self.reset_ceph_config(org_ceph_config)
-        return log_dir
+        self.gen_result(log_dir, jobtime)
     
-    def gen_result(self, log_dir):
+        if self.todb:
+            job_info = {'status': "Finished"}
+            self.db.update_jobs(jobid, **job_info)
+        return log_dir
+
+    def gen_result(self, log_dir, jobtime):
         print log_dir
         log_dir_list = log_dir.split('/')
         jobtag = log_dir_list[-1]
@@ -233,26 +249,32 @@ class RunFIO(object):
         output_file = result.deal_with_fio_data(
             log_dir_list[-2],
             jobtag,
-            './result_{}'.format(jobtag)
+            './result_{}'.format(jobtag),
+            log_dir
         )
         print "============================="
         print output_file
         print "============================="
     
         try:
-            sysinfo_dir_list = subprocess.check_output(
-                'ls {} | grep sysinfo'.format(log_dir),
+            sysdata_dir_list = subprocess.check_output(
+                'ls {} | grep sysdata'.format(log_dir),
                 shell=True).split('\n')
         except Exception, e:
             print e
             sys.exit(0)
         else:
-            del sysinfo_dir_list[-1]
-            for sysinfo_dir in sysinfo_dir_list:
-                self.sysinfo.deal_with_sysinfo_logfile(
+            del sysdata_dir_list[-1]
+            for sysdata_dir in sysdata_dir_list:
+                self.sysdata.deal_with_sysdata_logfile(
                     log_dir,
-                    sysinfo_dir,
+                    sysdata_dir,
                 )
+
+        self.sysinfo.deal_with_sysinfo_logfile(
+            '{}/sysinfo'.format(log_dir),
+            jobtime,
+        )
     
     def update_ceph_conffile(self, host, ceph_config):
         t = paramiko.Transport(host, "22")
@@ -279,7 +301,7 @@ class RunFIO(object):
     def modify_ceph_config(self, ceph_config):
         print ceph_config
         org_all_config = {}
-        for host in self.sysinfo.host_list:
+        for host in self.sysdata.host_list:
             org_host_config = {}
             #timetag = time.strftime('%Y_%m_%d_%H_%M_%S', time.localtime(time.time()))
             ssh = paramiko.SSHClient()
@@ -404,14 +426,12 @@ def main():
     if os.path.exists(ceph_config_file): 
         ceph_configs = json.load(open(ceph_config_file))
         for ceph_config in ceph_configs:
-            log_dir  = runfio.run(path, args.jobname, ceph_config=ceph_config)
-            time.sleep(2)
-            runfio.gen_result(log_dir)
+            if args.todb:
+                runfio.db.insert_tb_jobs(args.name, '', 'new', '')
+            log_dir  = runfio.run(path, args.jobname, 36, ceph_config=ceph_config)
             runfio.store_logfile_FS(log_dir)
     else:
-        log_dir = runfio.run(path, args.jobname)
-        time.sleep(2)
-        runfio.gen_result(log_dir)
+        log_dir = runfio.run(path, args.jobname, 36)
         runfio.store_logfile_FS(log_dir)
 
 

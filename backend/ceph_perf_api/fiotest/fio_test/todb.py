@@ -20,16 +20,15 @@ class ToDB(object):
             print sql
             self.db.rollback()
 
-        sql = "INSERT INTO fiotest_result(jobid_id, case_name, ceph_config, time, \
+        sql = "INSERT INTO fiotest_result(jobid_id, case_name, time, \
             status, blocksize, iodepth, numberjob, imagenum, \
             clientnum, r_iops, w_iops, iops, readwrite, lat, r_bw, w_bw, bw ) \
-            VALUES ('{}', '{}', '{}', '{}', \
+            VALUES ('{}', '{}', '{}', \
             '{}', '{}', '{}', '{}', \
             '{}', '{}', '{}', '{}', '{}', \
             '{}', '{}', '{}', '{}', '{}' )".format(
                 jobid,
                 kwargs['case_name'],
-                kwargs['ceph_config'],
                 kwargs['time'],
                 kwargs['status'],
                 kwargs['blocksize'],
@@ -207,18 +206,18 @@ class ToDB(object):
             print sql
             self.db.rollback()
 
-    def insert_tb_cephconfigdata(self, casename, node, osd, **kwargs):
-        sql = "SELECT * FROM fiotest_result \
-            WHERE case_name = '{}'".format(casename)
+    def insert_tb_cephconfigdata(self, jobtime, node, osd, **kwargs):
+        sql = "SELECT * FROM fiotest_jobs \
+            WHERE time = '{}'".format(jobtime)
         try:
             self.cursor.execute(sql)
             results = self.cursor.fetchall()
             for row in results:
-                caseid = row[0]
+                jobid = row[0]
         except:
             print sql
             self.db.rollback()
-        sql = "INSERT INTO fiotest_cephconfig(caseid_id, node, osd, \
+        sql = "INSERT INTO fiotest_cephconfig(jobid_id, node, osd, \
             filestore_expected_throughput_bytes, \
             filestore_expected_throughput_ops, filestore_max_sync_interval, \
             filestore_min_sync_interval, filestore_queue_max_bytes, \
@@ -256,7 +255,7 @@ class ToDB(object):
             '{}', '{}', '{}', '{}', \
             '{}', '{}', '{}', '{}', '{}', \
             '{}', '{}')".format(
-                caseid,
+                jobid,
                 node,
                 osd,
                 #kwargs['max_open_files'],
@@ -530,40 +529,41 @@ class ToDB(object):
             print sql
             self.db.rollback()
 
-    def update_jobs_status(self, jobtime, status):
-        sql = "UPDATE fiotest_jobs SET status = '{}' WHERE time = '{}'".format(status, jobtime)
-        try:
-            self.cursor.execute(sql)
-            self.db.commit()
-        except:
-            print sql
-            self.db.rollback()
+    def update_jobs(self, jobid, **kwargs):
+        for key, value in kwargs.items():
+            sql = "UPDATE fiotest_jobs SET {} = '{}' WHERE id = '{}'".format(key, value, jobid)
+            try:
+                self.cursor.execute(sql)
+                self.db.commit()
+            except:
+                print sql
+                self.db.rollback()
 
     def insert_tb_diskinfo(self,
-        casename,
+        jobtime,
         host,
         disk_name,
         disk_size,
         disk_model,
         disk_speed
     ):
-        sql = "SELECT * FROM fiotest_result \
-            WHERE case_name = '{}'".format(casename)
+        sql = "SELECT * FROM fiotest_jobs \
+            WHERE time = '{}'".format(jobtime)
         try:
             self.cursor.execute(sql)
             results = self.cursor.fetchall()
             for row in results:
-                caseid = row[0]
+                jobid = row[0]
         except:
             print sql
             self.db.rollback()
 
-        sql = "INSERT INTO fiotest_diskinfo(caseid_id, \
+        sql = "INSERT INTO fiotest_diskinfo(jobid_id, \
         node, disk_name, disk_size, \
         disk_model, disk_speed ) \
             VALUES ('{}', '{}', '{}', \
             '{}', '{}', '{}' )".format(
-                caseid,
+                jobid,
                 host,
                 disk_name,
                 disk_size,
@@ -577,19 +577,19 @@ class ToDB(object):
             print sql
             self.db.rollback()
 
-    def insert_tb_hwinfo(self, casename, host, **kwargs):
-        sql = "SELECT * FROM fiotest_result \
-            WHERE case_name = '{}'".format(casename)
+    def insert_tb_hwinfo(self, jobtime, host, **kwargs):
+        sql = "SELECT * FROM fiotest_jobs \
+            WHERE time = '{}'".format(jobtime)
         try:
             self.cursor.execute(sql)
             results = self.cursor.fetchall()
             for row in results:
-                caseid = row[0]
+                jobid = row[0]
         except:
             print sql
             self.db.rollback()
 
-        sql = "INSERT INTO fiotest_hwinfo(caseid_id, \
+        sql = "INSERT INTO fiotest_hwinfo(jobid_id, \
         node, HyperThreading, VirtualTechnology, \
         NUMA, OperatingModes, \
         CPUType, CPUCores, CPUMaxSpeed, CPUNum, \
@@ -597,7 +597,7 @@ class ToDB(object):
             VALUES ('{}', '{}', '{}', '{}', \
             '{}', '{}', '{}', '{}', '{}', \
             '{}', '{}', '{}', '{}')".format(
-                caseid,
+                jobid,
                 host,
                 kwargs['HyperThreading'],
                 kwargs['VirtualTechnology'],
@@ -618,25 +618,25 @@ class ToDB(object):
             print sql
             self.db.rollback()
 
-    def insert_tb_osinfo(self, casename, host, **kwargs):
-        sql = "SELECT * FROM fiotest_result \
-            WHERE case_name = '{}'".format(casename)
+    def insert_tb_osinfo(self, jobtime, host, **kwargs):
+        sql = "SELECT * FROM fiotest_jobs \
+            WHERE time = '{}'".format(jobtime)
         try:
             self.cursor.execute(sql)
             results = self.cursor.fetchall()
             for row in results:
-                caseid = row[0]
+                jobid = row[0]
         except:
             print sql
             self.db.rollback()
 
-        sql = "INSERT INTO fiotest_osinfo(caseid_id, \
+        sql = "INSERT INTO fiotest_osinfo(jobid_id, \
         node, PIDnumber, read_ahead, \
         IOscheduler, dirty_background_ratio, \
         dirty_ratio, MTU ) \
             VALUES ('{}', '{}', '{}', '{}', \
             '{}', '{}', '{}', '{}')".format(
-                caseid,
+                jobid,
                 host,
                 kwargs['PIDnumber'],
                 kwargs['read_ahead'],

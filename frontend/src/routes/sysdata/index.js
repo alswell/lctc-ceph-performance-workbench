@@ -423,7 +423,7 @@ class HostPage extends React.Component {
       },
     }
 
-    this.cephtableDataProps = {
+    this.cephstatustableDataProps = {
       columns: [
         {
           title: 'Case ID',
@@ -512,6 +512,100 @@ class HostPage extends React.Component {
         params: null,
       },
       errorMsg: 'get sarnic table error',
+      refresh: this.props.host.refresh,
+      handleSelectItems: (selectedRows) => {
+        this.props.dispatch({ type: 'host/updateSelectItems', payload: selectedRows })
+      },
+    }
+
+    this.cephinfotableDataProps = {
+      columns: [
+        {
+          title: 'Case ID',
+          dataIndex: 'caseid',
+          key: 'caseid',
+          width: 60,
+          sorter: true,
+        }, {
+          title: 'Monitor Number',
+          dataIndex: 'monnum',
+          key: 'monnum',
+        }, {
+          title: 'Node Number',
+          dataIndex: 'nodenum',
+          key: 'nodenum',
+        }, {
+          title: 'Version',
+          dataIndex: 'version',
+          key: 'version',
+        }, {
+          title: 'osd Number',
+          dataIndex: 'osdnum',
+          key: 'osdnum',
+        }, {
+          title: 'global raw used',
+          dataIndex: 'globalrawused',
+          key: 'globalrawused',
+        }, {
+          title: 'Operation',
+          key: 'operation',
+          width: 100,
+          render: (text, record) => {
+            return (<DropOption onMenuClick={e => this.handleMenuClick(record, e)}
+              menuOptions={[{ key: '1', name: 'Update' }, { key: '2', name: 'Delete' }]}
+            />)
+          },
+        },
+      ],
+      title: 'Ceph Info',
+      fetchData: {
+        url: this.props.host.caseid ? `cephinfo/${this.props.host.caseid}/`:`cephinfo`,
+        params: null,
+      },
+      errorMsg: 'get cephinfo table error',
+      refresh: this.props.host.refresh,
+      handleSelectItems: (selectedRows) => {
+        this.props.dispatch({ type: 'host/updateSelectItems', payload: selectedRows })
+      },
+    }
+
+    this.poolinfotableDataProps = {
+      columns: [
+        {
+          title: 'Case ID',
+          dataIndex: 'caseid',
+          key: 'caseid',
+          width: 60,
+          sorter: true,
+        }, {
+          title: 'Pool Name',
+          dataIndex: 'name',
+          key: 'name',
+        }, {
+          title: 'PG Number',
+          dataIndex: 'pgnum',
+          key: 'pgnum',
+        }, {
+          title: 'Size',
+          dataIndex: 'size',
+          key: 'size',
+        }, {
+          title: 'Operation',
+          key: 'operation',
+          width: 100,
+          render: (text, record) => {
+            return (<DropOption onMenuClick={e => this.handleMenuClick(record, e)}
+              menuOptions={[{ key: '1', name: 'Update' }, { key: '2', name: 'Delete' }]}
+            />)
+          },
+        },
+      ],
+      title: 'Pool Info',
+      fetchData: {
+        url: this.props.host.caseid ? `poolinfo/${this.props.host.caseid}/`:`poolinfo`,
+        params: null,
+      },
+      errorMsg: 'get poolinfo table error',
       refresh: this.props.host.refresh,
       handleSelectItems: (selectedRows) => {
         this.props.dispatch({ type: 'host/updateSelectItems', payload: selectedRows })
@@ -620,7 +714,17 @@ class HostPage extends React.Component {
           </TabPane>
           <TabPane tab="Ceph status" key="5">
             <DataTable
-              {...this.cephtableDataProps}
+              {...this.cephstatustableDataProps}
+            />
+          </TabPane>
+           <TabPane tab="Ceph info" key="6">
+            <DataTable
+              {...this.cephinfotableDataProps}
+            />
+          </TabPane>
+          <TabPane tab="Ceph Pool" key="7">
+            <DataTable
+              {...this.poolinfotableDataProps}
             />
           </TabPane>
         </Tabs>

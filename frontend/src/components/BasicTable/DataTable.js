@@ -7,14 +7,17 @@ import { fetch } from '../../services/restfulService'
 import { delay, getSessionStorage, setSessionStorage, sortJsonArr } from '../../utils/dataUtils'
 import Filter from './Filter'
 
+
 class DataTable extends React.Component {
   constructor (props) {
     super(props)
+    const title = () => this.props.title;
     this.state = {
       loading: true,
       current: getSessionStorage('pagination')[window.location.pathname],
       dataSourceBack: [],
       pageSize: 5,
+      title,
     }
   }
 
@@ -96,7 +99,7 @@ class DataTable extends React.Component {
       showTotal: total => `共 ${total} 条`,
       total: null,
       pageSize: this.state.pageSize,
-      defaultPageSize: 5,
+      defaultPageSize: 20,
       pageSizeOptions: ['5', '20', '30', '40'],
       current: this.state.current,
     }
@@ -128,6 +131,7 @@ class DataTable extends React.Component {
           onChange={this.handleTableChange}
           {...this.tableProps}
           pagination={this.pagination}
+          scroll={this.props.scroll}
         />
       </div>
     )

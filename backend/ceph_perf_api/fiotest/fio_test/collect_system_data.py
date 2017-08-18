@@ -13,7 +13,7 @@ import yaml
 import socket,struct
 
 
-class SysInfo(object):
+class SysData(object):
 
     def __init__(self, path, client, havedb=False):
         if havedb:
@@ -45,7 +45,9 @@ class SysInfo(object):
             sys.exit(1)
 
         self.client_password = str(self.client_password)
-        self.host_password = "passw0rd"
+        node_name, node_data = ceph_info['ceph-node'].popitem()
+        self.host_password = node_data['password']
+        ceph_info['ceph-node'][node_name] = node_data
 
         self.host_list = []
         ssh = paramiko.SSHClient()
@@ -75,20 +77,30 @@ class SysInfo(object):
             ssh.exec_command(cmd)
         ssh.close()
 
-    def sys_info(self, host):
+    def get_logfile(self, host, password, log, log_dir):
+        t = paramiko.Transport(host, "22")
+        t.connect(username = "root", password = password)
+        sftp = paramiko.SFTPClient.from_transport(t)
+        remotepath = '/tmp/{}'.format(log)
+        if not os.path.exists(log_dir):
+            try:
+                os.makedirs(log_dir)
+            except Exception, e:
+                print "make sysdata log dir fail:{}".format(e)
+                sys.exit(1)
+
+        localpath = '{}/{}_{}'.format(log_dir, host, log)
+        print host, remotepath, localpath
+        sftp.get(remotepath, localpath)
+        t.close()
+
+
+    def sys_data(self, host):
         cmds = [
             'sar -A {} >/tmp/sar.txt &'.format(self.intervaltime),
             'date >/tmp/iostat.txt; iostat -p -dxm {} >>/tmp/iostat.txt &'.format(self.intervaltime),
         ]
         self.run_sshcmds(host, cmds, self.host_password)
-
-    def get_sys_info(self):
-        for host in self.host_list:
-            host_ip = self.nodes[host]['public_ip']
-            print 'get sysinfo {}'.format(host)
-            p = Process(target=self.sys_info, args=(host_ip,))
-            p.start()
-        self.get_ceph_status(self.client)
 
     def get_ceph_status(self, client):
         cmds = [
@@ -99,7 +111,15 @@ class SysInfo(object):
         ]
         self.run_sshcmds(client, cmds, self.client_password)
 
-    def cleanup_sys_info(self, host):
+    def get_sys_data(self):
+        for host in self.host_list:
+            host_ip = self.nodes[host]['public_ip']
+            print 'get sysdata {}'.format(host)
+            p = Process(target=self.sys_data, args=(host_ip,))
+            p.start()
+        self.get_ceph_status(self.client)
+
+    def cleanup_sys_data(self, host):
         cmds = [
             'kill -9 `ps -ef | grep sar | grep -v grep | awk \'{print $2}\'`',
             'kill -9 `ps -ef | grep iostat | grep -v grep | awk \'{print $2}\'`',
@@ -109,8 +129,8 @@ class SysInfo(object):
     def cleanup_all(self):
         for host in self.host_list:
             host_ip = self.nodes[host]['public_ip']
-            print 'cleanup sysinfo collect process in {}'.format(host)
-            p = Process(target=self.cleanup_sys_info,args=(host_ip,))
+            print 'cleanup sysdata collect process in {}'.format(host)
+            p = Process(target=self.cleanup_sys_data,args=(host_ip,))
             p.start()
         cmd = [
             'kill -9 `ps -ef | grep \'ceph -s\' | grep -v grep | awk \'{print $2}\'`',
@@ -118,53 +138,22 @@ class SysInfo(object):
         self.run_sshcmds(self.client, cmd, self.client_password)
 
 
-    def get_logfile(self, host, password, log, log_dir):
-        t = paramiko.Transport(host, "22")
-        t.connect(username = "root", password = password)
-        sftp = paramiko.SFTPClient.from_transport(t)
-        remotepath = '/tmp/{}'.format(log)
-        if not os.path.exists(log_dir):
-            try:
-                os.makedirs(log_dir)
-            except Exception, e:
-                print "make sysinfo log dir fail:{}".format(e)
-                sys.exit(1)
-
-        localpath = '{}/{}_{}'.format(log_dir, host, log)
-        print host, remotepath, localpath
-        sftp.get(remotepath, localpath)
-        t.close()
-
     def get_all_logfile(self, host, log_dir):
-        self.get_hwinfo_log(host, log_dir)
         self.get_logfile(host, self.host_password, 'sar.txt', log_dir)
         self.get_logfile(host, self.host_password, 'iostat.txt', log_dir)
-        self.get_logfile(host, self.host_password, 'dmidecode.txt', log_dir)
-        self.get_logfile(host, self.host_password, 'meminfo.txt', log_dir)
-        self.get_logfile(host, self.host_password, 'cpuinfo.txt', log_dir)
-        self.get_logfile(host, self.host_password, 'lsblk.txt', log_dir)
 
-    def get_all_host_logfile(self, log_dir):
+    def get_all_host_sysdata_logfile(self, log_dir):
         self.cleanup_all()
         for host in self.host_list:
             host_ip = self.nodes[host]['public_ip']
             self.get_all_logfile(host_ip, log_dir)
             self.get_ceph_perfdump(host_ip, log_dir)
-            self.get_ceph_conf(host_ip, log_dir)
 
         self.get_logfile(self.client, self.client_password, 'cephstatus.txt', log_dir)
         self.get_logfile(self.client, self.client_password, 'cephv.txt', log_dir)
         self.get_logfile(self.client, self.client_password, 'cephdf.json', log_dir)
         self.get_logfile(self.client, self.client_password, 'cephosdtree.json', log_dir)
 
-    def get_hwinfo_log(self, host_ip, log_dir):
-        cmds = [
-            'dmidecode >/tmp/dmidecode.txt',
-            'cat /proc/meminfo >/tmp/meminfo.txt',
-            'cat /proc/cpuinfo >/tmp/cpuinfo.txt',
-            'lsblk >/tmp/lsblk.txt',
-        ]
-        self.run_sshcmds(host_ip, cmds, self.host_password)
 
     def get_ceph_perfdump(self, host, log_dir):
         ssh = paramiko.SSHClient()
@@ -199,7 +188,7 @@ class SysInfo(object):
             try:
                 os.makedirs(log_dir)
             except Exception, e:
-                print "make sysinfo log dir fail:{}".format(e)
+                print "make sysdata log dir fail:{}".format(e)
                 sys.exit(1)
         for log in ceph_perfdump_file_list:
             remotepath = '/tmp/{}'.format(log)
@@ -212,48 +201,6 @@ class SysInfo(object):
         for host in self.host_list:
             cmds = ['find /var/run/ceph -name \'*osd*asok\' | while read path; do ceph --admin-daemon $path perf reset all; done']
             self.run_sshcmds(self.nodes[host]['public_ip'], cmds, self.host_password)
-
-    def get_ceph_conf(self, host, log_dir):
-        ssh = paramiko.SSHClient()
-        ssh.load_system_host_keys()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(
-            hostname = host,
-            port = 22,
-            username = 'root',
-            password = self.host_password
-        )
-        cmd = 'find /var/run/ceph -name \'*osd*asok\''
-        stdin, stdout, stderr = ssh.exec_command(cmd)
-        osd_list = stdout.readlines()
-        ceph_config_file_list = []
-        for osd in osd_list:
-            osd = osd.strip()
-            cmd = 'ceph --admin-daemon {} config show > /tmp/{}_ceph_config.json'.format(
-                osd,
-                re.search('(osd\.\d+)', osd).group(1)
-            )
-            ssh.exec_command(cmd)
-            ceph_config_file_list.append('{}_ceph_config.json'.format(
-                re.search('(osd\.\d+)', osd).group(1)
-            ))
-        ssh.close()
-
-        t = paramiko.Transport(host, "22")
-        t.connect(username = "root", password = self.host_password)
-        sftp = paramiko.SFTPClient.from_transport(t)
-        if not os.path.exists(log_dir):
-            try:
-                os.makedirs(log_dir)
-            except Exception, e:
-                print "make sysinfo log dir fail:{}".format(e)
-                sys.exit(1)
-        for log in ceph_config_file_list:
-            remotepath = '/tmp/{}'.format(log)
-            localpath = '{}/{}_{}'.format(log_dir, host, log)
-            print host, remotepath, localpath
-            sftp.get(remotepath, localpath)
-        t.close()
 
     def get_datetime_fordb_sarlog(self, time, t_type, casename):
         if t_type == 'PM':
@@ -514,16 +461,6 @@ class SysInfo(object):
             log_osd = log_file.split('_')[1]
             self.db.insert_tb_perfdumpdata(casename, host, log_osd, **perfdump)
 
-    def deal_with_cephconfiglog(self, casename, path):
-        log_files = os.popen('ls {}/*ceph_config.json'.format(path)).readlines()
-        for log_file in log_files:
-            log_file = log_file.strip()
-            ceph_configs = json.load(open(log_file))
-            log_file = log_file.split('/')[-1]
-            host = log_file.split('_')[0]
-            osd = log_file.split('_')[1]
-            self.db.insert_tb_cephconfigdata(casename, host, osd, **ceph_configs)
-
     def deal_with_cephstatuslog(self, casename, path):
         log_file = '{}/{}_cephstatus.txt'.format(path, self.client)
         with open(log_file, 'r') as f:
@@ -553,128 +490,6 @@ class SysInfo(object):
                     ceph_status['monmap']['mons'] = ceph_mon
                     ceph_status['pgmap']['pgs_by_state'] = ceph_map
                     self.db.insert_tb_cephstatusdata(casename, time, **ceph_status)
-
-    def deal_with_smartctl(self, result):
-        model = ''
-        speed = ''
-        for line in result:
-            model_match = re.match('Device Model:\s+(.*)$', line)
-            speed_match = re.match('Rotation Rate::\s+(.*)$', line)
-            if model_match:
-                model = model_match.group(1)
-            if speed_match:
-                speed = speed_match.group(1)
-        return model, speed
-
-    def deal_with_lsblk_log(self, casename, path):
-        disk_info = {}
-        for host in self.host_list:
-            ip = self.nodes[host]['public_ip']
-            ssh = paramiko.SSHClient()
-            ssh.load_system_host_keys()
-            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh.connect(
-                hostname = ip,
-                port = 22,
-                username = 'root',
-                password = self.host_password
-            )
- 
-            with open('{}/{}_lsblk.txt'.format(path, ip), 'r') as f:
-                f.readline()
-                for line in f.readlines():
-                    match = re.match('(\w+)\s+\S+\s+\S+\s+(\S+)', line)
-                    if match:
-                        disk_name = match.group(1)
-                        disk_size = match.group(2)
-                        cmd = 'smartctl -i /dev/{}'.format(disk_name)
-                        stdin, stdout, stderr = ssh.exec_command(cmd)
-                        result = stdout.read()
-                        with open('{}/{}_{}_smartctl.txt'.format(path, ip, disk_name), 'w') as smartctl_f:
-                            smartctl_f.write(result)
-                        disk_model, disk_speed = self.deal_with_smartctl(result)
-                        if self.havedb:
-                            self.db.insert_tb_diskinfo(
-                                casename,
-                                host,
-                                disk_name,
-                                disk_size,
-                                disk_model,
-                                disk_speed
-                            )
-            ssh.close()
-
-
-    def deal_with_cpuinfo_log(self, path):
-        cpu_info = {}
-        for host in self.host_list:
-            with open('{}/{}_cpuinfo.txt'.format(path, self.nodes[host]['public_ip']), 'r') as f:
-                cpunum = 0
-                cputype = ''
-                cpuspeed = ''
-                cpucores = ''
-                for line in f:
-                    match_cputype = re.match('model name\s+: (.*)$', line)
-                    match_cpuspeed = re.match('cpu MHz\s+: (.*)$', line)
-                    match_cpucores = re.match('cpu cores\s+: (.*)$', line)
-                    if match_cputype:
-                        cputype = match_cputype.group(1)
-                        cpunum = cpunum + 1
-                    if match_cpuspeed:
-                        cpuspeed = match_cpuspeed.group(1)
-                    if match_cpucores:
-                        cpucores = match_cpucores.group(1)
-            cpu_info[host] = {
-                'cputype': cputype,
-                'cpuspeed': cpuspeed,
-                'percpucores': cpucores,
-                'cpunum': cpunum
-            }
-        return cpu_info 
-
-    def deal_with_meminfo_log(self, path):
-        mem_info = {}
-        for host in self.host_list:
-            with open('{}/{}_dmidecode.txt'.format(path, self.nodes[host]['public_ip']), 'r') as f:
-                n = 0
-                memnum = 0
-                mem_match = False
-                mem_M = ''
-                mem_S = ''
-                lines = f.readlines()
-                while n < len(lines):
-                    if re.match('Memory Device$', lines[n]):
-                        memnum = memnum + 1
-                        mem_match = True
-                    if mem_match:
-                        M_match = re.match('\s*Manufacturer: (.*)$', lines[n])
-                        S_match = re.match('\s*Serial Number: (.*)$', lines[n])
-                        if M_match:
-                            mem_M = M_match.group(1)
-                        if S_match:
-                            mem_S = S_match.group(1)
-                        if re.match('$', lines[n]):
-                            mem_match = False
-                    n = n+1
-            with open('{}/{}_meminfo.txt'.format(path, self.nodes[host]['public_ip']), 'r') as f:
-                for line in f:
-                    maxsize_match = re.match('MemTotal:\s+(.*)$', line)
-                    if maxsize_match:
-                        memsize = maxsize_match.group(1)
-            mem_info[host] = {'memtype': mem_M+':'+mem_S, 'totalsize': memsize, 'memnum': memnum}
-        return mem_info 
-
-    def deal_with_hwinfo(self, casename, path):
-        cpu_info = self.deal_with_cpuinfo_log(path)
-        mem_info = self.deal_with_meminfo_log(path)
-        for host in self.host_list:
-            hw_info = {}
-            hw_info.update(cpu_info[host])
-            hw_info.update(mem_info[host])
-            hw_info.update(self.nodes[host]['hwinfo'])
-            json.dump(hw_info, open('{}/{}_hw_info.json'.format(path, host), 'w'), indent=2)
-            if self.havedb:
-                self.db.insert_tb_hwinfo(casename, host, **hw_info)
 
     def get_pool_info(self, pools):
         pool_info = {}
@@ -731,57 +546,17 @@ class SysInfo(object):
             for pool, pool_info in pools_info.items():
                 self.db.insert_tb_poolinfo(casename, pool, **pool_info)
 
-    def get_os_info(self, casename, path):
-        for host in self.host_list:
-            os_info = {}
-            ip = self.nodes[host]['public_ip']
-            ssh = paramiko.SSHClient()
-            ssh.load_system_host_keys()
-            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh.connect(
-                hostname = ip,
-                port = 22,
-                username = 'root',
-                password = self.host_password
-            )
-
-            cmd = 'cat /proc/sys/vm/dirty_background_ratio'
-            stdin, stdout, stderr = ssh.exec_command(cmd)
-            output = stdout.read()
-            os_info['dirty_background_ratio'] = re.sub('\n', '', output)
-
-            cmd = 'cat /proc/sys/vm/dirty_ratio'
-            stdin, stdout, stderr = ssh.exec_command(cmd)
-            output = stdout.read()
-            os_info['dirty_ratio'] = re.sub('\n', '', output)
-
-            cmd = 'ps -ef | wc -l'
-            stdin, stdout, stderr = ssh.exec_command(cmd)
-            output = stdout.read()
-            os_info['PIDnumber'] = re.sub('\n', '', output)
-
-            os_info.update(self.nodes[host]['osinfo'])
-
-            json.dump(os_info, open('{}/{}_os_info.json'.format(path, host), 'w'), indent=2)
-            if self.havedb:
-                self.db.insert_tb_osinfo(casename, host, **os_info)
-
-
-    def deal_with_sysinfo_logfile(self, log_dir, sysinfo_dir):
-        path = '{}/{}'.format(log_dir, sysinfo_dir)
+    def deal_with_sysdata_logfile(self, log_dir, sysdata_dir):
+        path = '{}/{}'.format(log_dir, sysdata_dir)
         dir_list = path.split('/')
-        casename = re.match('sysinfo_(.*)', dir_list[-1]).group(1)
+        casename = re.match('sysdata_(.*)', dir_list[-1]).group(1)
 
         self.deal_with_sarlog(casename, path)
         self.deal_with_iostatlog(casename, path)
         if self.havedb:
-            self.deal_with_cephconfiglog(casename, path)
             self.deal_with_perfdumplog(casename, path)
             self.deal_with_cephstatuslog(casename, path)
-        self.deal_with_lsblk_log(casename, path)
-        self.deal_with_hwinfo(casename, path)
-        self.get_os_info(casename, path)
-        self.deal_with_cephinfo(casename, path)
+            self.deal_with_cephinfo(casename, path)
 
 def format_subnet(subnet_input):
     if subnet_input.find("/") == -1:
@@ -831,94 +606,3 @@ def ip_in_subnet(ip,subnet):
     subnet_array = subnet.split("/")
     ip = format_subnet(ip + "/" + subnet_array[1])
     return ip == subnet
-
-def get_ceph_config_file_sds(log_dir, client):
-    t = paramiko.Transport(client, "22")
-    t.connect(username = "root", password = self.client_password)
-    sftp = paramiko.SFTPClient.from_transport(t)
-    remotepath = '/etc/ceph/ceph.conf'
-    if not os.path.exists(log_dir):
-        try:
-            os.makedirs(log_dir)
-        except Exception, e:
-            print "make log dir fail:{}".format(e)
-            sys.exit(1)
-
-    localpath = '{}/{}_ceph.conf'.format(log_dir, client)
-    sftp.get(remotepath, localpath)
-    t.close()
-
-    output = {}
-    nodes = {}
-    with open('{}/{}_ceph.conf'.format(log_dir, client), 'r') as f:
-        lines = f.readlines()
-        n = 0
-        while n < len(lines):
-            osd_match = re.match('\[(osd\.\d+)\]', lines[n])
-            if osd_match:
-                host_match = re.match('\s*host = (.*)', lines[n+1])
-                publicip_match = re.match('\s*public addr = (\d+.\d+.\d+\.\d+)', lines[n+2])
-                clusterip_match = re.match('\s*cluster addr = (\d+.\d+.\d+\.\d+)', lines[n+3])
-                osdjournal_match = re.match('\s*osd journal = (.*)', lines[n+5])
-                osddata_match = re.match('\s*devs = (.*)', lines[n+4])
-                if not osddata_match:
-                    osddata_match = re.match('\s*osd data = (.*)', lines[n+6])
-                n = n + 6
-                host_name = host_match.group(1)
-                osd_num = osd_match.group(1)
-                if nodes.has_key(host_name):
-                    nodes[host_name]['osd'][osd_num] = {
-                        'osd-disk': osddata_match.group(1),
-                        'journal-disk': osdjournal_match.group(1)
-                    }
-                else:
-                    osd_dic = {}
-                    osd_dic[osd_num] = {
-                        'osd-disk': osddata_match.group(1),
-                        'journal-disk': osdjournal_match.group(1)
-                    }
-                    nodes[host_name] = {
-                        'public_ip': publicip_match.group(1),
-                        'cluster_ip': clusterip_match.group(1),
-                        'osd': osd_dic}
-            else:
-                n = n + 1
-    output['ceph-node'] = nodes
-    return output
-
-def get_ceph_config_file(client):
-    osds_num_list = subprocess.check_output('ceph osd ls', shell=True).split('\n')
-    del osds_num_list[-1]
-
-    for osd_num in osds_num_list:
-        subprocess.check_output('ceph osd find {} >/tmp/osd_tmp.json'.format(osd_num), shell=True)
-        output = json.dumps(output)
-        print "++++++++++++++++++++++++++"
-        print output
-        print "++++++++++++++++++++++++++"
-
-def main():
-    parser = argparse.ArgumentParser(
-        prog="sysinfo",
-        version='v0.1',
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        description="collect systen info")
-    parser.add_argument('-D', '--logdir', dest="logdir",
-                metavar="sysinfo log dir", action="store",
-                    help='''sysinfo log dir''')
-    args = parser.parse_args()
-
-    client = '10.240.217.101'
-    #sysinfo = SysInfo(client)
-    '''
-    #sysinfo.get_sys_info()
-    #sysinfo.cleanup_all()
-    sysinfo.deal_with_sysinfo_logfile(
-        sysinfo_dir,
-    )
-    '''
-    #sysinfo.deal_with_perfdumplog('/root/fio-zelin/test-suites/test2/log_2017_07_28_15_00_39/sysinfo_rbd_rw_4k_runtime30_iodepth1_numjob1_imagenum2_test2_%70_2017_07_28_15_00_39')
-    get_ceph_config_file(client)
-
-if __name__ == '__main__':
-    main()

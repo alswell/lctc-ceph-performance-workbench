@@ -3,3 +3,4 @@ openpyxl
 paramiko
 pyyaml
 MySQL-python
+oslo_messaging

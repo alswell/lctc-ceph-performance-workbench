@@ -255,11 +255,14 @@ class TestTestForm extends React.Component {
           url: 'create',
           method: 'post',
           params: values,
-          //notifications: {
-            //title: 'create Action',
-            //success: `创建${values.jobname} 操作成功！`,
-            //error: `创建${values.jobname} 操作失败！`,
-          //},
+          notifications: {
+            title: 'create Action',
+            success: `创建${values.jobname} 操作成功！`,
+            error: `创建${values.jobname} 操作失败！`,
+          },
+        }).then((result)=>{
+          //when the fetch successfully ,refresh the table
+          this.props.refresh()
         })
       }
     })

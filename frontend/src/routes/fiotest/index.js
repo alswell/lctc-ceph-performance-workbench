@@ -5,7 +5,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'dva'
 import DataTable from '../../components/BasicTable/DataTable'
-import { Modal, Row, Col, Card, Button } from 'antd'
+import { Modal, Row, Col, Card, Button, Table } from 'antd'
 import { Link } from 'dva/router'
 import DropOption from '../../components/DropOption/DropOption'
 import BatchModal from '../../components/modals/BatchModal'
@@ -53,7 +53,7 @@ class HostPage extends React.Component {
   };
 
   refresh = () => {
-    this.props.dispatch({ type: 'host/refresh' })
+    this.props.dispatch({ type: 'fiotest/refresh' })
   };
 
   init = () => {
@@ -82,64 +82,91 @@ class HostPage extends React.Component {
           title: 'Case Name',
           dataIndex: 'case_name',
           key: 'case_name',
-          // width: 64,
+          //width: 350,
           sorter: true,
         }, {
-          title: 'Start Time',
-          dataIndex: 'time',
-          key: 'time',
+          title: 'Status',
+          dataIndex: 'status',
+          key: 'status',
           sorter: true,
-          // width: 100,
         }, {
-          title: 'Sys data',
-          //dataIndex: 'sysdata',
-          //key: 'sysdate',
-          // width: 120,
-          render: (text, record) => <Link to={`sysdata?caseid=${record.id}`}>sys data</Link>,
-        }, {
-          title: 'Block Size',
-          dataIndex: 'blocksize',
-          key: 'blocksize',
+          title: 'Job ID',
+          dataIndex: 'jobid',
+          key: 'jobid',
           sorter: true,
-          // width: 100,
-        }, {
-          title: 'IO Depth',
-          dataIndex: 'iodepth',
-          key: 'iodepth',
-          sorter: true,
-          // width: 64,
-        }, {
-          title: 'Number Job',
-          dataIndex: 'numberjob',
-          key: 'numberjob',
-          sorter: true,
-        },
-        {
-          title: 'Image Number',
-          dataIndex: 'imagenum',
-          key: 'imagenum',
-        }, {
-          title: 'clientnum',
-          dataIndex: 'clientnum',
-          key: 'clientnum',
-        }, {
-          title: 'readwrite',
-          dataIndex: 'readwrite',
-          key: 'readwrite',
-        },
+        },  
+        // {
+        //   title: 'Block Size',
+        //   dataIndex: 'blocksize',
+        //   key: 'blocksize',
+        //   sorter: true,
+        // }, {
+        //   title: 'IO Depth',
+        //   dataIndex: 'iodepth',
+        //   key: 'iodepth',
+        //   sorter: true,
+        // }, {
+        //   title: 'Number Job',
+        //   dataIndex: 'numberjob',
+        //   key: 'numberjob',
+        //   sorter: true,
+        // },
+        // {
+        //   title: 'Image Number',
+        //   dataIndex: 'imagenum',
+        //   key: 'imagenum',
+        // }, {
+        //   title: 'clientnum',
+        //   dataIndex: 'clientnum',
+        //   key: 'clientnum',
+        // }, {
+        //   title: 'readwrite',
+        //   dataIndex: 'readwrite',
+        //   key: 'readwrite',
+        // },
         {  
+          title: 'Read IOPS',
+          dataIndex: 'r_iops',
+          key: 'r_iops',
+        },{
+          title: 'Write IOPS',
+          dataIndex: 'w_iops',
+          key: 'w_iops',
+        }, {
           title: 'IOPS',
           dataIndex: 'iops',
           key: 'iops',
         }, {
+          title: 'Read BW',
+          dataIndex: 'r_bw',
+          key: 'r_bw',
+        }, {
+          title: 'Write BW',
+          dataIndex: 'w_bw',
+          key: 'w_bw',
+        }, {
+          title: 'BW',
+          dataIndex: 'bw',
+          key: 'bw',
+        }, {
           title: 'lat',
           dataIndex: 'lat',
           key: 'lat',
-        
-        }, {
+        },
+        {
+          title: 'Start Time',
+          dataIndex: 'time',
+          key: 'time',
+          sorter: true,
+        },{
+          title: 'Sys data',
+          //dataIndex: 'sysdata',
+          //key: 'sysdate',
+          render: (text, record) => <Link to={`sysdata?caseid=${record.id}`}>sys data</Link>,
+        },
+        {
           title: 'Operation',
           key: 'operation',
-          width: 100,
           render: (text, record) => {
             return (<DropOption onMenuClick={e => this.handleMenuClick(record, e)}
               menuOptions={[{ key: '1', name: 'Update' }, { key: '2', name: 'Delete' }]}
@@ -148,12 +175,10 @@ class HostPage extends React.Component {
         },
       ],
       fetchData: {
-        // url: `fiotest`,
         url: this.props.host.jobid ? `fiotest/${this.props.host.jobid}/`:`fiotest`,
-        //url: `fiotest/${this.props.host.jobid}/`,
         params: null,
       },
-      errorMsg: 'get host table error',
+      errorMsg: 'get fiotest table error',
       refresh: this.props.host.refresh,
       handleSelectItems: (selectedRows) => {
         this.props.dispatch({ type: 'host/updateSelectItems', payload: selectedRows })
@@ -250,6 +275,7 @@ class HostPage extends React.Component {
               </div>
               <DataTable
                 {...this.tableDataProps}
+                scroll={{ x: 1600 }}
               />
             </Card>
           </Col>

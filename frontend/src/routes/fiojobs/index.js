@@ -54,7 +54,7 @@ class HostPage extends React.Component {
   };
 
   refresh = () => {
-    this.props.dispatch({ type: 'host/refresh' })
+    this.props.dispatch({ type: 'fiojobs/refresh' })
   };
 
   init = () => {
@@ -104,6 +104,11 @@ class HostPage extends React.Component {
           render: (text, record) => <Link to={`fiotest?jobid=${record.id}`}>{text} test cases</Link>,
           // width: 100,
         }, {
+          title: 'ceph config',
+          dataIndex: 'ceph_config',
+          key: 'ceph_config',
+          render: (text, record) => <Link to={`cephconfig?jobid=${record.id}`}>{text}</Link>,
+        }, {
           title: 'Operation',
           key: 'operation',
           width: 100,
@@ -118,7 +123,7 @@ class HostPage extends React.Component {
         url: `fiojobs`,
         params: null,
       },
-      //errorMsg: 'get host table error',
+      errorMsg: 'get job table error',
       refresh: this.props.host.refresh,
       handleSelectItems: (selectedRows) => {
         this.props.dispatch({ type: 'host/updateSelectItems', payload: selectedRows })
@@ -198,6 +203,9 @@ class HostPage extends React.Component {
     }
   };
 
+  actionCollectionsProps = {
+    refresh:this.refresh
+  };
 
   render () {
     this.init()
@@ -212,7 +220,7 @@ class HostPage extends React.Component {
                 <Button type="primary" onClick={this.showModal.bind(this, 'batchModalVisible')}
                   disabled={this.props.host.selectedItems.length === 0}
                 >Batch Action</Button>
-                <CollectionsPage />
+                <CollectionsPage {...this.actionCollectionsProps}/>
               </div>
               <DataTable
                 {...this.tableDataProps}

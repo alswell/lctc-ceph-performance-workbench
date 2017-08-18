@@ -129,4 +129,79 @@ class CephStatus(generic.View):
         d = utils.query_to_dict(result)
         return {"total": len(d), "data": d}
 
+@urls.register
+class CephInfos(generic.View):
+    url_regex = r'^cephinfo$'
+
+    @utils.json_response
+    def get(self, request):
+        print dict(request.GET)
+        f = {}
+        for key, value in dict(request.GET).items():
+            f[key] = value[0]
+        print f
+        result = models.CephInfo.objects.filter(**f).all()
+        d = utils.query_to_dict(result)
+        return {"total": len(d), "data": d}
+
+@urls.register
+class CephInfo(generic.View):
+    url_regex = r'^cephinfo/(?P<caseid>\d+)/$'
+
+    @utils.json_response
+    def get(self, request, caseid):
+        result = models.CephInfo.objects.filter(caseid=caseid).all()
+        d = utils.query_to_dict(result)
+        return {"total": len(d), "data": d}
+
+@urls.register
+class CephPoolInfos(generic.View):
+    url_regex = r'^poolinfo$'
+
+    @utils.json_response
+    def get(self, request):
+        print dict(request.GET)
+        f = {}
+        for key, value in dict(request.GET).items():
+            f[key] = value[0]
+        print f
+        result = models.CephPoolInfo.objects.filter(**f).all()
+        d = utils.query_to_dict(result)
+        return {"total": len(d), "data": d}
+
+@urls.register
+class CephPoolInfo(generic.View):
+    url_regex = r'^poolinfo/(?P<caseid>\d+)/$'
+
+    @utils.json_response
+    def get(self, request, caseid):
+        result = models.CephPoolInfo.objects.filter(caseid=caseid).all()
+        d = utils.query_to_dict(result)
+        return {"total": len(d), "data": d}
+
+
+@urls.register
+class CephConfigs(generic.View):
+    url_regex = r'^cephconfig$'
+
+    @utils.json_response
+    def get(self, request):
+        print dict(request.GET)
+        f = {}
+        for key, value in dict(request.GET).items():
+            f[key] = value[0]
+        print f
+        result = models.CephConfig.objects.filter(**f).all()
+        d = utils.query_to_dict(result)
+        return {"total": len(d), "data": d}
+
+@urls.register
+class CephConfig(generic.View):
+    url_regex = r'^cephconfig/(?P<jobid>\d+)/$'
+
+    @utils.json_response
+    def get(self, request, jobid):
+        result = models.CephConfig.objects.filter(jobid=jobid, osd='osd.0').all()
+        d = utils.query_to_dict(result)
+        return {"total": len(d), "data": d}
 

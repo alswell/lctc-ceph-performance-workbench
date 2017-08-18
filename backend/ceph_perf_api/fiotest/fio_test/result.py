@@ -23,14 +23,8 @@ class Result(object):
             from todb import ToDB
             self.db = ToDB()
 
-    def get_log_list(self, suitename, tag):
+    def get_log_list(self, suitename, tag, path):
         result = []
-        pwd_path = os.getcwd().split('/')
-        if pwd_path[-1] == suitename and pwd_path[-2] == 'test-suites':
-            path = "{}/{}".format(os.getcwd(), tag)
-        else:
-            path = "{}/test-suites/{}/{}".format(os.getcwd(), suitename, tag)
-        #os.chdir(path)
         logs = subprocess.check_output('ls {}/*.txt'.format(path), shell=True)
         logs = logs.split('\n')
         del logs[-1]
@@ -39,7 +33,7 @@ class Result(object):
             log = re.match('{}/(.+)\.txt'.format(path), log).group(1)
             result.append(log)
     
-        return path, result
+        return result
     
     def create_sheets(self, logs, wb):
         config_types = []
@@ -269,6 +263,16 @@ class Result(object):
 
         for log in logs:
             #rbd_randrw_4k_runtime30_iodepth1_numjob1_imagenum2_hahaha_%100_2017_07_18_17_27_04
+            log_list = []
+            with open('{}/{}.txt'.format(log_dir, log), 'r') as f:
+                begin_to = False
+                lines = f.readlines()
+                case_status = lines[-1].strip()
+                for line in lines:
+                    if begin_to:
+                        log_list.append(line)
+                    if re.match('All clients', line):
+                        begin_to = True
             time_match = re.search('_(\d{4})_(\d{2})_(\d{2})_(\d{2})_(\d{2})_(\d{2})', log)
 
             time = '{}-{}-{} {}:{}:{}'.format(
@@ -280,7 +284,6 @@ class Result(object):
                 time_match.group(6),
             )
 
-            #log = re.sub('_(\d{4})_(\d{2})_(\d{2})_(\d{2})_(\d{2})_(\d{2})', '', log)
             configs_log = log.split('_')
             for configs in configs_log:
                 if re.match('case\d+', configs):
@@ -320,57 +323,61 @@ class Result(object):
             configs_log.remove(time_match.group(6))
 
             print configs_log
-
-            config_type = '{}_{}{}'.format(bs_log, rpercent_log, rw_log)
-            ws = wb.get_sheet_by_name(config_type)
-            row = row_dic[config_type]
-            row_dic[config_type] = row_dic[config_type] +1
     
-            #fill imagenum, readwrite, bs, iodepth
-            results = subprocess.check_output('grep iodepth {}/{}.txt'.format(log_dir, log), shell=True).split('\n')
-            del results[-1]
-            result_match = re.search(r'rbd_image\d+:.*rw=(.*), bs=\(R\) (.*)-.*-.*-.*, ioengine=(.*), iodepth=(.*)', results[0])
-    
-            imagenum, clientnum = self.fill_imagenum(log_dir, results, imagenum_log, ws, row, 6)
-            readwrite = self.fill_readwrite(result_match.group(1), rw_log, rpercent_log, ws, row, 10)
-            bs = self.fill_bs(result_match.group(2), bs_log, ws, row, 3)
-            if result_match.group(3) != 'rbd':
-                print "Error: The ioengine in log is not 'rbd'!"
-                sys.exit(1)
-            iodepth = self.fill_iodepth(result_match.group(4), iodepth_log, ws, row, 4)
-    
-            #fill numberjob    
-            results = subprocess.check_output('grep jobs= {}/{}.txt'.format(log_dir, log), shell=True).split('\n')
-            result_match = re.search(r'jobs=(\d+)\)', results[0])
-    
-            numjob = self.fill_numjob(result_match.group(1), numjob_log, ws, row, 5)
-    
-            ws.cell(row = row, column = 2).value = '{}_{}_{}_{}'.format(bs, iodepth, numjob, imagenum)
-            ws.cell(row = row, column = 2).border = self.border
-            ws.cell(row = row, column = 1).value = '{}'.format(log)
-            ws.cell(row = row, column = 1).border = self.border
-            #fill iops and lat
-            log_list = []
-            with open('{}/{}.txt'.format(log_dir, log), 'r') as f:
-                begin_to = False
-                lines = f.readlines()
-                case_status = lines[-1].strip()
-                for line in lines:
-                    if begin_to:
-                        log_list.append(line)
-                    if re.match('All clients', line):
-                        begin_to = True
-            if len(log_list) == 0:
-                with open('{}/{}.txt'.format(log_dir, log), 'r') as f:
-                    log_list = f.readlines()
-            r_iops, w_iops, iops = self.fill_iops(log_list, ws, row, 7)
-            lat = self.fill_lat(log_list, ws, row, 11)
-            r_bw, w_bw, bw = self.fill_bw(log_list, ws, row, 12)
+            if case_status == "Pass":
+                config_type = '{}_{}{}'.format(bs_log, rpercent_log, rw_log)
+                ws = wb.get_sheet_by_name(config_type)
+                row = row_dic[config_type]
+                row_dic[config_type] = row_dic[config_type] +1
+        
+                #fill imagenum, readwrite, bs, iodepth
+                results = subprocess.check_output('grep iodepth {}/{}.txt'.format(log_dir, log), shell=True).split('\n')
+                del results[-1]
+                result_match = re.search(r'rbd_image\d+:.*rw=(.*), bs=\(R\) (.*)-.*-.*-.*, ioengine=(.*), iodepth=(.*)', results[0])
+        
+                imagenum, clientnum = self.fill_imagenum(log_dir, results, imagenum_log, ws, row, 6)
+                readwrite = self.fill_readwrite(result_match.group(1), rw_log, rpercent_log, ws, row, 10)
+                bs = self.fill_bs(result_match.group(2), bs_log, ws, row, 3)
+                if result_match.group(3) != 'rbd':
+                    print "Error: The ioengine in log is not 'rbd'!"
+                    sys.exit(1)
+                iodepth = self.fill_iodepth(result_match.group(4), iodepth_log, ws, row, 4)
+        
+                #fill numberjob    
+                results = subprocess.check_output('grep jobs= {}/{}.txt'.format(log_dir, log), shell=True).split('\n')
+                result_match = re.search(r'jobs=(\d+)\)', results[0])
+        
+                numjob = self.fill_numjob(result_match.group(1), numjob_log, ws, row, 5)
+        
+                ws.cell(row = row, column = 2).value = '{}_{}_{}_{}'.format(bs, iodepth, numjob, imagenum)
+                ws.cell(row = row, column = 2).border = self.border
+                ws.cell(row = row, column = 1).value = '{}'.format(log)
+                ws.cell(row = row, column = 1).border = self.border
+                #fill iops and lat
+                if len(log_list) == 0:
+                    with open('{}/{}.txt'.format(log_dir, log), 'r') as f:
+                        log_list = f.readlines()
+                r_iops, w_iops, iops = self.fill_iops(log_list, ws, row, 7)
+                lat = self.fill_lat(log_list, ws, row, 11)
+                r_bw, w_bw, bw = self.fill_bw(log_list, ws, row, 12)
+            else:
+                bs = bs_log
+                readwrite = '{}{}'.format(rw_log, rpercent_log)
+                imagenum = re.sub('imagenum', '', imagenum_log)
+                iodepth = re.sub('iodepth', '', iodepth_log)
+                numjob = re.sub('numjob', '', numjob_log)
+                clientnum = ''
+                r_iops = ''
+                w_iops = ''
+                iops = ''
+                lat = ''
+                r_bw =''
+                w_bw = ''
+                bw = ''
 
             if self.havedb:
                 result_to_db = {
                     'jobtime': job_start_time,
-                    'ceph_config': cephconfig,
                     'time': time,
                     'status': case_status,
                     'case_name': log,
@@ -390,8 +397,9 @@ class Result(object):
                 }
                 self.db.insert_tb_result(**result_to_db)
 
-    def deal_with_fio_data(self, suitename, jobtag, file_name):
-        log_dir, logs = self.get_log_list(suitename, jobtag)
+    def deal_with_fio_data(self, suitename, jobtag, file_name, path):
+        log_dir = path
+        logs = self.get_log_list(suitename, jobtag, path)
 
         result_table = Workbook()
         sheet_list = self.create_sheets(logs, result_table)

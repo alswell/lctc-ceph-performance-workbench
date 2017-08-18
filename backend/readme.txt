@@ -38,3 +38,6 @@ http://www.cnblogs.com/caseast/articles/4806213.html
         # edit table
     ./manage.py makemigrations mysql    #初始化表结构
     ./manage.py migrate                 #表创建完毕
+
+3. 
+ yum install rabbitmq-server

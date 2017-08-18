@@ -1,7 +1,11 @@
+import os
 import sys
 import time
 import oslo_messaging
 from oslo_config import cfg
+
+file_path = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.join(file_path, ".."))
 from common.log import setup_log
 
 
