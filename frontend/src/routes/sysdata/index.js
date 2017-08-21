@@ -8,14 +8,14 @@ import DataTable from '../../components/BasicTable/DataTable'
 import { Modal, Row, Col, Card, Button, Tabs } from 'antd'
 import { Link } from 'dva/router'
 import DropOption from '../../components/DropOption/DropOption'
-import BatchModal from '../../components/modals/BatchModal'
+import MemModal from '../../components/modals/MemModal'
+import CpuModal from '../../components/modals/CpuModal'
 import { fetchAndNotification } from '../../services/restfulService'
-import { CollectionsPage } from '../../components/host/CreateModal'
 
 const confirm = Modal.confirm
 const TabPane = Tabs.TabPane;
 
-class HostPage extends React.Component {
+class SysData extends React.Component {
   // constructor (props) {
   //   super(props)
   // }
@@ -28,7 +28,7 @@ class HostPage extends React.Component {
     if (e.key === '1') {
       let { dispatch } = this.props
       dispatch({
-        type: 'host/showModal',
+        type: 'sysdata/showModal',
         payload: {
           key: 'modalVisible',
         },
@@ -47,7 +47,7 @@ class HostPage extends React.Component {
   showModal = (key) => {
     let { dispatch } = this.props
     dispatch({
-      type: 'host/showModal',
+      type: 'sysdata/showModal',
       payload: {
         key,
       },
@@ -55,7 +55,7 @@ class HostPage extends React.Component {
   };
 
   refresh = () => {
-    this.props.dispatch({ type: 'host/refresh' })
+    this.props.dispatch({ type: 'sysdata/refresh' })
   };
 
   init = () => {
@@ -70,7 +70,7 @@ class HostPage extends React.Component {
       onCancel: () => {
         let { dispatch } = this.props
         dispatch({
-          type: 'host/hideModal',
+          type: 'sysdata/hideModal',
           payload: {
             key: 'modalVisible',
           },
@@ -162,7 +162,7 @@ class HostPage extends React.Component {
       errorMsg: 'get sar cpu table error',
       refresh: this.props.host.refresh,
       handleSelectItems: (selectedRows) => {
-        this.props.dispatch({ type: 'host/updateSelectItems', payload: selectedRows })
+        this.props.dispatch({ type: 'sysdata/updateSelectItems', payload: selectedRows })
       },
     }
 
@@ -245,7 +245,7 @@ class HostPage extends React.Component {
       errorMsg: 'get sarmem table error',
       refresh: this.props.host.refresh,
       handleSelectItems: (selectedRows) => {
-        this.props.dispatch({ type: 'host/updateSelectItems', payload: selectedRows })
+        this.props.dispatch({ type: 'sysdata/updateSelectItems', payload: selectedRows })
       },
     }
 
@@ -321,7 +321,7 @@ class HostPage extends React.Component {
       errorMsg: 'get sarnic table error',
       refresh: this.props.host.refresh,
       handleSelectItems: (selectedRows) => {
-        this.props.dispatch({ type: 'host/updateSelectItems', payload: selectedRows })
+        this.props.dispatch({ type: 'sysdata/updateSelectItems', payload: selectedRows })
       },
     }
 
@@ -419,7 +419,7 @@ class HostPage extends React.Component {
       errorMsg: 'get iostat table error',
       refresh: this.props.host.refresh,
       handleSelectItems: (selectedRows) => {
-        this.props.dispatch({ type: 'host/updateSelectItems', payload: selectedRows })
+        this.props.dispatch({ type: 'sysdata/updateSelectItems', payload: selectedRows })
       },
     }
 
@@ -514,7 +514,7 @@ class HostPage extends React.Component {
       errorMsg: 'get sarnic table error',
       refresh: this.props.host.refresh,
       handleSelectItems: (selectedRows) => {
-        this.props.dispatch({ type: 'host/updateSelectItems', payload: selectedRows })
+        this.props.dispatch({ type: 'sysdata/updateSelectItems', payload: selectedRows })
       },
     }
 
@@ -565,7 +565,7 @@ class HostPage extends React.Component {
       errorMsg: 'get cephinfo table error',
       refresh: this.props.host.refresh,
       handleSelectItems: (selectedRows) => {
-        this.props.dispatch({ type: 'host/updateSelectItems', payload: selectedRows })
+        this.props.dispatch({ type: 'sysdata/updateSelectItems', payload: selectedRows })
       },
     }
 
@@ -608,14 +608,14 @@ class HostPage extends React.Component {
       errorMsg: 'get poolinfo table error',
       refresh: this.props.host.refresh,
       handleSelectItems: (selectedRows) => {
-        this.props.dispatch({ type: 'host/updateSelectItems', payload: selectedRows })
+        this.props.dispatch({ type: 'sysdata/updateSelectItems', payload: selectedRows })
       },
     }
 
     this.batchModalProps = {
       visible: this.props.host.batchModalVisible,
       maskClosable: true,
-      title: 'Batch Action Modal',
+      title: '',
       wrapClassName: 'vertical-center-modal',
       selectedItems: this.props.host.selectedItems,
       fetchData: {
@@ -640,7 +640,7 @@ class HostPage extends React.Component {
       onCancel: () => {
         let { dispatch } = this.props
         dispatch({
-          type: 'host/hideModal',
+          type: 'sysdata/hideModal',
           payload: {
             key: 'batchModalVisible',
           },
@@ -676,7 +676,7 @@ class HostPage extends React.Component {
       onCancel: () => {
         let { dispatch } = this.props
         dispatch({
-          type: 'host/hideModal',
+          type: 'sysdata/hideModal',
           payload: {
             key: 'createModalVisible',
           },
@@ -685,6 +685,17 @@ class HostPage extends React.Component {
     }
   };
 
+  state = {
+    visible: false,
+  };
+  
+  showModalchart = () => {
+    this.setState({ visible: true })
+  };
+
+  handleCancel = () => {
+    this.setState({ visible: false })
+  };
 
   render () {
     this.init()
@@ -693,14 +704,29 @@ class HostPage extends React.Component {
       <div className="content-inner">
         <Tabs type="card">
           <TabPane tab="cpu" key="1">
+            <div className="action-btn-container">
+                <Button type="primary" onClick={this.refresh} icon="reload" />
+                <Button type="primary" onClick={this.showModal.bind(this, 'batchModalVisible')}
+                  disabled={this.props.host.selectedItems.length === 0}
+                >Chart</Button>
+            </div>
             <DataTable
               {...this.cputableDataProps}
             />
+             {this.props.host.batchModalVisible && <CpuModal {...this.batchModalProps} />}
           </TabPane>
           <TabPane tab="memory" key="2">
+            <div className="action-btn-container">
+                <Button type="primary" onClick={this.refresh} icon="reload" />
+                <Button type="primary" onClick={this.showModal.bind(this, 'batchModalVisible')}
+                  disabled={this.props.host.selectedItems.length === 0}
+                >Chart</Button>
+            </div>
             <DataTable
               {...this.memtableDataProps}
             />
+          {this.props.host.modalVisible && <Modal {...this.modalProps} />}
+          {this.props.host.batchModalVisible && <MemModal {...this.batchModalProps} />}
           </TabPane>
           <TabPane tab="network" key="3">
             <DataTable
@@ -728,8 +754,6 @@ class HostPage extends React.Component {
             />
           </TabPane>
         </Tabs>
-        {this.props.host.modalVisible && <Modal {...this.modalProps} />}
-        {this.props.host.batchModalVisible && <BatchModal {...this.batchModalProps} />}
       </div>
     )
   }
@@ -742,7 +766,7 @@ function mapStateToProps ({ sysdata }) {
   }
 }
 
-HostPage.propTypes = {
+SysData.propTypes = {
   cluster: PropTypes.object,
   location: PropTypes.object,
   dispatch: PropTypes.func,
@@ -750,5 +774,5 @@ HostPage.propTypes = {
   host: PropTypes.object,
 }
 
-export default connect(mapStateToProps)(HostPage)
+export default connect(mapStateToProps)(SysData)
 

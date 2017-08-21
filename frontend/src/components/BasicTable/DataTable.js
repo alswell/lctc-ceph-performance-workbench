@@ -16,7 +16,7 @@ class DataTable extends React.Component {
       loading: true,
       current: getSessionStorage('pagination')[window.location.pathname],
       dataSourceBack: [],
-      pageSize: 5,
+      pageSize: 10,
       title,
     }
   }
@@ -99,7 +99,7 @@ class DataTable extends React.Component {
       showTotal: total => `共 ${total} 条`,
       total: null,
       pageSize: this.state.pageSize,
-      defaultPageSize: 20,
+      defaultPageSize: 30,
       pageSizeOptions: ['5', '20', '30', '40'],
       current: this.state.current,
     }

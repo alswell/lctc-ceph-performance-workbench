@@ -199,7 +199,10 @@ class SysData(object):
 
     def cleanup_ceph_perf(self):
         for host in self.host_list:
-            cmds = ['find /var/run/ceph -name \'*osd*asok\' | while read path; do ceph --admin-daemon $path perf reset all; done']
+            cmds = [
+                'find /var/run/ceph -name \'*osd*asok\' | while read path; do ceph --admin-daemon $path perf reset all; done',
+                'lsblk | grep -Eo "ceph-.*" | sed "s/ceph-/osd./g" | while read osd; do ceph daemon $osd flush_store_cache; done; sync; echo 3 > /proc/sys/vm/drop_caches',
+            ]
             self.run_sshcmds(self.nodes[host]['public_ip'], cmds, self.host_password)
 
     def get_datetime_fordb_sarlog(self, time, t_type, casename):
@@ -249,6 +252,7 @@ class SysData(object):
             cpu_result.append(result)
             if self.havedb:
                 self.db.insert_tb_sarcpudata(casename, host, **result)
+        cpu_result.append(self.get_average(cpu_result))
         return cpu_result
 
     def deal_with_sarlog_memory(self, host, casename, path):
@@ -278,6 +282,7 @@ class SysData(object):
             mem_result.append(result)
             if self.havedb:
                 self.db.insert_tb_sarmemdata(casename, host, **result)
+        mem_result.append(self.get_average(mem_result))
         return mem_result
 
     def get_network_device(self, host):
@@ -356,10 +361,28 @@ class SysData(object):
                         'public:{}'.format(public_n),
                         **result
                     )
+        cluster_result.append(self.get_average(cluster_result))
+        public_result.append(self.get_average(public_result))
         both_result['cluster_network:{}'.format(cluster_n)] = cluster_result
         both_result['public_network:{}'.format(public_n)] = public_result
 
         return both_result
+
+    def get_average(self, results):
+        total = {}
+        num = 0
+        for data in results:
+            for key, value in data.items():
+                if key == "time":
+                    continue
+                if not total.has_key(key):
+                    total[key] = value
+                    continue
+                num =  num + 1
+                total[key] = float(total[key]) + float(value)
+        total[key] = total[key]/num
+        total['avg'] = "True"
+        return total
 
     def deal_with_sarlog(self, casename, path):
         all_result = {}

@@ -8,12 +8,12 @@ import DataTable from '../../components/BasicTable/DataTable'
 import { Modal, Row, Col, Card, Button, Table } from 'antd'
 import { Link } from 'dva/router'
 import DropOption from '../../components/DropOption/DropOption'
-import BatchModal from '../../components/modals/BatchModal'
+import FioTestModal from '../../components/modals/FioTestModal'
 import { fetchAndNotification } from '../../services/restfulService'
 
 const confirm = Modal.confirm
 
-class HostPage extends React.Component {
+class FioTest extends React.Component {
   // constructor (props) {
   //   super(props)
   // }
@@ -26,7 +26,7 @@ class HostPage extends React.Component {
     if (e.key === '1') {
       let { dispatch } = this.props
       dispatch({
-        type: 'host/showModal',
+        type: 'fiotest/showModal',
         payload: {
           key: 'modalVisible',
         },
@@ -45,7 +45,7 @@ class HostPage extends React.Component {
   showModal = (key) => {
     let { dispatch } = this.props
     dispatch({
-      type: 'host/showModal',
+      type: 'fiotest/showModal',
       payload: {
         key,
       },
@@ -68,7 +68,7 @@ class HostPage extends React.Component {
       onCancel: () => {
         let { dispatch } = this.props
         dispatch({
-          type: 'host/hideModal',
+          type: 'fiotest/hideModal',
           payload: {
             key: 'modalVisible',
           },
@@ -181,19 +181,19 @@ class HostPage extends React.Component {
       errorMsg: 'get fiotest table error',
       refresh: this.props.host.refresh,
       handleSelectItems: (selectedRows) => {
-        this.props.dispatch({ type: 'host/updateSelectItems', payload: selectedRows })
+        this.props.dispatch({ type: 'fiotest/updateSelectItems', payload: selectedRows })
       },
     }
 
     this.batchModalProps = {
       visible: this.props.host.batchModalVisible,
       maskClosable: true,
-      title: 'Batch Action Modal',
+      title: '',
       wrapClassName: 'vertical-center-modal',
       selectedItems: this.props.host.selectedItems,
       fetchData: {
-        url: 'host',
-        method: 'delete',
+        url: 'fiotest',
+        //method: 'delete',
       },
       onOk: (data) => {
         this.batchModalProps.onCancel()
@@ -213,45 +213,9 @@ class HostPage extends React.Component {
       onCancel: () => {
         let { dispatch } = this.props
         dispatch({
-          type: 'host/hideModal',
+          type: 'fiotest/hideModal',
           payload: {
             key: 'batchModalVisible',
-          },
-        })
-      },
-    }
-
-    this.createModalProps = {
-      visible: this.props.host.createModalVisible,
-      maskClosable: true,
-      title: 'Batch Action Modal',
-      wrapClassName: 'vertical-center-modal',
-      selectedItems: this.props.host.selectedItems,
-      fetchData: {
-        url: 'host',
-        method: 'delete',
-      },
-      onOk: (data) => {
-        this.batchModalProps.onCancel()
-        this.props.host.selectedItems.forEach((item) => {
-          fetchAndNotification({
-            url: 'host',
-            method: 'delete',
-            params: { ids: item.id },
-            notifications: {
-              title: 'batch Action',
-              success: `${item.name} 操作成功！`,
-              error: `${item.name} 操作失败！`,
-            },
-          })
-        })
-      },
-      onCancel: () => {
-        let { dispatch } = this.props
-        dispatch({
-          type: 'host/hideModal',
-          payload: {
-            key: 'createModalVisible',
           },
         })
       },
@@ -271,7 +235,7 @@ class HostPage extends React.Component {
                 <Button type="primary" onClick={this.refresh} icon="reload" />
                 <Button type="primary" onClick={this.showModal.bind(this, 'batchModalVisible')}
                   disabled={this.props.host.selectedItems.length === 0}
-                >Batch Action</Button>
+                >IOPS Chart</Button>
               </div>
               <DataTable
                 {...this.tableDataProps}
@@ -281,7 +245,7 @@ class HostPage extends React.Component {
           </Col>
         </Row>
         {this.props.host.modalVisible && <Modal {...this.modalProps} />}
-        {this.props.host.batchModalVisible && <BatchModal {...this.batchModalProps} />}
+        {this.props.host.batchModalVisible && <FioTestModal {...this.batchModalProps} />}
       </div>
     )
   }
@@ -294,7 +258,7 @@ function mapStateToProps ({ fiotest }) {
   }
 }
 
-HostPage.propTypes = {
+FioTest.propTypes = {
   cluster: PropTypes.object,
   location: PropTypes.object,
   dispatch: PropTypes.func,
@@ -302,5 +266,5 @@ HostPage.propTypes = {
   host: PropTypes.object,
 }
 
-export default connect(mapStateToProps)(HostPage)
+export default connect(mapStateToProps)(FioTest)
 

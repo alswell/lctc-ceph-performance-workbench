@@ -183,6 +183,21 @@ const Routers = function ({ history, app }) {
             }, 'sysdata')
           },
         }, {
+          path: 'cephconfig',
+          getComponent (nextState, cb) {
+            require.ensure([], require => {
+              cb(null, require('./routes/cephconfig/lineChart/'))
+            }, 'cephconfig')
+          },
+        }, {
+
+          path: 'cephconfig/:id',
+          getComponent (nextState, cb) {
+            require.ensure([], require => {
+              cb(null, require('./routes/cephconfig/lineChart'))
+            }, 'cephconfig')
+          },
+        }, {
           path: 'test',
           getComponent (nextState, cb) {
             require.ensure([], require => {
