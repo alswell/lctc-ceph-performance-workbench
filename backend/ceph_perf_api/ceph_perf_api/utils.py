@@ -9,8 +9,8 @@ class JSONResponse(http.HttpResponse):
     def __init__(self, data, status=200):
         if status == 204:
             content = ''
-	elif isinstance(data, QuerySet):
-	    content = serializers.serialize("json", data)
+        elif isinstance(data, QuerySet):
+            content = serializers.serialize("json", data)
         else:
             content = json.dumps(data)
         
@@ -41,6 +41,17 @@ def json_response(func):
             return JSONResponse('', status=204)
         return JSONResponse(data)
     return _wrapped
+
+
+def parse_filter_param(body):
+    filter_param = {}
+    for key, value in body.items():
+        if isinstance(value, dict):
+            for k, v in value.items():
+                filter_param[key + '__' + k] = v
+        else:
+            filter_param[key] = value
+    return filter_param
 
 
 def query_to_dict(obj, foreign_key=None, foreign_convert=None):

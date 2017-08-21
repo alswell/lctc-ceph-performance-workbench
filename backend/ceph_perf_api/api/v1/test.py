@@ -6,17 +6,6 @@ from fiotest import models
 from job_conductor import api as job_api
 
 
-def parse_filter_param(body):
-    filter_param = {}
-    for key, value in body.items():
-        if isinstance(value, dict):
-            for k, v in value.items():
-                filter_param[key + '__' + k] = v
-        else:
-            filter_param[key] = value
-    return filter_param
-
-
 @urls.register
 class UserInfos(generic.View):
     url_regex = r'^userinfo$'
@@ -37,7 +26,7 @@ class UserInfos(generic.View):
         """
 
         body = request.DATA
-        filter_param = parse_filter_param(body)
+        filter_param = utils.parse_filter_param(body)
         result = models.Result.objects.filter(**filter_param).all()
         d = utils.query_to_dict(result)
         return {"value": d}
