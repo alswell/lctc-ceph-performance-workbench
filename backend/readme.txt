@@ -40,4 +40,6 @@ http://www.cnblogs.com/caseast/articles/4806213.html
     ./manage.py migrate                 #表创建完毕
 
 3. 
- yum install rabbitmq-server
+    yum install rabbitmq-server
+    rabbitmq-server restart
+
