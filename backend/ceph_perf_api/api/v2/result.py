@@ -5,8 +5,9 @@ from ceph_perf_api import utils
 from fiotest import models
 
 
-def foreign_convert(model):
-    return "%s %s" % (model.jobid.name, model.jobid.time)
+class JobConvert(utils.ForeignKeyConvert):
+    def __call__(self, model):
+        return "%s %s" % (model.jobid.name, model.jobid.time)
 
 
 @urls.register
@@ -22,7 +23,7 @@ class FIOTEST(generic.View):
         print f
         result = models.Result.objects.filter(**f).all()
 
-        d = utils.query_to_dict(result, "jobid", foreign_convert)
+        d = utils.query_to_dict(result, JobConvert("jobid"))
         return {"total": len(d), "data": d}
 
 
@@ -37,7 +38,7 @@ def mk_check(n, array):
 
 def jobs(array):
     result = models.Result.objects.all()
-    d = utils.query_to_dict(result, "jobid", foreign_convert)
+    d = utils.query_to_dict(result, JobConvert("jobid"))
     total = len(d)
     check = mk_check(total, array)
 
@@ -72,7 +73,7 @@ def jobs(array):
 
 def jobs2(array):
     result = models.Result.objects.all()
-    d = utils.query_to_dict(result, "jobid", foreign_convert)
+    d = utils.query_to_dict(result, JobConvert("jobid"))
     total = len(d)
     check = mk_check(total, array)
 
@@ -113,7 +114,7 @@ def jobs2(array):
 
 def results(array):
     result = models.Result.objects.all()
-    d = utils.query_to_dict(result, "jobid", foreign_convert)
+    d = utils.query_to_dict(result, JobConvert("jobid"))
     total = len(d)
     check = mk_check(total, array)
 

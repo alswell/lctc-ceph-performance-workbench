@@ -4,6 +4,7 @@ from django.db.models.query import QuerySet
 from django.db.models import Model
 from django.core import serializers
 
+
 class JSONResponse(http.HttpResponse):
 
     def __init__(self, data, status=200):
@@ -20,9 +21,12 @@ class JSONResponse(http.HttpResponse):
             content_type='application/json;',
         )
 
-        self.__setitem__('Access-Control-Allow-Headers', "Content-Type, Content-Length, Authorization, Accept, X-Requested-With , yourHeaderFeild")
-        self.__setitem__('Access-Control-Allow-Methods', "PUT, POST, GET, DELETE, OPTIONS,PATCH")
-        self.__setitem__('Access-Control-Allow-Origin', "*")
+        self.__setitem__('Access-Control-Allow-Headers'
+                         , "Content-Type, Content-Length, Authorization, Accept, X-Requested-With , yourHeaderFeild")
+        self.__setitem__('Access-Control-Allow-Methods'
+                         , "PUT, POST, GET, DELETE, OPTIONS,PATCH")
+        self.__setitem__('Access-Control-Allow-Origin'
+                         , "*")
 
 
 def json_response(func):
@@ -54,15 +58,23 @@ def parse_filter_param(body):
     return filter_param
 
 
-def query_to_dict(obj, foreign_key=None, foreign_convert=None):
+class ForeignKeyConvert(object):
+    def __init__(self, foreign_key):
+        self.foreign_key = foreign_key
+
+    def __call__(self, *args, **kwargs):
+        return self.foreign_key
+
+
+def query_to_dict(obj, foreign_convert=None):
     if isinstance(obj, QuerySet):
         data = json.loads(serializers.serialize("json", obj))
         for i in range(len(data)):
             pk = data[i]['pk']
             data[i] = data[i]["fields"]
             data[i]['id'] = pk
-            if foreign_key and foreign_convert:
-                data[i][foreign_key] = foreign_convert(obj[i])
+            if foreign_convert:
+                data[i][foreign_convert.foreign_key] = foreign_convert(obj[i])
         return data
 
     if isinstance(obj, Model):
