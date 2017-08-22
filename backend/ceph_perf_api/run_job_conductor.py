@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#! /usr/bin/python
 import os
 import sys
 import time
@@ -10,10 +10,7 @@ from oslo_config import cfg
 from common.log import setup_log
 
 
-def main():
-    setup_log()
-    transport = oslo_messaging.get_transport(cfg.CONF)
-    target = oslo_messaging.Target(topic='job', server='job-server')
+def load_endpoints():
     # __import__('manager')
     # endpoint = getattr(sys.modules['manager'], 'Manager')
     from job_conductor.manager import Manager
@@ -21,6 +18,14 @@ def main():
     endpoints = [
         endpoint(),
     ]
+    return endpoints
+
+
+def main():
+    setup_log()
+    transport = oslo_messaging.get_transport(cfg.CONF)
+    target = oslo_messaging.Target(topic='job', server='job-server')
+    endpoints = load_endpoints()
     server = oslo_messaging.get_rpc_server(transport, target, endpoints, executor='blocking')
 
     try:

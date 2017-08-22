@@ -9,6 +9,10 @@ cd ceph_perf_api
 ```
 ./run_job_conductor.py
 ```
+- run all servers:
+```
+./run_all.sh
+```
 ***
 #### Django ORM (mysql):
 - http://blog.csdn.net/fgf00/article/details/53678205
@@ -53,6 +57,6 @@ cd ceph_perf_api
 #### Install Rabbitmq
 ```
     yum install rabbitmq-server
-    rabbitmq-server restart
+    service rabbitmq-server restart
 ```
 
