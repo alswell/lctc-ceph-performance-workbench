@@ -9,10 +9,11 @@ cd ceph_perf_api
 ```
 ./run_job_conductor.py
 ```
+***
 #### Django ORM (mysql):
-http://blog.csdn.net/fgf00/article/details/53678205
-http://www.cnblogs.com/caseast/articles/4806213.html
-- initial
+- http://blog.csdn.net/fgf00/article/details/53678205
+- http://www.cnblogs.com/caseast/articles/4806213.html
+##### initial
 ```
     pip install MySQL-python
     ./manage.py startapp mysql
@@ -41,13 +42,14 @@ http://www.cnblogs.com/caseast/articles/4806213.html
     ./manage.py makemigrations mysql    #初始化表结构
     ./manage.py migrate                 #表创建完毕
 ```
-- add table
+##### add table
 ```
     vim mysql/models.py
         # edit table
     ./manage.py makemigrations mysql    #初始化表结构
     ./manage.py migrate                 #表创建完毕
 ```
+***
 #### Install Rabbitmq
 ```
     yum install rabbitmq-server
