@@ -1,11 +1,19 @@
-1. How to run django server:
-    cd ceph_perf_api
-    ./manage.py runserver <IP>:<PORT>  # example: ./manage.py runserver 0.0.0.0:8866
+#### run server
+- How to run django server:
+```
+cd ceph_perf_api
+./manage.py runserver <IP>:<PORT>  # example: ./manage.py runserver 0.0.0.0:8866
+```
 
-2. Django ORM (mysql):
+- run job conductor(RPC server):
+```
+./run_job_conductor.py
+```
+#### Django ORM (mysql):
 http://blog.csdn.net/fgf00/article/details/53678205
 http://www.cnblogs.com/caseast/articles/4806213.html
-  1) initial
+- initial
+```
     pip install MySQL-python
     ./manage.py startapp mysql
     vim ceph_perf_api/settings.py
@@ -32,14 +40,17 @@ http://www.cnblogs.com/caseast/articles/4806213.html
         # edit table
     ./manage.py makemigrations mysql    #初始化表结构
     ./manage.py migrate                 #表创建完毕
-
-  2) add table
+```
+- add table
+```
     vim mysql/models.py
         # edit table
     ./manage.py makemigrations mysql    #初始化表结构
     ./manage.py migrate                 #表创建完毕
-
-3. 
+```
+#### Install Rabbitmq
+```
     yum install rabbitmq-server
     rabbitmq-server restart
+```
 
