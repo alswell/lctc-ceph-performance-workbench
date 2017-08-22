@@ -163,6 +163,11 @@ class FioTest extends React.Component {
           //dataIndex: 'sysdata',
           //key: 'sysdate',
           render: (text, record) => <Link to={`sysdata?caseid=${record.id}`}>sys data</Link>,
+        },{
+          title: 'Perf dump',
+          //dataIndex: 'sysdata',
+          //key: 'sysdate',
+          render: (text, record) => <Link to={`perfdump/${record.id}`}>perf dump</Link>,
         },
         {
           title: 'Operation',

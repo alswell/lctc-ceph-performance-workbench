@@ -179,6 +179,32 @@ class CephPoolInfo(generic.View):
         d = utils.query_to_dict(result)
         return {"total": len(d), "data": d}
 
+@urls.register
+class PerfDumps(generic.View):
+    url_regex = r'^perfdump$'
+
+    @utils.json_response
+    def get(self, request):
+        print dict(request.GET)
+        f = {}
+        for key, value in dict(request.GET).items():
+            f[key] = value[0]
+        print f
+        result = models.PerfDump.objects.filter(**f).all()
+        d = utils.query_to_dict(result)
+        return {"total": len(d), "data": d}
+
+@urls.register
+class PerfDump(generic.View):
+    url_regex = r'^perfdump/(?P<caseid>\d+)/$'
+
+    @utils.json_response
+    def get(self, request, caseid):
+        result = models.PerfDump.objects.filter(caseid=caseid).all()
+        d = utils.query_to_dict(result)
+        #return {"total": len(d), "data": d}
+        return d
+
 
 @urls.register
 class CephConfigs(generic.View):
@@ -203,5 +229,6 @@ class CephConfig(generic.View):
     def get(self, request, jobid):
         result = models.CephConfig.objects.filter(jobid=jobid, osd='osd.0').all()
         d = utils.query_to_dict(result)
-        return {"total": len(d), "data": d}
+        #return {"total": len(d), "data": d}
+        return d[0]
 

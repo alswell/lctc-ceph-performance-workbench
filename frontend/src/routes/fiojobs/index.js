@@ -107,7 +107,7 @@ class HostPage extends React.Component {
           title: 'ceph config',
           dataIndex: 'ceph_config',
           key: 'ceph_config',
-          render: (text, record) => <Link to={`cephconfig?jobid=${record.id}`}>{text}</Link>,
+          render: (text, record) => <Link to={`cephconfig/${record.id}`}>{text}</Link>,
         }, {
           title: 'Operation',
           key: 'operation',

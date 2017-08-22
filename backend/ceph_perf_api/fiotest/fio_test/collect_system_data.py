@@ -175,6 +175,7 @@ class SysData(object):
                 osd,
                 re.search('(osd\.\d+)', osd).group(1)
             )
+            print cmd
             ssh.exec_command(cmd)
             ceph_perfdump_file_list.append('{}_ceph_perfdump.json'.format(
                 re.search('(osd\.\d+)', osd).group(1)

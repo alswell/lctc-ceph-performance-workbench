@@ -177,7 +177,7 @@ class PerfDump(models.Model):
     filestore_apply_latency_sum = models.FloatField(null=True)
     filestore_commitcycle = models.IntegerField(null=True)
     filestore_commitcycle_latency_avgcount = models.IntegerField(null=True)
-    filestore_commitcycle_sum = models.FloatField(null=True)
+    filestore_commitcycle_latency_sum = models.FloatField(null=True)
     leveldb_leveldb_submit_sync_latency_avgcount = models.IntegerField(null=True)
     leveldb_leveldb_submit_sync_latency_sum = models.FloatField(null=True)
     leveldb_leveldb_get_latency_avgcount = models.IntegerField(null=True)

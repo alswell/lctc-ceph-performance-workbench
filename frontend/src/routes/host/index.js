@@ -90,7 +90,7 @@ class HostPage extends React.Component {
           dataIndex: 'name',
           key: 'name',
           // width: 120,
-          render: (text, record) => <Link to={`user/${record.id}`}>{text}</Link>,
+          render: (text, record) => <Link to={`host/${record.id}`}>{text}</Link>,
         }, {
           title: 'NickName',
           dataIndex: 'nickName',
@@ -156,10 +156,10 @@ class HostPage extends React.Component {
       title: 'Batch Action Modal',
       wrapClassName: 'vertical-center-modal',
       selectedItems: this.props.host.selectedItems,
-      fetchData: {
-        url: 'host',
-        method: 'delete',
-      },
+      //fetchData: {
+      //  url: 'host',
+      //  method: 'delete',
+      //},
       onOk: (data) => {
         this.batchModalProps.onCancel()
         this.props.host.selectedItems.forEach((item) => {

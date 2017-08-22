@@ -350,7 +350,7 @@ class ToDB(object):
             filestore_apply_latency_sum, \
             filestore_commitcycle, \
             filestore_commitcycle_latency_avgcount, \
-            filestore_commitcycle_sum, \
+            filestore_commitcycle_latency_sum, \
             osd_op, \
             osd_op_wip, \
             osd_op_in_bytes, \

@@ -140,7 +140,21 @@ const Routers = function ({ history, app }) {
               cb(null, require('./routes/host/'))
             }, 'host')
           },
-        },{
+        },
+        {
+          path: "host/:id",
+          getComponent(nextState, cb) {
+            require.ensure(
+              [],
+              require => {
+                registerModel(app, require("./models/host.model"));
+                cb(null, require("./routes/host/detail.js"));
+              },
+              "host-detail"
+            );
+          }
+        },
+        {
           path: 'fiotest/:jobid',
           getComponent (nextState, cb) {
             require.ensure([], require => {
@@ -182,21 +196,57 @@ const Routers = function ({ history, app }) {
               cb(null, require('./routes/sysdata/'))
             }, 'sysdata')
           },
+        },
+        {
+          path: "cephconfig/:id",
+          getComponent(nextState, cb) {
+            require.ensure(
+              [],
+              require => {
+                registerModel(app, require("./models/cephconfig.model"));
+                cb(null, require("./routes/cephconfig/"));
+              },
+              "cephconfig"
+            );
+          }
+        }, 
+        {
+          path: "cephconfig",
+          getComponent(nextState, cb) {
+            require.ensure(
+              [],
+              require => {
+                registerModel(app, require("./models/cephconfig.model"));
+                cb(null, require("./routes/cephconfig/"));
+              },
+              "cephconfig"
+            );
+          }
         }, {
-          path: 'cephconfig',
-          getComponent (nextState, cb) {
-            require.ensure([], require => {
-              cb(null, require('./routes/cephconfig/lineChart/'))
-            }, 'cephconfig')
-          },
-        }, {
-
-          path: 'cephconfig/:id',
-          getComponent (nextState, cb) {
-            require.ensure([], require => {
-              cb(null, require('./routes/cephconfig/lineChart'))
-            }, 'cephconfig')
-          },
+          path: "perfdump/:id",
+          getComponent(nextState, cb) {
+            require.ensure(
+              [],
+              require => {
+                registerModel(app, require("./models/perfdump.model"));
+                cb(null, require("./routes/perfdump/"));
+              },
+              "perfdump"
+            );
+          }
+        }, 
+        {
+          path: "perfdump",
+          getComponent(nextState, cb) {
+            require.ensure(
+              [],
+              require => {
+                registerModel(app, require("./models/perfdump.model"));
+                cb(null, require("./routes/perfdump/"));
+              },
+              "perfdump"
+            );
+          }
         }, {
           path: 'test',
           getComponent (nextState, cb) {
