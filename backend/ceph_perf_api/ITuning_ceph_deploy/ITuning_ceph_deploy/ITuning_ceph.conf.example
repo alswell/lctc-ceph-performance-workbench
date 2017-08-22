@@ -52,7 +52,6 @@ mon clock drift allowed = 2
 
 [osd]
 bluestore = false
-osd crush update on start = false
 osd journal size = 20480
 #osd max backfills = 1
 #osd recovery op priority = 2
