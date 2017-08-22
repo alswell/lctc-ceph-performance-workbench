@@ -6,6 +6,9 @@ from fiotest import models
 
 
 class JobConvert(utils.ForeignKeyConvert):
+    def __init__(self):
+        super(JobConvert, self).__init__("jobid")
+
     def __call__(self, model):
         return "%s %s" % (model.jobid.name, model.jobid.time)
 
@@ -23,7 +26,7 @@ class FIOTEST(generic.View):
         print f
         result = models.Result.objects.filter(**f).all()
 
-        d = utils.query_to_dict(result, JobConvert("jobid"))
+        d = utils.query_to_dict(result, JobConvert())
         return {"total": len(d), "data": d}
 
 
@@ -38,7 +41,7 @@ def mk_check(n, array):
 
 def jobs(array):
     result = models.Result.objects.all()
-    d = utils.query_to_dict(result, JobConvert("jobid"))
+    d = utils.query_to_dict(result, JobConvert())
     total = len(d)
     check = mk_check(total, array)
 
@@ -73,7 +76,7 @@ def jobs(array):
 
 def jobs2(array):
     result = models.Result.objects.all()
-    d = utils.query_to_dict(result, JobConvert("jobid"))
+    d = utils.query_to_dict(result, JobConvert())
     total = len(d)
     check = mk_check(total, array)
 
@@ -114,7 +117,7 @@ def jobs2(array):
 
 def results(array):
     result = models.Result.objects.all()
-    d = utils.query_to_dict(result, JobConvert("jobid"))
+    d = utils.query_to_dict(result, JobConvert())
     total = len(d)
     check = mk_check(total, array)
 
