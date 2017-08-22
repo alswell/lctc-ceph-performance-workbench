@@ -144,16 +144,7 @@ class SysData extends React.Component {
           title: '%idle',
           dataIndex: 'idle',
           key: 'idle',
-        }, {
-          title: 'Operation',
-          key: 'operation',
-          width: 100,
-          render: (text, record) => {
-            return (<DropOption onMenuClick={e => this.handleMenuClick(record, e)}
-              menuOptions={[{ key: '1', name: 'Update' }, { key: '2', name: 'Delete' }]}
-            />)
-          },
-        },
+        }, 
       ],
       fetchData: {
         url: this.props.host.caseid ? `sarcpu/${this.props.host.caseid}/`:`sarcpu`,
@@ -227,16 +218,7 @@ class SysData extends React.Component {
           title: 'kbdirty',
           dataIndex: 'kbdirty',
           key: 'kbdirty',
-        }, {
-          title: 'Operation',
-          key: 'operation',
-          width: 100,
-          render: (text, record) => {
-            return (<DropOption onMenuClick={e => this.handleMenuClick(record, e)}
-              menuOptions={[{ key: '1', name: 'Update' }, { key: '2', name: 'Delete' }]}
-            />)
-          },
-        },
+        }, 
       ],
       fetchData: {
         url: this.props.host.caseid ? `sarmem/${this.props.host.caseid}/`:`sarmem`,
@@ -303,16 +285,7 @@ class SysData extends React.Component {
           title: 'rxmcst/s',
           dataIndex: 'rxmcsts',
           key: 'rxmcsts',
-        }, {
-          title: 'Operation',
-          key: 'operation',
-          width: 100,
-          render: (text, record) => {
-            return (<DropOption onMenuClick={e => this.handleMenuClick(record, e)}
-              menuOptions={[{ key: '1', name: 'Update' }, { key: '2', name: 'Delete' }]}
-            />)
-          },
-        },
+        }, 
       ],
       fetchData: {
         url: this.props.host.caseid ? `sarnic/${this.props.host.caseid}/`:`sarnic`,
@@ -401,16 +374,7 @@ class SysData extends React.Component {
           title: '%util',
           dataIndex: 'util',
           key: 'util',
-        }, {
-          title: 'Operation',
-          key: 'operation',
-          width: 100,
-          render: (text, record) => {
-            return (<DropOption onMenuClick={e => this.handleMenuClick(record, e)}
-              menuOptions={[{ key: '1', name: 'Update' }, { key: '2', name: 'Delete' }]}
-            />)
-          },
-        },
+        }, 
       ],
       fetchData: {
         url: this.props.host.caseid ? `iostat/${this.props.host.caseid}/`:`iostat`,
@@ -496,15 +460,6 @@ class SysData extends React.Component {
           title: 'pgmap_bytes_total',
           dataIndex: 'pgmap_bytes_total',
           key: 'pgmap_bytes_total',
-        }, {
-          title: 'Operation',
-          key: 'operation',
-          width: 100,
-          render: (text, record) => {
-            return (<DropOption onMenuClick={e => this.handleMenuClick(record, e)}
-              menuOptions={[{ key: '1', name: 'Update' }, { key: '2', name: 'Delete' }]}
-            />)
-          },
         },
       ],
       fetchData: {
@@ -546,16 +501,7 @@ class SysData extends React.Component {
           title: 'global raw used',
           dataIndex: 'globalrawused',
           key: 'globalrawused',
-        }, {
-          title: 'Operation',
-          key: 'operation',
-          width: 100,
-          render: (text, record) => {
-            return (<DropOption onMenuClick={e => this.handleMenuClick(record, e)}
-              menuOptions={[{ key: '1', name: 'Update' }, { key: '2', name: 'Delete' }]}
-            />)
-          },
-        },
+        }, 
       ],
       title: 'Ceph Info',
       fetchData: {
@@ -589,16 +535,7 @@ class SysData extends React.Component {
           title: 'Size',
           dataIndex: 'size',
           key: 'size',
-        }, {
-          title: 'Operation',
-          key: 'operation',
-          width: 100,
-          render: (text, record) => {
-            return (<DropOption onMenuClick={e => this.handleMenuClick(record, e)}
-              menuOptions={[{ key: '1', name: 'Update' }, { key: '2', name: 'Delete' }]}
-            />)
-          },
-        },
+        }, 
       ],
       title: 'Pool Info',
       fetchData: {

@@ -108,15 +108,12 @@ class HostPage extends React.Component {
           dataIndex: 'ceph_config',
           key: 'ceph_config',
           render: (text, record) => <Link to={`cephconfig/${record.id}`}>{text}</Link>,
-        }, {
-          title: 'Operation',
-          key: 'operation',
-          width: 100,
-          render: (text, record) => {
-            return (<DropOption onMenuClick={e => this.handleMenuClick(record, e)}
-              menuOptions={[{ key: '1', name: 'Update' }, { key: '2', name: 'Delete' }]}
-            />)
-          },
+        }, 
+        {
+          title: 'sys info',
+          //dataIndex: 'ceph_config',
+          //key: 'ceph_config',
+          render: (text, record) => <Link to={`sysinfo/${record.id}`}>sys info</Link>,
         },
       ],
       fetchData: {

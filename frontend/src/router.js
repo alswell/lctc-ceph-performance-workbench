@@ -198,6 +198,23 @@ const Routers = function ({ history, app }) {
           },
         },
         {
+          path: 'sysinfo/:jobid',
+          getComponent (nextState, cb) {
+            require.ensure([], require => {
+              registerModel(app, require('./models/sysinfo.model'))
+              cb(null, require('./routes/sysinfo/'))
+            }, 'sysinfo')
+          },
+        },{
+          path: 'sysinfo',
+          getComponent (nextState, cb) {
+            require.ensure([], require => {
+              registerModel(app, require('./models/sysinfo.model'))
+              cb(null, require('./routes/sysinfo/'))
+            }, 'sysinfo')
+          },
+        },
+        {
           path: "cephconfig/:id",
           getComponent(nextState, cb) {
             require.ensure(

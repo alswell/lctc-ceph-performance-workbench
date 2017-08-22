@@ -169,15 +169,6 @@ class FioTest extends React.Component {
           //key: 'sysdate',
           render: (text, record) => <Link to={`perfdump/${record.id}`}>perf dump</Link>,
         },
-        {
-          title: 'Operation',
-          key: 'operation',
-          render: (text, record) => {
-            return (<DropOption onMenuClick={e => this.handleMenuClick(record, e)}
-              menuOptions={[{ key: '1', name: 'Update' }, { key: '2', name: 'Delete' }]}
-            />)
-          },
-        },
       ],
       fetchData: {
         url: this.props.host.jobid ? `fiotest/${this.props.host.jobid}/`:`fiotest`,
