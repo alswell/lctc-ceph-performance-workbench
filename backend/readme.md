@@ -1,8 +1,14 @@
 #### run server
-- How to run django server:
 ```
 cd ceph_perf_api
+```
+- How to run django server:
+```
 ./manage.py runserver <IP>:<PORT>  # example: ./manage.py runserver 0.0.0.0:8866
+```
+or
+```
+.run_django.sh
 ```
 
 - run job conductor(RPC server):

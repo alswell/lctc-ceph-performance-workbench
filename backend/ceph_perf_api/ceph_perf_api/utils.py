@@ -37,6 +37,7 @@ def json_response(func):
                 request.DATA = json.loads(request.body)
             except (TypeError, ValueError) as e:
                 return JSONResponse('malformed JSON request: %s' % e, 400)
+        request.GET = dict(request.GET)
 
         data = func(self, request, *args, **kw)
         if isinstance(data, http.HttpResponse):
@@ -47,14 +48,23 @@ def json_response(func):
     return _wrapped
 
 
-def parse_filter_param(body):
+def parse_filter_param(*params):
     filter_param = {}
-    for key, value in body.items():
-        if isinstance(value, dict):
-            for k, v in value.items():
-                filter_param[key + '__' + k] = v
-        else:
-            filter_param[key] = value
+    for param in params:
+        if not param:
+            continue
+
+        for key, value in param.items():
+            if isinstance(value, dict):
+                for k, v in value.items():
+                    filter_param[key + '__' + k] = v
+            elif isinstance(value, list):
+                if len(value) == 1:
+                    filter_param[key] = value[0]
+                else:
+                    filter_param[key + '__in'] = value
+            else:
+                filter_param[key] = value
     return filter_param
 
 

@@ -18,6 +18,7 @@ class UserInfos(generic.View):
                 "gte": 5,
                 "lt": 10,
             },
+            "jobid": [1, 3, 5],
             "blocksize": "4k"
         }
 
@@ -25,9 +26,9 @@ class UserInfos(generic.View):
         :return:
         """
 
-        body = request.DATA
-        filter_param = utils.parse_filter_param(body)
+        filter_param = utils.parse_filter_param(request.DATA, request.GET)
         result = models.Result.objects.filter(**filter_param).all()
+        print result.query
         d = utils.query_to_dict(result)
         return {"value": d}
 
