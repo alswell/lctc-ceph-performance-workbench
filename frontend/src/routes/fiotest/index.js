@@ -149,7 +149,7 @@ class FioTest extends React.Component {
           dataIndex: 'bw',
           key: 'bw',
         }, {
-          title: 'lat',
+          title: 'LAT',
           dataIndex: 'lat',
           key: 'lat',
         },
@@ -181,43 +181,60 @@ class FioTest extends React.Component {
       },
     }
 
-    this.batchModalProps = {
-      visible: this.props.host.batchModalVisible,
+    this.iopsModalProps = {
+      visible: this.props.host.iopsModalVisible,
       maskClosable: true,
       title: '',
+      type: 'iops',
       wrapClassName: 'vertical-center-modal',
       selectedItems: this.props.host.selectedItems,
-      fetchData: {
-        url: 'fiotest',
-        //method: 'delete',
-      },
-      onOk: (data) => {
-        this.batchModalProps.onCancel()
-        this.props.host.selectedItems.forEach((item) => {
-          fetchAndNotification({
-            url: 'host',
-            method: 'delete',
-            params: { ids: item.id },
-            notifications: {
-              title: 'batch Action',
-              success: `${item.name} 操作成功！`,
-              error: `${item.name} 操作失败！`,
-            },
-          })
-        })
-      },
       onCancel: () => {
         let { dispatch } = this.props
         dispatch({
           type: 'fiotest/hideModal',
           payload: {
-            key: 'batchModalVisible',
+            key: 'iopsModalVisible',
           },
         })
       },
     }
-  };
-
+ 
+  this.latModalProps = {
+      visible: this.props.host.latModalVisible,
+      maskClosable: true,
+      title: '',
+      type: 'lat',
+      wrapClassName: 'vertical-center-modal',
+      selectedItems: this.props.host.selectedItems,
+      onCancel: () => {
+        let { dispatch } = this.props
+        dispatch({
+          type: 'fiotest/hideModal',
+          payload: {
+            key: 'latModalVisible',
+          },
+        })
+      },
+    }
+  
+  this.bwModalProps = {
+      visible: this.props.host.bwModalVisible,
+      maskClosable: true,
+      title: '',
+      type: 'bw',
+      wrapClassName: 'vertical-center-modal',
+      selectedItems: this.props.host.selectedItems,
+      onCancel: () => {
+        let { dispatch } = this.props
+        dispatch({
+          type: 'fiotest/hideModal',
+          payload: {
+            key: 'bwModalVisible',
+          },
+        })
+      },
+    }
+   };
 
   render () {
     this.init()
@@ -229,9 +246,15 @@ class FioTest extends React.Component {
             <Card title="远程数据">
               <div className="action-btn-container">
                 <Button type="primary" onClick={this.refresh} icon="reload" />
-                <Button type="primary" onClick={this.showModal.bind(this, 'batchModalVisible')}
+                <Button type="primary" onClick={this.showModal.bind(this, 'iopsModalVisible')}
                   disabled={this.props.host.selectedItems.length === 0}
                 >IOPS Chart</Button>
+                <Button type="primary" onClick={this.showModal.bind(this, 'latModalVisible')}
+                  disabled={this.props.host.selectedItems.length === 0}
+                >Lat Chart</Button>
+                <Button type="primary" onClick={this.showModal.bind(this, 'bwModalVisible')}
+                  disabled={this.props.host.selectedItems.length === 0}
+                >BW Chart</Button>
               </div>
               <DataTable
                 {...this.tableDataProps}
@@ -240,8 +263,9 @@ class FioTest extends React.Component {
             </Card>
           </Col>
         </Row>
-        {this.props.host.modalVisible && <Modal {...this.modalProps} />}
-        {this.props.host.batchModalVisible && <FioTestModal {...this.batchModalProps} />}
+        {this.props.host.iopsModalVisible && <FioTestModal {...this.iopsModalProps} />}
+        {this.props.host.latModalVisible && <FioTestModal {...this.latModalProps} />}
+        {this.props.host.bwModalVisible && <FioTestModal {...this.bwModalProps} />}
       </div>
     )
   }

@@ -142,7 +142,7 @@ class SysInfo extends React.Component {
         }, 
       ],
       fetchData: {
-        url: this.props.host.caseid ? `hwinfo/${this.props.host.caseid}/`:`hwinfo`,
+        url: this.props.host.jobid ? `hwinfo/${this.props.host.jobid}/`:`hwinfo`,
         params: null,
       },
       errorMsg: 'get sar cpu table error',
@@ -193,7 +193,7 @@ class SysInfo extends React.Component {
         },
       ],
       fetchData: {
-        url: this.props.host.caseid ? `osinfo/${this.props.host.caseid}/`:`osinfo`,
+        url: this.props.host.jobid ? `osinfo/${this.props.host.jobid}/`:`osinfo`,
         params: null,
       },
       errorMsg: 'get osinfo table error',
@@ -206,9 +206,9 @@ class SysInfo extends React.Component {
     this.diskinfotableDataProps = {
       columns: [
         {
-          title: 'Case ID',
-          dataIndex: 'caseid',
-          key: 'caseid',
+          title: 'Job ID',
+          dataIndex: 'jobid',
+          key: 'jobid',
           width: 60,
           sorter: true,
         }, {
@@ -235,7 +235,7 @@ class SysInfo extends React.Component {
         },
       ],
       fetchData: {
-        url: this.props.host.caseid ? `diskinfo/${this.props.host.caseid}/`:`diskinfo`,
+        url: this.props.host.jobid ? `diskinfo/${this.props.host.jobid}/`:`diskinfo`,
         params: null,
       },
       errorMsg: 'get diskinfo table error',

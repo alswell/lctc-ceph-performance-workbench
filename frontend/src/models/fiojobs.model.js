@@ -11,7 +11,9 @@ export default {
   state: {
     ...model.state,
     modalVisible: false,
-    batchModalVisible: false,
+    iopsModalVisible: false,
+    latModalVisible: false,
+    bwModalVisible: false,
     createModalVisible: false,
   },
 

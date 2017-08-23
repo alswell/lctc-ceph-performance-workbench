@@ -8,7 +8,7 @@ import DataTable from '../../components/BasicTable/DataTable'
 import { Modal, Row, Col, Card, Button } from 'antd'
 import { Link } from 'dva/router'
 import DropOption from '../../components/DropOption/DropOption'
-import BatchModal from '../../components/modals/BatchModal'
+import FioJobsModal from '../../components/modals/FioJobsModal'
 import { fetchAndNotification } from '../../services/restfulService'
 import { CollectionsPage } from '../../components/fiojobs/CreateModal'
 
@@ -27,7 +27,7 @@ class HostPage extends React.Component {
     if (e.key === '1') {
       let { dispatch } = this.props
       dispatch({
-        type: 'host/showModal',
+        type: 'fiojobs/showModal',
         payload: {
           key: 'modalVisible',
         },
@@ -46,7 +46,7 @@ class HostPage extends React.Component {
   showModal = (key) => {
     let { dispatch } = this.props
     dispatch({
-      type: 'host/showModal',
+      type: 'fiojobs/showModal',
       payload: {
         key,
       },
@@ -69,7 +69,7 @@ class HostPage extends React.Component {
       onCancel: () => {
         let { dispatch } = this.props
         dispatch({
-          type: 'host/hideModal',
+          type: 'fiojobs/hideModal',
           payload: {
             key: 'modalVisible',
           },
@@ -113,7 +113,7 @@ class HostPage extends React.Component {
           title: 'sys info',
           //dataIndex: 'ceph_config',
           //key: 'ceph_config',
-          render: (text, record) => <Link to={`sysinfo/${record.id}`}>sys info</Link>,
+          render: (text, record) => <Link to={`sysinfo?jobid=${record.id}`}>sys info</Link>,
         },
       ],
       fetchData: {
@@ -123,81 +123,63 @@ class HostPage extends React.Component {
       errorMsg: 'get job table error',
       refresh: this.props.host.refresh,
       handleSelectItems: (selectedRows) => {
-        this.props.dispatch({ type: 'host/updateSelectItems', payload: selectedRows })
+        this.props.dispatch({ type: 'fiojobs/updateSelectItems', payload: selectedRows })
       },
     }
 
-    this.batchModalProps = {
-      visible: this.props.host.batchModalVisible,
+    this.iopsModalProps = {
+      visible: this.props.host.iopsModalVisible,
       maskClosable: true,
-      title: 'Batch Action Modal',
+      title: 'IOPS Chart',
+      type: 'iops',
       wrapClassName: 'vertical-center-modal',
       selectedItems: this.props.host.selectedItems,
-      fetchData: {
-        url: 'host',
-        method: 'delete',
-      },
-      onOk: (data) => {
-        this.batchModalProps.onCancel()
-        this.props.host.selectedItems.forEach((item) => {
-          fetchAndNotification({
-            url: 'host',
-            method: 'delete',
-            params: { ids: item.id },
-            notifications: {
-              title: 'batch Action',
-              success: `${item.name} 操作成功！`,
-              error: `${item.name} 操作失败！`,
-            },
-          })
-        })
-      },
       onCancel: () => {
         let { dispatch } = this.props
         dispatch({
-          type: 'host/hideModal',
+          type: 'fiojobs/hideModal',
           payload: {
-            key: 'batchModalVisible',
+            key: 'iopsModalVisible',
+          },
+        })
+      },
+    }
+    this.latModalProps = {
+      visible: this.props.host.latModalVisible,
+      maskClosable: true,
+      title: 'LAT Chart',
+      type: 'lat',
+      wrapClassName: 'vertical-center-modal',
+      selectedItems: this.props.host.selectedItems,
+      onCancel: () => {
+        let { dispatch } = this.props
+        dispatch({
+          type: 'fiojobs/hideModal',
+          payload: {
+            key: 'latModalVisible',
+          },
+        })
+      },
+    }
+    this.bwModalProps = {
+      visible: this.props.host.bwModalVisible,
+      maskClosable: true,
+      title: 'BW Chart',
+      type: 'bw',
+      wrapClassName: 'vertical-center-modal',
+      selectedItems: this.props.host.selectedItems,
+      onCancel: () => {
+        let { dispatch } = this.props
+        dispatch({
+          type: 'fiojobs/hideModal',
+          payload: {
+            key: 'bwModalVisible',
           },
         })
       },
     }
 
-    this.createModalProps = {
-      visible: this.props.host.createModalVisible,
-      maskClosable: true,
-      title: 'Batch Action Modal',
-      wrapClassName: 'vertical-center-modal',
-      selectedItems: this.props.host.selectedItems,
-      fetchData: {
-        url: 'host',
-        method: 'delete',
-      },
-      onOk: (data) => {
-        this.batchModalProps.onCancel()
-        this.props.host.selectedItems.forEach((item) => {
-          fetchAndNotification({
-            url: 'host',
-            method: 'delete',
-            params: { ids: item.id },
-            notifications: {
-              title: 'batch Action',
-              success: `${item.name} 操作成功！`,
-              error: `${item.name} 操作失败！`,
-            },
-          })
-        })
-      },
-      onCancel: () => {
-        let { dispatch } = this.props
-        dispatch({
-          type: 'host/hideModal',
-          payload: {
-            key: 'createModalVisible',
-          },
-        })
-      },
-    }
+
   };
 
   actionCollectionsProps = {
@@ -213,11 +195,19 @@ class HostPage extends React.Component {
           <Col lg={24} md={24}>
             <Card title="远程数据">
               <div className="action-btn-container">
-                <Button type="primary" onClick={this.refresh} icon="reload" />
-                <Button type="primary" onClick={this.showModal.bind(this, 'batchModalVisible')}
-                  disabled={this.props.host.selectedItems.length === 0}
-                >Batch Action</Button>
                 <CollectionsPage {...this.actionCollectionsProps}/>
+              </div>
+              <div className="action-btn-container">
+                <Button type="primary" onClick={this.refresh} icon="reload" />                
+                <Button type="primary" onClick={this.showModal.bind(this, 'iopsModalVisible')}
+                  disabled={this.props.host.selectedItems.length === 0}
+                >IOPS Chart</Button>
+                <Button type="primary" onClick={this.showModal.bind(this, 'latModalVisible')}
+                  disabled={this.props.host.selectedItems.length === 0}
+                >Lat Chart</Button>
+                <Button type="primary" onClick={this.showModal.bind(this, 'bwModalVisible')}
+                  disabled={this.props.host.selectedItems.length === 0}
+                >BW Chart</Button>
               </div>
               <DataTable
                 {...this.tableDataProps}
@@ -225,8 +215,9 @@ class HostPage extends React.Component {
             </Card>
           </Col>
         </Row>
-        {this.props.host.modalVisible && <Modal {...this.modalProps} />}
-        {this.props.host.batchModalVisible && <BatchModal {...this.batchModalProps} />}
+        {this.props.host.iopsModalVisible && <FioJobsModal {...this.iopsModalProps} />}
+        {this.props.host.latModalVisible && <FioJobsModal {...this.latModalProps} />}
+        {this.props.host.bwModalVisible && <FioJobsModal {...this.bwModalProps} />}
       </div>
     )
   }

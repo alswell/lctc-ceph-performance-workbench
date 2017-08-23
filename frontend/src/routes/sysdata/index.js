@@ -5,7 +5,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'dva'
 import DataTable from '../../components/BasicTable/DataTable'
-import { Modal, Row, Col, Card, Button, Tabs } from 'antd'
+import { Modal, Row, Col, Card, Button, Tabs, Checkbox } from 'antd'
 import { Link } from 'dva/router'
 import DropOption from '../../components/DropOption/DropOption'
 import MemModal from '../../components/modals/MemModal'
@@ -59,25 +59,6 @@ class SysData extends React.Component {
   };
 
   init = () => {
-    this.modalProps = {
-      visible: this.props.host.modalVisible,
-      maskClosable: true,
-      title: 'test',
-      wrapClassName: 'vertical-center-modal',
-      onOk: (data) => {
-        console.log(data)
-      },
-      onCancel: () => {
-        let { dispatch } = this.props
-        dispatch({
-          type: 'sysdata/hideModal',
-          payload: {
-            key: 'modalVisible',
-          },
-        })
-      },
-    }
-
     this.cputableDataProps = {
       columns: [
         {
@@ -96,24 +77,20 @@ class SysData extends React.Component {
           title: 'Node',
           dataIndex: 'node',
           key: 'node',
+          sorter: true,
           width: 80,
         }, {
           title: '%usr',
           dataIndex: 'usr',
           key: 'usr',
-          sorter: true,
-          // width: 100,
         }, {
           title: '%nice',
           dataIndex: 'nice',
           key: 'nice',
-          sorter: true,
-          // width: 64,
         }, {
           title: '%sys',
           dataIndex: 'sys',
           key: 'sys',
-          sorter: true,
         },
         {
           title: '%iowait',
@@ -175,6 +152,7 @@ class SysData extends React.Component {
           title: 'Node',
           dataIndex: 'node',
           key: 'node',
+          sorter: true,
           width: 80,
         }, {
           title: 'kbmemfree',
@@ -249,11 +227,13 @@ class SysData extends React.Component {
           title: 'Node',
           dataIndex: 'node',
           key: 'node',
+          sorter: true,
           width: 80,
         }, {
           title: 'Network',
           dataIndex: 'network',
           key: 'network',
+          sorter: true,
           width: 120,
         }, {
           title: 'rxpck/s',
@@ -316,15 +296,18 @@ class SysData extends React.Component {
           title: 'Node',
           dataIndex: 'node',
           key: 'node',
+          sorter: true,
           width: 80,
         }, {
           title: 'osd',
           dataIndex: 'osdnum',
           key: 'osdnum',
+          sorter: true,
         }, {
           title: 'Disk',
           dataIndex: 'diskname',
           key: 'diskname',
+          sorter: true,
         }, {
           title: 'rrqm/s',
           dataIndex: 'rrqms',
@@ -409,7 +392,6 @@ class SysData extends React.Component {
           title: 'Health Summary',
           dataIndex: 'health_summary',
           key: 'health_summary',
-          width: 120,
         }, {
           title: 'Health Detail',
           dataIndex: 'health_detail',
@@ -559,21 +541,6 @@ class SysData extends React.Component {
         url: 'host',
         method: 'delete',
       },
-      onOk: (data) => {
-        this.batchModalProps.onCancel()
-        this.props.host.selectedItems.forEach((item) => {
-          fetchAndNotification({
-            url: 'host',
-            method: 'delete',
-            params: { ids: item.id },
-            notifications: {
-              title: 'batch Action',
-              success: `${item.name} 操作成功！`,
-              error: `${item.name} 操作失败！`,
-            },
-          })
-        })
-      },
       onCancel: () => {
         let { dispatch } = this.props
         dispatch({
@@ -584,55 +551,12 @@ class SysData extends React.Component {
         })
       },
     }
-
-    this.createModalProps = {
-      visible: this.props.host.createModalVisible,
-      maskClosable: true,
-      title: 'Batch Action Modal',
-      wrapClassName: 'vertical-center-modal',
-      selectedItems: this.props.host.selectedItems,
-      fetchData: {
-        url: 'host',
-        method: 'delete',
-      },
-      onOk: (data) => {
-        this.batchModalProps.onCancel()
-        this.props.host.selectedItems.forEach((item) => {
-          fetchAndNotification({
-            url: 'host',
-            method: 'delete',
-            params: { ids: item.id },
-            notifications: {
-              title: 'batch Action',
-              success: `${item.name} 操作成功！`,
-              error: `${item.name} 操作失败！`,
-            },
-          })
-        })
-      },
-      onCancel: () => {
-        let { dispatch } = this.props
-        dispatch({
-          type: 'sysdata/hideModal',
-          payload: {
-            key: 'createModalVisible',
-          },
-        })
-      },
-    }
   };
 
-  state = {
-    visible: false,
-  };
-  
-  showModalchart = () => {
-    this.setState({ visible: true })
+  onChange = (e) => {
+    console.log(`checked = ${e.target.checked}`);
   };
 
-  handleCancel = () => {
-    this.setState({ visible: false })
-  };
 
   render () {
     this.init()
@@ -643,6 +567,7 @@ class SysData extends React.Component {
           <TabPane tab="cpu" key="1">
             <div className="action-btn-container">
                 <Button type="primary" onClick={this.refresh} icon="reload" />
+                <Checkbox onChange={this.onChange}>Checkbox</Checkbox>
                 <Button type="primary" onClick={this.showModal.bind(this, 'batchModalVisible')}
                   disabled={this.props.host.selectedItems.length === 0}
                 >Chart</Button>
@@ -650,7 +575,7 @@ class SysData extends React.Component {
             <DataTable
               {...this.cputableDataProps}
             />
-             {this.props.host.batchModalVisible && <CpuModal {...this.batchModalProps} />}
+            {this.props.host.batchModalVisible && <CpuModal {...this.batchModalProps} />}
           </TabPane>
           <TabPane tab="memory" key="2">
             <div className="action-btn-container">
@@ -662,8 +587,7 @@ class SysData extends React.Component {
             <DataTable
               {...this.memtableDataProps}
             />
-          {this.props.host.modalVisible && <Modal {...this.modalProps} />}
-          {this.props.host.batchModalVisible && <MemModal {...this.batchModalProps} />}
+            {this.props.host.batchModalVisible && <MemModal {...this.batchModalProps} />}
           </TabPane>
           <TabPane tab="network" key="3">
             <DataTable

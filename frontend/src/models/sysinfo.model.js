@@ -41,7 +41,7 @@ export default {
     setId(state,{payload:param}){
       return {
         ...state,
-        caseid:param.caseid
+        jobid:param.jobid
       }
     }
   },

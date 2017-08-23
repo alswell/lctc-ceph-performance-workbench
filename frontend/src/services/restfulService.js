@@ -4,6 +4,7 @@
 import config from '../config'
 import { notification } from 'antd'
 import axios from 'axios'
+import qs from 'qs'
 
 let instance = axios.create({
   baseURL: config.uri.api,
@@ -34,6 +35,9 @@ function request ({ method, url, params }) {
     case 'get':
       return instance.get(url, {
         params,
+        'paramsSerializer': function (params) {
+          return qs.stringify(params, {arrayFormat: 'repeat'})
+        },
       })
     case 'delete':
       return instance.delete(url, { data: params })

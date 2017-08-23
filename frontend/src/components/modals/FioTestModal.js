@@ -40,7 +40,7 @@ class FioTestModal extends React.Component {
         </div>
       </div>
 
-      const SimpleLineChart = ({data}) => {
+      const SimpleLineChart = ({data, type}) => {
         return (
           <Container>
             <LineChart data={data} margin={{
@@ -54,7 +54,7 @@ class FioTestModal extends React.Component {
               <CartesianGrid strokeDasharray="3 3" />
               <Tooltip />
               <Legend />
-              <Line type="monotone" dataKey="iops" stroke="#8884d8"/>
+              <Line type="monotone" dataKey={type} stroke="#8884d8"/>
             </LineChart>
           </Container>
         )
@@ -69,9 +69,9 @@ class FioTestModal extends React.Component {
           onOk={this.props.onOk}
           onCancel={this.props.onCancel}
           width={1000}
-          closable={false}
+          footer={null}
         >
-          <SimpleLineChart data={this.props.selectedItems}/>
+          <SimpleLineChart data={this.props.selectedItems} type={this.props.type}/>
         </Modal>
       </div>
     )
@@ -86,6 +86,7 @@ FioTestModal.propTypes = {
   onOk: PropTypes.function,
   onCancel: PropTypes.function,
   selectedItems: PropTypes.array,
+  type: PropTypes.string,
 }
 
 export default FioTestModal
