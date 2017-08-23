@@ -13,27 +13,11 @@ class JobConvert(utils.ForeignKeyConvert):
         return "%s %s" % (model.jobid.name, model.jobid.time)
 
 
-@urls.register
-class FIOTEST(generic.View):
-    url_regex = r'^fiotest$'
-
-    @utils.json_response
-    def get(self, request):
-        print dict(request.GET)
-        f = {}
-        for key, value in dict(request.GET).items():
-            f[key] = value[0]
-        print f
-        result = models.Result.objects.filter(**f).all()
-
-        d = utils.query_to_dict(result, JobConvert())
-        return {"total": len(d), "data": d}
-
-
 def get_data(query_param):
     result = models.Result.objects.filter(**query_param).all()
     d = utils.query_to_dict(result, JobConvert())
     return d
+
 
 KEYS = ['iodepth', 'numberjob', 'imagenum', 'clientnum']
 KEY_MAP = {
@@ -129,6 +113,15 @@ class Figure(generic.View):
 
     @utils.json_response
     def get(self, request):
+        """
+        url examples:
+        /api/v1/figure?type=results"         -d '{"id": [1,2,3,4,5,6,7]}'
+        /api/v2/figure?type=jobs"            -d '{"jobid": [1,2,4,5,7]}'
+        /api/v1/figure?type=jobs&version=2"  -d '{"jobid": [1,3,6,7]}'
+
+        :param request:
+        :return:
+        """
         figure_type = request.GET.get('type')
         if figure_type:
             figure_type = figure_type[0]
