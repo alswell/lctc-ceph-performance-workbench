@@ -1,4 +1,5 @@
 # -*- coding: UTF-8 -*-
+import copy
 import urls
 from django.views import generic
 from ceph_perf_api import utils
@@ -13,12 +14,6 @@ class JobConvert(utils.ForeignKeyConvert):
         return "%s %s" % (model.jobid.name, model.jobid.time)
 
 
-def get_data(query_param):
-    result = models.Result.objects.filter(**query_param).all()
-    d = utils.query_to_dict(result, JobConvert())
-    return d
-
-
 KEYS = ['iodepth', 'numberjob', 'imagenum', 'clientnum']
 KEY_MAP = {
     'iodepth': 'io',
@@ -26,85 +21,96 @@ KEY_MAP = {
     'imagenum': 'img',
     'clientnum': 'cli',
 }
+DIMENSION = [
+    'r_iops',
+    'w_iops',
+    'iops',
+    'lat',
+    'bw',
+    'r_bw',
+    'w_bw',
+]
 
 
 class FigureData(object):
     @staticmethod
-    def jobs(d):
-        dimension = {
-            'iops': {},
-            'lat': {},
-            'bw': {},
-        }
+    def _mk_dims(e={}):
+        dims = {}
+        for dim in DIMENSION:
+            dims[dim] = copy.copy(e)
+        return dims
+
+    @staticmethod
+    def _mk_name(item):
+        name = item['blocksize']
+        for key in KEYS:
+            name += '_%s%s' % (KEY_MAP.get(key, key), item[key])
+        name += '_' + item['readwrite']
+        return name
+
+    @classmethod
+    def jobs(cls, d):
+        dims = cls._mk_dims()
 
         x_label = {}
         for item in d:
-            name = item['blocksize']
-            for key in KEYS:
-                name += '_%s%s' % (KEY_MAP.get(key, key), item[key])
-            name += '_' + item['readwrite']
+            name = cls._mk_name(item)
             x_label[name] = True
 
-            for key, _ in dimension.items():
-                try:
-                    dimension[key][item['jobid']].update({name: item[key]})
-                except KeyError:
-                    dimension[key][item['jobid']] = {}
-                    dimension[key][item['jobid']].update({name: item[key]})
+            for key, _ in dims.items():
+                job_id = item['jobid']
+                if not dims[key].get(job_id):
+                    dims[key][job_id] = {}
+                dims[key][job_id][name] = item[key]
 
         x_label = [k for k, v in x_label.items()]
-        for key, _ in dimension.items():
-            dimension[key]['name'] = x_label
+        for key, _ in dims.items():
+            dims[key]['name'] = x_label
 
-        return dimension
+        return dims
 
-    @staticmethod
-    def jobs2(d):
-        dimension = {
-            'iops': {},
-            'lat': {},
-            'bw': {},
-        }
+    @classmethod
+    def jobs2(cls, d):
+        dims = cls._mk_dims()
 
         for item in d:
-            name = item['blocksize']
-            for key in KEYS:
-                name += '_%s%s' % (KEY_MAP.get(key, key), item[key])
-            name += '_' + item['readwrite']
-            for key, _ in dimension.items():
-                if not dimension[key].get(name):
-                    dimension[key][name] = {}
+            name = cls._mk_name(item)
+            for key, _ in dims.items():
+                if not dims[key].get(name):
+                    dims[key][name] = {}
 
-            for key, _ in dimension.items():
-                try:
-                    dimension[key][name][item['jobid']] = item.get(key)
-                except KeyError:
-                    dimension[key][name][item['jobid']] = []
-                    dimension[key][name][item['jobid']] = item.get(key)
+            for key, _ in dims.items():
+                dims[key][name][item['jobid']] = item.get(key)
 
-        for key, value in dimension.items():
+        for key, value in dims.items():
             items = value.items()
             items.sort()
             l = []
             for k, _ in items:
-                dimension[key][k]['name'] = k
-                l.append(dimension[key][k])
-            dimension[key] = l
+                dims[key][k]['name'] = k
+                l.append(dims[key][k])
+            dims[key] = l
 
-        return dimension
+        return dims
 
-    @staticmethod
-    def results(d):
-        dimension = {
-            'iops': [],
-            'lat': [],
-            'bw': [],
-        }
+    @classmethod
+    def results(cls, d):
+        dims = cls._mk_dims([])
 
         for item in d:
-            for key, _ in dimension.items():
-                dimension[key].append({'name': item.get('case_name'), key: item.get(key)})
-        return dimension
+            for key, _ in dims.items():
+                dims[key].append({'name': item.get('case_name'), key: item.get(key)})
+        return dims
+
+    @staticmethod
+    def results2(d):
+        l = []
+        for item in d:
+            one = {'name': item.get('case_name')}
+            for key in DIMENSION:
+                one[key] = item.get(key)
+            l.append(one)
+        return {'value': l}
 
 
 @urls.register
@@ -130,7 +136,9 @@ class Figure(generic.View):
         if version:
             figure_type += version[0]
 
-        d = get_data(utils.parse_filter_param(request.DATA))
+        query_param = utils.parse_filter_param(request.DATA)
+        result = models.Result.objects.filter(**query_param).all()
+        d = utils.query_to_dict(result, JobConvert())
 
         return getattr(FigureData, figure_type)(d)
 
