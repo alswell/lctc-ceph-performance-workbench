@@ -26,12 +26,12 @@ class FIOTest(object):
             '512k',
             '1024k',
             '2048k',
-            '4MB',
-            '8MB',
-            '16MB',
-            '32MB',
-            '64MB',
-            '128MB'
+            '4M',
+            '8M',
+            '16M',
+            '32M',
+            '64M',
+            '128M'
         ]
         self.iodepth = [
             1,

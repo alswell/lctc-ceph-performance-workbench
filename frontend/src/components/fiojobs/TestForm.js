@@ -2,7 +2,7 @@
  * Created by chenkang1 on 2017/7/4.
  */
 import React from 'react'
-import { Form, Icon, Input, Button, Modal, Row, Col } from 'antd'
+import { Form, Icon, Input, Button, Modal, Row, Col, Select } from 'antd'
 const { TextArea } = Input;
 import PropTypes from 'prop-types'
 import './TestForm.less'
@@ -13,11 +13,7 @@ function hasErrors (fieldsError) {
   return Object.keys(fieldsError).some(field => fieldsError[field])
 }
 
-let bsid = 1;
-let iodepthid = 1;
 let clientid = 1;
-let fiotypeid = 1;
-let numjobid = 1;
 let rwmixreadid = 1;
 let cephconfigid = 0;
 let fioparaid = 0;
@@ -26,60 +22,6 @@ class TestTestForm extends React.Component {
   componentDidMount () {
     // To disabled submit button at the beginning.
     this.props.form.validateFields()
-  }
-
-  bsremove = (k) => {
-    const { form } = this.props;
-
-    const bskeys = form.getFieldValue('bskeys');
-
-    if (bskeys.length === 0) {
-      return;
-    }
-
-
-    form.setFieldsValue({
-      bskeys: bskeys.filter(key => key !== k),
-    });
-  }
-
-  bsadd = () => {
-    bsid++;
-    const { form } = this.props;
-
-    const bskeys = form.getFieldValue('bskeys');
-    const nextbsKeys = bskeys.concat(bsid);
-
-    form.setFieldsValue({
-      bskeys: nextbsKeys,
-    });
-  }
-
-  iodepthremove = (k) => {
-    const { form } = this.props;
-
-    const iodepthkeys = form.getFieldValue('iodepthkeys');
-
-    if (iodepthkeys.length === 0) {
-      return;
-    }
-
-
-    form.setFieldsValue({
-      iodepthkeys: iodepthkeys.filter(key => key !== k),
-    });
-  }
-
-  iodepthadd = () => {
-    iodepthid++;
-    const { form } = this.props;
-
-    const iodepthkeys = form.getFieldValue('iodepthkeys');
-    const nextiodepthKeys = iodepthkeys.concat(iodepthid);
-
-    form.setFieldsValue({
-      iodepthkeys: nextiodepthKeys,
-    });
   }
 
   clientremove = (k) => {
@@ -106,60 +48,6 @@ class TestTestForm extends React.Component {
 
     form.setFieldsValue({
       clientkeys: nextclientKeys,
-    });
-  }
-
-  fiotyperemove = (k) => {
-    const { form } = this.props;
-
-    const fiotypekeys = form.getFieldValue('fiotypekeys');
-
-    if (fiotypekeys.length === 0) {
-      return;
-    }
-
-
-    form.setFieldsValue({
-      fiotypekeys: fiotypekeys.filter(key => key !== k),
-    });
-  }
-
-  fiotypeadd = () => {
-    fiotypeid++;
-    const { form } = this.props;
-
-    const fiotypekeys = form.getFieldValue('fiotypekeys');
-    const nextfiotypeKeys = fiotypekeys.concat(fiotypeid);
-
-    form.setFieldsValue({
-      fiotypekeys: nextfiotypeKeys,
-    });
-  }
-
-  numjobremove = (k) => {
-    const { form } = this.props;
-
-    const numjobkeys = form.getFieldValue('numjobkeys');
-
-    if (numjobkeys.length === 0) {
-      return;
-    }
-
-
-    form.setFieldsValue({
-      numjobkeys: numjobkeys.filter(key => key !== k),
-    });
-  }
-
-  numjobadd = () => {
-    numjobid++;
-    const { form } = this.props;
-
-    const numjobkeys = form.getFieldValue('numjobkeys');
-    const nextnumjobKeys = numjobkeys.concat(numjobid);
-
-    form.setFieldsValue({
-      numjobkeys: nextnumjobKeys,
     });
   }
 
@@ -268,6 +156,11 @@ class TestTestForm extends React.Component {
     })
   };
 
+  handleChange = (value) => {
+      console.log(`selected ${value}`);
+    };
+
+
   render () {
     const { getFieldDecorator, getFieldsError, getFieldError, isFieldTouched, getFieldValue } = this.props.form
 
@@ -291,68 +184,6 @@ class TestTestForm extends React.Component {
         sm: { span: 11, offset: 6 },
       },
     };
-
-    getFieldDecorator('bskeys', { initialValue: [] });
-    const bskeys = getFieldValue('bskeys');
-    const bsformItems = bskeys.map((k, index) => {
-      return (
-        <FormItem
-          {...formItemLayoutWithOutLabel}
-          required={false}
-          bskey={k}
-        >
-          {getFieldDecorator(`bs-${k}`, {
-            validateTrigger: ['onChange', 'onBlur'],
-            rules: [{
-              required: true,
-              whitespace: true,
-              message: "Please input block size or delete this field.",
-            }],
-          })(
-            <Input placeholder="4k" style={{ width: '60%', marginRight: 8 }} />
-          )}
-          {bskeys.length > 0 ? (
-            <Icon
-              className="dynamic-delete-button"
-              type="minus-circle-o"
-              disabled={bskeys.length === 0}
-              onClick={() => this.bsremove(k)}
-            />
-          ) : null}
-        </FormItem>
-      );
-    });
-
-    getFieldDecorator('iodepthkeys', { initialValue: [] });
-    const iodepthkeys = getFieldValue('iodepthkeys');
-    const iodepthformItems = iodepthkeys.map((k, index) => {
-      return (
-        <FormItem
-          {...formItemLayoutWithOutLabel}
-          required={false}
-          iodepthkeys={k}
-        >
-          {getFieldDecorator(`iodepth-${k}`, {
-            validateTrigger: ['onChange', 'onBlur'],
-            rules: [{
-              required: true,
-              whitespace: true,
-              message: "Please input iodepth or delete this field.",
-            }],
-          })(
-            <Input placeholder="1" style={{ width: '60%', marginRight: 8 }} />
-          )}
-          {iodepthkeys.length > 0 ? (
-            <Icon
-              className="dynamic-delete-button"
-              type="minus-circle-o"
-              disabled={iodepthkeys.length === 0}
-              onClick={() => this.iodepthremove(k)}
-            />
-          ) : null}
-        </FormItem>
-      );
-    });
 
     getFieldDecorator('clientkeys', { initialValue: [] });
     const clientkeys = getFieldValue('clientkeys');
@@ -385,37 +216,6 @@ class TestTestForm extends React.Component {
       );
     });
 
-    getFieldDecorator('fiotypekeys', { initialValue: [] });
-    const fiotypekeys = getFieldValue('fiotypekeys');
-    const fiotypeformItems = fiotypekeys.map((k, index) => {
-      return (
-        <FormItem
-          {...formItemLayoutWithOutLabel}
-          required={false}
-          fiotypekey={k}
-        >
-          {getFieldDecorator(`fiotype-${k}`, {
-            validateTrigger: ['onChange', 'onBlur'],
-            rules: [{
-              required: true,
-              whitespace: true,
-              message: "Please input block size or delete this field.",
-            }],
-          })(
-            <Input placeholder="rw|randrw" style={{ width: '60%', marginRight: 8 }} />
-          )}
-          {fiotypekeys.length > 0 ? (
-            <Icon
-              className="dynamic-delete-button"
-              type="minus-circle-o"
-              disabled={fiotypekeys.length === 0}
-              onClick={() => this.fiotyperemove(k)}
-            />
-          ) : null}
-        </FormItem>
-      );
-    });
-
     getFieldDecorator('rwmixreadkeys', { initialValue: [] });
     const rwmixreadkeys = getFieldValue('rwmixreadkeys');
     const rwmixreadformItems = rwmixreadkeys.map((k, index) => {
@@ -433,7 +233,7 @@ class TestTestForm extends React.Component {
               message: "Please input block size or delete this field.",
             }],
           })(
-            <Input placeholder="100" style={{ width: '60%', marginRight: 8 }} />
+            <Input defaultValue="100" placeholder="100" style={{ width: '60%', marginRight: 8 }} />
           )}
           {rwmixreadkeys.length > 0 ? (
             <Icon
@@ -441,37 +241,6 @@ class TestTestForm extends React.Component {
               type="minus-circle-o"
               disabled={rwmixreadkeys.length === 0}
               onClick={() => this.rwmixreadremove(k)}
-            />
-          ) : null}
-        </FormItem>
-      );
-    });
-
-    getFieldDecorator('numjobkeys', { initialValue: [] });
-    const numjobkeys = getFieldValue('numjobkeys');
-    const numjobformItems = numjobkeys.map((k, index) => {
-      return (
-        <FormItem
-          {...formItemLayoutWithOutLabel}
-          required={false}
-          numjobkey={k}
-        >
-          {getFieldDecorator(`numjob-${k}`, {
-            validateTrigger: ['onChange', 'onBlur'],
-            rules: [{
-              required: true,
-              whitespace: true,
-              message: "Please input Num Job or delete this field.",
-            }],
-          })(
-            <Input placeholder="1" style={{ width: '60%', marginRight: 8 }} />
-          )}
-          {numjobkeys.length > 0 ? (
-            <Icon
-              className="dynamic-delete-button"
-              type="minus-circle-o"
-              disabled={numjobkeys.length === 0}
-              onClick={() => this.numjobremove(k)}
             />
           ) : null}
         </FormItem>
@@ -541,7 +310,7 @@ class TestTestForm extends React.Component {
         </FormItem>
       );
     });
-
+    
     return (
       <Modal
         visible={this.props.visible}
@@ -552,6 +321,7 @@ class TestTestForm extends React.Component {
         // onOk={this.onCreate}
       >
         <Form onSubmit={this.handleSubmit}>
+          
           <FormItem
             {...formItemLayout}
             label="JobName"
@@ -594,22 +364,22 @@ class TestTestForm extends React.Component {
             validateStatus={userNameError ? 'error' : ''}
             help={userNameError || ''}
           >
-            <Row gutter={8}>
-              <Col span={12}>
-                {getFieldDecorator('fiotype-1', {
-                  rules: [{ required: true, message: 'Please input the FIO type!' }],
-                })(
-                  <Input size="large" placeholder="rw|randrw"/>
-                )}
-              </Col>
-              <Col span={12}>
-                <Button type="dashed" onClick={this.fiotypeadd} style={{ width: '100%' }}>
-                  <Icon type="plus" /> Add fio Type
-                </Button>
-              </Col>
-            </Row>
-          </FormItem> 
-          {fiotypeformItems}
+            {getFieldDecorator('fiotype', {
+              rules: [
+                { required: true, message: 'Please select read write type!' },
+              ],
+            })(
+              <Select
+                mode="multiple"
+                style={{ width: '100%' }}
+                placeholder="Please select"
+                onChange={this.handleChange}
+              >
+                <Option key="rw">rw</Option>
+                <Option key="randrw">randrw</Option>
+              </Select>
+            )}
+          </FormItem>
           <FormItem
             {...formItemLayout}
             label="RW MixRead(%)"
@@ -640,66 +410,92 @@ class TestTestForm extends React.Component {
             validateStatus={userNameError ? 'error' : ''}
             help={userNameError || ''}
           >
-            <Row gutter={8}>
-              <Col span={12}>
-                {getFieldDecorator('bs-1', {
-                  rules: [{ required: true, message: 'Please input the Block Size!' }],
-                })(
-                  <Input size="large" placeholder="4k"/>
-                )}
-              </Col>
-              <Col span={12}>
-            <Button type="dashed" onClick={this.bsadd} style={{ width: '100%' }}>
-              <Icon type="plus" /> Add Block Size
-            </Button>
-              </Col>
-            </Row>
+            {getFieldDecorator('bs', {
+              rules: [
+                { required: true, message: 'Please select Block Size!' },
+              ],
+            })(
+              <Select
+                mode="multiple"
+                style={{ width: '100%' }}
+                placeholder="Please select"
+                onChange={this.handleChange}
+              >
+                <Option key="4k">4k</Option>
+                <Option key="8k">8k</Option>
+                <Option key="16k">16k</Option>
+                <Option key="32k">32k</Option>
+                <Option key="64k">64k</Option>
+                <Option key="128k">128k</Option>
+                <Option key="256k">256k</Option>
+                <Option key="512k">512k</Option>
+                <Option key="1024k">1024k</Option>
+                <Option key="2048k">2048k</Option>
+                <Option key="4M">4M</Option>
+                <Option key="8M">8M</Option>
+                <Option key="16M">16M</Option>
+                <Option key="32M">32M</Option>
+                <Option key="64M">64M</Option>
+                <Option key="128M">128M</Option>
+              </Select>
+            )}
           </FormItem>
-          {bsformItems}
           <FormItem
             {...formItemLayout}
             label="IODepth"
             validateStatus={userNameError ? 'error' : ''}
             help={userNameError || ''}
           >
-            <Row gutter={8}>
-              <Col span={12}>
-                {getFieldDecorator('iodepth-1', {
-                  rules: [{ required: true, message: 'Please input the IODepth!' }],
-                })(
-                  <Input size="large" placeholder="1"/>
-                )}
-              </Col>
-              <Col span={12}>
-                <Button type="dashed" onClick={this.iodepthadd} style={{ width: '100%' }}>
-                  <Icon type="plus" /> Add IODepth
-                </Button>
-              </Col>
-            </Row>
+            {getFieldDecorator('iodepth', {
+              rules: [
+                { required: true, message: 'Please select IODepth!' },
+              ],
+            })(
+              <Select
+                mode="multiple"
+                style={{ width: '100%' }}
+                placeholder="Please select"
+                onChange={this.handleChange}
+              >
+                <Option key="1">1</Option>
+                <Option key="4">4</Option>
+                <Option key="8">8</Option>
+                <Option key="16">16</Option>
+                <Option key="32">32</Option>
+                <Option key="64">64</Option>
+                <Option key="128">128</Option>
+                <Option key="256">256</Option>
+                <Option key="512">512</Option>
+                <Option key="1024">1024</Option>
+              </Select>
+            )}
           </FormItem>
-          {iodepthformItems}
-          <FormItem
+           <FormItem
             {...formItemLayout}
             label="Num Job"
             validateStatus={userNameError ? 'error' : ''}
             help={userNameError || ''}
           >
-            <Row gutter={8}>
-              <Col span={12}>
-                {getFieldDecorator('numjob-1', {
-                  rules: [{ required: true, message: 'Please input the Num Job!' }],
-                })(
-                  <Input size="large" placeholder="1"/>
-                )}
-              </Col>
-              <Col span={12}>
-            <Button type="dashed" onClick={this.numjobadd} style={{ width: '100%' }}>
-              <Icon type="plus" /> Add Num Job
-            </Button>
-              </Col>
-            </Row>
+            {getFieldDecorator('numjob', {
+              rules: [
+                { required: true, message: 'Please select Num Job!' },
+              ],
+            })(
+              <Select
+                mode="multiple"
+                style={{ width: '100%' }}
+                placeholder="Please select"
+                onChange={this.handleChange}
+              >
+                <Option key="1">1</Option>
+                <Option key="4">4</Option>
+                <Option key="8">8</Option>
+                <Option key="16">16</Option>
+                <Option key="32">32</Option>
+                <Option key="64">64</Option>
+              </Select>
+            )}
           </FormItem>
-          {numjobformItems}
           <FormItem
             {...formItemLayout}
             label="Runtime(s)"
@@ -711,7 +507,7 @@ class TestTestForm extends React.Component {
                 { required: true, message: 'Please input the Run Time!' },
               ],
             })(
-              <Input placeholder="120" />
+              <Input defaultValue="120" placeholder="120" />
             )}
           </FormItem>
           <FormItem

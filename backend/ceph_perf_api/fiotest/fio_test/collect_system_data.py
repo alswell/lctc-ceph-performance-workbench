@@ -182,6 +182,7 @@ class SysData(object):
             ))
         ssh.close()
 
+        time.sleep(2)
         #t = paramiko.Transport(host, "22")
         #t.connect(username = "root", password = self.host_password)
         #sftp = paramiko.SFTPClient.from_transport(t)

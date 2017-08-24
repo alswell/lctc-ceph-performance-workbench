@@ -238,12 +238,12 @@ class FioTest extends React.Component {
 
   render () {
     this.init()
-
+    console.log(this.props.host.selectedItems)
     return (
       <div className="content-inner">
         <Row gutter={32}>
           <Col lg={24} md={24}>
-            <Card title="远程数据">
+            <Card>
               <div className="action-btn-container">
                 <Button type="primary" onClick={this.refresh} icon="reload" />
                 <Button type="primary" onClick={this.showModal.bind(this, 'iopsModalVisible')}

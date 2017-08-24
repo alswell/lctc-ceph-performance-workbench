@@ -193,7 +193,7 @@ class HostPage extends React.Component {
       <div className="content-inner">
         <Row gutter={32}>
           <Col lg={24} md={24}>
-            <Card title="远程数据">
+            <Card>
               <div className="action-btn-container">
                 <CollectionsPage {...this.actionCollectionsProps}/>
               </div>

@@ -69,22 +69,25 @@ export async function fetchAndNotification ({ url, params = null, method = 'get'
     params,
   })
     .then((result) => {
-      notification.open({
-        message: notifications.title,
-        description: notifications.success,
-        duration: 0,
-        type: 'success',
-      });
+      if (notifications.success) {
+        notification.open({
+          message: notifications.title,
+          description: notifications.success,
+          duration: 0,
+          type: 'success',
+        });
+      }
       return result;
-      Promise.resolve(result)
     })
     .catch((result) => {
-      notification.open({
-        message: notifications.title,
-        description: notifications.error,
-        duration: 0,
-        type: 'error',
-      });
+      if (notifications.error) {
+        notification.open({
+          message: notifications.title,
+          description: notifications.error,
+          duration: 0,
+          type: 'error',
+        });
+      }
       return result;
     })
 }

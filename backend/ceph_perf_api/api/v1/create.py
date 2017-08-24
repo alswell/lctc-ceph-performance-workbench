@@ -50,27 +50,23 @@ class UserInfos(generic.View):
         fiotest.gen_setup_ceph_config(dir_path, cephconfig)
 
 
-        body['fiotypekeys'].append(1)
-        body['bskeys'].append(1)
-        body['iodepthkeys'].append(1)
-        body['numjobkeys'].append(1)
         body['rwmixreadkeys'].append(1)
 
         casenum = 1
-        for rwkey in body['fiotypekeys']:
-            for bskey in body['bskeys']:
-                for iodepthkey in body['iodepthkeys']:
-                    for numjobkey in body['numjobkeys']:
+        for rw in body['fiotype']:
+            for bs in body['bs']:
+                for iodepth in body['iodepth']:
+                    for numjob in body['numjob']:
                         for rwmixreadkey in body['rwmixreadkeys']:
                             fiotest.case(
                                 dir_path,
                                 casenum,
                                 body['PoolName'],
-                                body['fiotype-{}'.format(rwkey)],
-                                body['bs-{}'.format(bskey)],
+                                rw,
+                                bs,
                                 body['Runtime'],
-                                str(body['iodepth-{}'.format(iodepthkey)]),
-                                str(body['numjob-{}'.format(numjobkey)]),
+                                str(iodepth),
+                                str(numjob),
                                 body['Image Count'],
                                 body['jobname'],
                                 body['rwmixread-{}'.format(rwmixreadkey)],

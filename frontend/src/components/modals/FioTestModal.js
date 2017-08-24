@@ -41,6 +41,7 @@ class FioTestModal extends React.Component {
       </div>
 
       const SimpleLineChart = ({data, type}) => {
+        //console.log(data)
         return (
           <Container>
             <LineChart data={data} margin={{
