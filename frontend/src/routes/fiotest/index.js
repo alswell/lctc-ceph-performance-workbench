@@ -79,6 +79,11 @@ class FioTest extends React.Component {
     this.tableDataProps = {
       columns: [
         {
+          title: 'Job ID',
+          dataIndex: 'jobid',
+          key: 'jobid',
+          sorter: true,
+        },{
           title: 'Case Name',
           dataIndex: 'case_name',
           key: 'case_name',
@@ -89,12 +94,7 @@ class FioTest extends React.Component {
           dataIndex: 'status',
           key: 'status',
           sorter: true,
-        }, {
-          title: 'Job ID',
-          dataIndex: 'jobid',
-          key: 'jobid',
-          sorter: true,
-        },  
+        },   
         // {
         //   title: 'Block Size',
         //   dataIndex: 'blocksize',

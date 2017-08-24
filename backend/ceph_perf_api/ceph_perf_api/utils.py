@@ -83,6 +83,7 @@ def query_to_dict(obj, foreign_convert=None):
             pk = data[i]['pk']
             data[i] = data[i]["fields"]
             data[i]['id'] = pk
+            data[i]['key'] = pk
             if foreign_convert:
                 data[i][foreign_convert.foreign_key] = foreign_convert(obj[i])
         return data

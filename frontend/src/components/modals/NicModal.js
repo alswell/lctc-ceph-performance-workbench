@@ -24,7 +24,7 @@ import {fetchAndNotification} from "../../services/restfulService";
 
 
 
-class MemModal extends React.Component {
+class NicModal extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -41,7 +41,7 @@ class MemModal extends React.Component {
 
   fetchDetail = () => {
     fetchAndNotification({
-      url: `sarmem?caseid=${this.state.id}`,
+      url: `sarnic?caseid=${this.state.id}`,
       method: 'get',
       notifications:{
         error: `获取数据失败！`,
@@ -55,13 +55,19 @@ class MemModal extends React.Component {
   }
 
   render () {
-    const MemLine = ({data}) => {
+    const NicLine = ({data}) => {
       const content = []
       let allnodes = []
+      let allnetworks = []
       for (let j=0; j<data.length; j++) {
         allnodes.push(data[j].node)
       }
+      for (let j=0; j<data.length; j++) {
+        allnetworks.push(data[j].network)
+      }
       let nodes = []
+      let networks = []
+
       let n = allnodes.length
       for (let i=0; i<n; i++) {
         let j = i+1
@@ -78,19 +84,39 @@ class MemModal extends React.Component {
       for  (let i=0; i<n; i++) {
         nodes[i]=allnodes[i]
       }
-      
+
+      //console.log(allnetworks)
+      let m = allnetworks.length
+      for (let i=0; i<m; i++) {
+        let j = i+1
+        while (j<m) {
+          if (allnetworks[i] == allnetworks[j]){
+            for (let k=j; k+1<m; k++){
+              allnetworks[k] =  allnetworks[k+1]
+            }
+            m = m-1
+          }
+          else{j++}
+        }
+      }
+      for  (let i=0; i<m; i++) {
+        networks[i]=allnetworks[i]
+      }
       for (let i=0; i<nodes.length; i++) {
-        const linedata = []
-        for (let j=0; j<data.length; j++) {
-          if (data[j].node == nodes[i]){
-            linedata.push(data[j])}
-        }
-        if (linedata.length > 0){
-          content.push(<p>{nodes[i]}</p>)
-          content.push(
-            <SimpleLineChart data={linedata}/>
-          )
-        }
+        for (let k=0; k<networks.length; k++) {
+          const linedata = []
+          for (let j=0; j<data.length; j++) {
+            if (data[j].node == nodes[i]){
+              if (data[j].network == networks[k]){linedata.push(data[j])}
+            }
+          }
+          if (linedata.length > 0){
+            content.push(<p>{nodes[i]} {networks[k]}</p>)
+            content.push(
+              <SimpleLineChart data={linedata}/>
+            )
+          }
+        } 
       }
       return (
         <div> {content}</div>
@@ -144,7 +170,7 @@ class MemModal extends React.Component {
           width={1000}
           footer={null}
         >
-         <MemLine data={this.props.selectedItems.length==0 ? this.state.data : this.props.selectedItems}/>
+         <NicLine data={this.props.selectedItems.length==0 ? this.state.data : this.props.selectedItems}/>
         </Modal>
       </div>
     )
@@ -153,7 +179,7 @@ class MemModal extends React.Component {
 }
 
 
-MemModal.propTypes = {
+NicModal.propTypes = {
   title: PropTypes.string,
   visible: PropTypes.boolean,
   onOk: PropTypes.function,
@@ -162,4 +188,4 @@ MemModal.propTypes = {
   checkedItems: PropTypes.array,
 }
 
-export default MemModal
+export default NicModal

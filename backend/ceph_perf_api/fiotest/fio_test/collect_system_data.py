@@ -182,9 +182,9 @@ class SysData(object):
             ))
         ssh.close()
 
-        t = paramiko.Transport(host, "22")
-        t.connect(username = "root", password = self.host_password)
-        sftp = paramiko.SFTPClient.from_transport(t)
+        #t = paramiko.Transport(host, "22")
+        #t.connect(username = "root", password = self.host_password)
+        #sftp = paramiko.SFTPClient.from_transport(t)
         if not os.path.exists(log_dir):
             try:
                 os.makedirs(log_dir)
@@ -195,8 +195,13 @@ class SysData(object):
             remotepath = '/tmp/{}'.format(log)
             localpath = '{}/{}_{}'.format(log_dir, host, log)
             print host, remotepath, localpath
-            sftp.get(remotepath, localpath)
-        t.close()
+            cmd = ['sshpass', '-p', self.host_password, 'scp',
+                '-o', 'StrictHostKeyChecking=no', '-r',
+                'root@{}:{}'.format(host, remotepath), localpath]
+            print cmd
+            subprocess.check_call(cmd)
+            #sftp.get(remotepath, localpath)
+        #t.close()
 
     def cleanup_ceph_perf(self):
         for host in self.host_list:

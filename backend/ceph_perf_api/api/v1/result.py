@@ -46,7 +46,7 @@ class FIOTESTS(generic.View):
                 d.append(tmp_dic)
             return d
         else:
-            result = models.Result.objects.filter(jobid=jobid).all()
+            result = models.Result.objects.filter(**f).all()
             d = utils.query_to_dict(result)
             return {"total": len(d), "data": d}
 

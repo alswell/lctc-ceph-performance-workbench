@@ -24,7 +24,7 @@ import {fetchAndNotification} from "../../services/restfulService";
 
 
 
-class MemModal extends React.Component {
+class DiskModal extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -41,7 +41,7 @@ class MemModal extends React.Component {
 
   fetchDetail = () => {
     fetchAndNotification({
-      url: `sarmem?caseid=${this.state.id}`,
+      url: `iostat?caseid=${this.state.id}`,
       method: 'get',
       notifications:{
         error: `获取数据失败！`,
@@ -55,20 +55,26 @@ class MemModal extends React.Component {
   }
 
   render () {
-    const MemLine = ({data}) => {
+    const DiskLine = ({data}) => {
       const content = []
-      let allnodes = []
+      let allosds = []
+      let alldisks = []
       for (let j=0; j<data.length; j++) {
-        allnodes.push(data[j].node)
+        allosds.push(data[j].osdnum)
       }
-      let nodes = []
-      let n = allnodes.length
+      for (let j=0; j<data.length; j++) {
+        alldisks.push(data[j].diskname)
+      }
+      let osds = []
+      let disks = []
+
+      let n = allosds.length
       for (let i=0; i<n; i++) {
         let j = i+1
         while (j<n) {
-          if (allnodes[i] == allnodes[j]){
+          if (allosds[i] == allosds[j]){
             for (let k=j; k+1<n; k++){
-              allnodes[k] =  allnodes[k+1]
+              allosds[k] =  allosds[k+1]
             }
             n = n-1
           }
@@ -76,21 +82,41 @@ class MemModal extends React.Component {
         }
       }
       for  (let i=0; i<n; i++) {
-        nodes[i]=allnodes[i]
+        osds[i]=allosds[i]
+      }
+
+      let m = alldisks.length
+      for (let i=0; i<m; i++) {
+        let j = i+1
+        while (j<m) {
+          if (alldisks[i] == alldisks[j]){
+            for (let k=j; k+1<m; k++){
+              alldisks[k] =  alldisks[k+1]
+            }
+            m = m-1
+          }
+          else{j++}
+        }
+      }
+      for  (let i=0; i<m; i++) {
+        disks[i]=alldisks[i]
       }
       
-      for (let i=0; i<nodes.length; i++) {
-        const linedata = []
-        for (let j=0; j<data.length; j++) {
-          if (data[j].node == nodes[i]){
-            linedata.push(data[j])}
-        }
-        if (linedata.length > 0){
-          content.push(<p>{nodes[i]}</p>)
-          content.push(
-            <SimpleLineChart data={linedata}/>
-          )
-        }
+      for (let i=0; i<osds.length; i++) {
+        for (let k=0; k<disks.length; k++) {
+          const linedata = []
+          for (let j=0; j<data.length; j++) {
+            if (data[j].osdnum == osds[i]){
+              if (data[j].diskname == disks[k]){linedata.push(data[j])}
+            }
+          }
+          if (linedata.length > 0){
+            content.push(<p>{osds[i]} {disks[k]}</p>)
+            content.push(
+              <SimpleLineChart data={linedata}/>
+            )
+          }
+        } 
       }
       return (
         <div> {content}</div>
@@ -144,7 +170,7 @@ class MemModal extends React.Component {
           width={1000}
           footer={null}
         >
-         <MemLine data={this.props.selectedItems.length==0 ? this.state.data : this.props.selectedItems}/>
+         <DiskLine data={this.props.selectedItems.length==0 ? this.state.data : this.props.selectedItems}/>
         </Modal>
       </div>
     )
@@ -153,7 +179,7 @@ class MemModal extends React.Component {
 }
 
 
-MemModal.propTypes = {
+DiskModal.propTypes = {
   title: PropTypes.string,
   visible: PropTypes.boolean,
   onOk: PropTypes.function,
@@ -162,4 +188,4 @@ MemModal.propTypes = {
   checkedItems: PropTypes.array,
 }
 
-export default MemModal
+export default DiskModal

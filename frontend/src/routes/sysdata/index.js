@@ -10,15 +10,20 @@ import { Link } from 'dva/router'
 import DropOption from '../../components/DropOption/DropOption'
 import MemModal from '../../components/modals/MemModal'
 import CpuModal from '../../components/modals/CpuModal'
+import NicModal from '../../components/modals/NicModal'
+import DiskModal from '../../components/modals/DiskModal'
 import { fetchAndNotification } from '../../services/restfulService'
 
 const confirm = Modal.confirm
 const TabPane = Tabs.TabPane;
 
 class SysData extends React.Component {
-  // constructor (props) {
-  //   super(props)
-  // }
+  constructor(props) {
+    super(props);
+    this.state = {
+      checkedItems: [],
+    }
+  }
 
   componentDidMount () {
 
@@ -537,10 +542,7 @@ class SysData extends React.Component {
       title: '',
       wrapClassName: 'vertical-center-modal',
       selectedItems: this.props.host.selectedItems,
-      fetchData: {
-        url: 'host',
-        method: 'delete',
-      },
+      checkedItems: this.state.checkedItems,
       onCancel: () => {
         let { dispatch } = this.props
         dispatch({
@@ -553,8 +555,10 @@ class SysData extends React.Component {
     }
   };
 
-  onChange = (e) => {
-    console.log(`checked = ${e.target.checked}`);
+  onChange = (checkedValues) => {
+    this.setState({
+      checkedItems: checkedValues
+    })
   };
 
 
@@ -565,39 +569,91 @@ class SysData extends React.Component {
       <div className="content-inner">
         <Tabs type="card">
           <TabPane tab="cpu" key="1">
-            <div className="action-btn-container">
-                <Button type="primary" onClick={this.refresh} icon="reload" />
-                <Checkbox onChange={this.onChange}>Checkbox</Checkbox>
-                <Button type="primary" onClick={this.showModal.bind(this, 'batchModalVisible')}
-                  disabled={this.props.host.selectedItems.length === 0}
-                >Chart</Button>
-            </div>
+              <Checkbox.Group onChange={this.onChange}>
+                <Row>
+                  <Col span={2}><Checkbox value="usr">%usr</Checkbox></Col>
+                  <Col span={2}><Checkbox value="nice">%nice</Checkbox></Col>
+                  <Col span={2}><Checkbox value="sys">%sys</Checkbox></Col>
+                  <Col span={2}><Checkbox value="iowait">%iowait</Checkbox></Col>
+                  <Col span={2}><Checkbox value="steal">%steal</Checkbox></Col>
+                  <Col span={2}><Checkbox value="irq">%irq</Checkbox></Col>
+                  <Col span={2}><Checkbox value="soft">%soft</Checkbox></Col>
+                  <Col span={2}><Checkbox value="guest">%guest</Checkbox></Col>
+                  <Col span={2}><Checkbox value="gnice">%gnice</Checkbox></Col>
+                  <Col span={2}><Checkbox value="idle">%idle</Checkbox></Col>
+                </Row>
+              </Checkbox.Group>
+              <Button type="primary" onClick={this.showModal.bind(this, 'batchModalVisible')}
+              >Chart</Button>
             <DataTable
               {...this.cputableDataProps}
             />
             {this.props.host.batchModalVisible && <CpuModal {...this.batchModalProps} />}
           </TabPane>
           <TabPane tab="memory" key="2">
-            <div className="action-btn-container">
-                <Button type="primary" onClick={this.refresh} icon="reload" />
-                <Button type="primary" onClick={this.showModal.bind(this, 'batchModalVisible')}
-                  disabled={this.props.host.selectedItems.length === 0}
-                >Chart</Button>
-            </div>
+            <Checkbox.Group onChange={this.onChange}>
+                <Row>
+                  <Col span={2}><Checkbox value="kbmemfree">kbmemfree</Checkbox></Col>
+                  <Col span={2}><Checkbox value="kbmemused">kbmemused</Checkbox></Col>
+                  <Col span={2}><Checkbox value="memused">%memused</Checkbox></Col>
+                  <Col span={2}><Checkbox value="kbbuffers">kbbuffers</Checkbox></Col>
+                  <Col span={2}><Checkbox value="kbcached">kbcached</Checkbox></Col>
+                  <Col span={2}><Checkbox value="kbcommit">kbcommit</Checkbox></Col>
+                  <Col span={2}><Checkbox value="commit">%commit</Checkbox></Col>
+                  <Col span={2}><Checkbox value="kbactive">kbactive</Checkbox></Col>
+                  <Col span={2}><Checkbox value="kbinact">kbinact</Checkbox></Col>
+                  <Col span={2}><Checkbox value="kbdirty">kbdirty</Checkbox></Col>
+                </Row>
+              </Checkbox.Group>
+              <Button type="primary" onClick={this.showModal.bind(this, 'batchModalVisible')}
+              >Chart</Button>  
             <DataTable
               {...this.memtableDataProps}
             />
             {this.props.host.batchModalVisible && <MemModal {...this.batchModalProps} />}
           </TabPane>
           <TabPane tab="network" key="3">
+            <Checkbox.Group onChange={this.onChange}>
+                <Row>
+                  <Col span={2}><Checkbox value="rxpcks">rxpck/s</Checkbox></Col>
+                  <Col span={2}><Checkbox value="txpcks">txpck/s</Checkbox></Col>
+                  <Col span={2}><Checkbox value="rxkBs">rxkB/s</Checkbox></Col>
+                  <Col span={2}><Checkbox value="txkBs">txkB/s</Checkbox></Col>
+                  <Col span={2}><Checkbox value="rxcmps">rxcmp/s</Checkbox></Col>
+                  <Col span={2}><Checkbox value="txcmps">txcmp/s</Checkbox></Col>
+                  <Col span={2}><Checkbox value="rxmcsts">rxmcst/s</Checkbox></Col>
+                </Row>
+              </Checkbox.Group>
+              <Button type="primary" onClick={this.showModal.bind(this, 'batchModalVisible')}
+              >Chart</Button> 
             <DataTable
               {...this.nictableDataProps}
             />
+            {this.props.host.batchModalVisible && <NicModal {...this.batchModalProps} />}
           </TabPane>
           <TabPane tab="disk" key="4">
+            <Checkbox.Group onChange={this.onChange}>
+                <Row>
+                  <Col span={2}><Checkbox value="rrqms">rrqm/s</Checkbox></Col>
+                  <Col span={2}><Checkbox value="wrqms">wrqm/s</Checkbox></Col>
+                  <Col span={2}><Checkbox value="rs">r/s</Checkbox></Col>
+                  <Col span={2}><Checkbox value="ws">w/s</Checkbox></Col>
+                  <Col span={2}><Checkbox value="rMBs">rMB/s</Checkbox></Col>
+                  <Col span={2}><Checkbox value="wMBs">wMB/s</Checkbox></Col>
+                  <Col span={2}><Checkbox value="avgrqsz">avgrq-sz</Checkbox></Col>
+                  <Col span={2}><Checkbox value="await">await</Checkbox></Col>
+                  <Col span={2}><Checkbox value="r_await">r_await</Checkbox></Col>
+                  <Col span={2}><Checkbox value="w_await">w_await</Checkbox></Col>
+                  <Col span={2}><Checkbox value="svctm">svctm</Checkbox></Col>
+                  <Col span={2}><Checkbox value="util">%util</Checkbox></Col>
+                </Row>
+              </Checkbox.Group>
+              <Button type="primary" onClick={this.showModal.bind(this, 'batchModalVisible')}
+              >Chart</Button> 
             <DataTable
               {...this.iostattableDataProps}
             />
+            {this.props.host.batchModalVisible && <DiskModal {...this.batchModalProps} />}
           </TabPane>
           <TabPane tab="Ceph status" key="5">
             <DataTable
