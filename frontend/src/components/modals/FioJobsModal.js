@@ -76,12 +76,14 @@ class FioJobsModal extends React.Component {
       //const linecolor = ["#ffc658"]
       let content = []
       let jobids = []
+      let jobnames = []
       this.props.selectedItems.map((item) => (jobids.push(item.id)))
+      this.props.selectedItems.map((item) => (jobnames.push(item.name)))
       for (let i=0; i<jobids.length; i++) {
         let j = i
         if ( i >= linecolor.length){j = 0}
         content.push(
-          <Bar dataKey={`${jobids[i]}_${type}`} fill={linecolor[j]} />
+          <Bar dataKey={`${jobids[i]}${jobnames[i]}_${type}`} fill={linecolor[j]} />
         ) 
       }
       return (

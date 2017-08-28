@@ -50,7 +50,7 @@ class FioTestModal extends React.Component {
               left: 20,
               bottom: 5,
             }}>
-              <XAxis dataKey="id" />
+              <XAxis dataKey="short_name" />
               <YAxis />
               <CartesianGrid strokeDasharray="3 3" />
               <Tooltip />

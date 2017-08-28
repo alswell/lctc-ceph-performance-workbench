@@ -20,15 +20,23 @@ class ToDB(object):
             print sql
             self.db.rollback()
 
-        sql = "INSERT INTO fiotest_result(jobid_id, case_name, time, \
+        sql = "INSERT INTO fiotest_result(jobid_id, case_name, short_name, time, \
             status, blocksize, iodepth, numberjob, imagenum, \
             clientnum, r_iops, w_iops, iops, readwrite, lat, r_bw, w_bw, bw ) \
-            VALUES ('{}', '{}', '{}', \
+            VALUES ('{}', '{}', '{}', '{}', \
             '{}', '{}', '{}', '{}', \
             '{}', '{}', '{}', '{}', '{}', \
             '{}', '{}', '{}', '{}', '{}' )".format(
                 jobid,
                 kwargs['case_name'],
+                '{}_{}_{}_{}_{}_{}'.format(
+                    kwargs['blocksize'],
+                    kwargs['iodepth'],
+                    kwargs['numberjob'],
+                    kwargs['imagenum'],
+                    kwargs['clientnum'],
+                    kwargs['readwrite'],
+                ),
                 kwargs['time'],
                 kwargs['status'],
                 kwargs['blocksize'],

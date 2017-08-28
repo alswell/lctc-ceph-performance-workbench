@@ -30,15 +30,28 @@ class FIOTESTS(generic.View):
                             result['clientnum'],
                             result['readwrite']
                         )
+                        if key == "jobid":
+                            j = {}
+                            j['id'] = value
+                            job_r = models.Jobs.objects.filter(**j).all()
+                            result_j = utils.query_to_dict(job_r)[0]
                         if output.has_key(case_name):
                             output[case_name]['{}_iops'.format(value)] = result['iops']
                             output[case_name]['{}_lat'.format(value)] = result['lat']
                             output[case_name]['{}_bw'.format(value)] = result['bw']
+                            if result_j.has_key('name'):
+                                output[case_name]['{}{}_iops'.format(value, result_j['name'])] = result['iops']
+                                output[case_name]['{}{}_lat'.format(value, result_j['name'])] = result['lat']
+                                output[case_name]['{}{}_bw'.format(value, result_j['name'])] = result['bw']
                         else:
                             output[case_name] = {}
                             output[case_name]['{}_iops'.format(value)] = result['iops']
                             output[case_name]['{}_lat'.format(value)] = result['lat']
                             output[case_name]['{}_bw'.format(value)] = result['bw']
+                            if result_j.has_key('name'):
+                                output[case_name]['{}{}_iops'.format(value, result_j['name'])] = result['iops']
+                                output[case_name]['{}{}_lat'.format(value, result_j['name'])] = result['lat']
+                                output[case_name]['{}{}_bw'.format(value, result_j['name'])] = result['bw']
             d = []
             for key, value in output.items():
                 tmp_dic = {'casename': key}

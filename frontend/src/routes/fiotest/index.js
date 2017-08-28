@@ -85,8 +85,8 @@ class FioTest extends React.Component {
           sorter: true,
         },{
           title: 'Case Name',
-          dataIndex: 'case_name',
-          key: 'case_name',
+          dataIndex: 'short_name',
+          key: 'short_name',
           //width: 350,
           sorter: true,
         }, {
@@ -154,11 +154,6 @@ class FioTest extends React.Component {
           key: 'lat',
         },
         {
-          title: 'Start Time',
-          dataIndex: 'time',
-          key: 'time',
-          sorter: true,
-        },{
           title: 'Sys data',
           //dataIndex: 'sysdata',
           //key: 'sysdate',
@@ -168,6 +163,13 @@ class FioTest extends React.Component {
           //dataIndex: 'sysdata',
           //key: 'sysdate',
           render: (text, record) => <Link to={`perfdump/${record.id}`}>perf dump</Link>,
+        },
+        {
+          title: 'Full Case Name',
+          dataIndex: 'case_name',
+          key: 'case_name',
+          //width: 350,
+          sorter: true,
         },
       ],
       fetchData: {
@@ -238,7 +240,6 @@ class FioTest extends React.Component {
 
   render () {
     this.init()
-    console.log(this.props.host.selectedItems)
     return (
       <div className="content-inner">
         <Row gutter={32}>
