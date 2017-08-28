@@ -150,13 +150,13 @@ class Result(object):
         w_iops = 0
         for i in range(len(log_list)):
             if re.match(r'   read:', log_list[i]):
-                match = re.match(r'\s*read: IOPS=(.+)(k?),', log_list[i])
+                match = re.match(r'\s*read: IOPS=([^k]+)(k?),', log_list[i])
                 if re.search('k', match.group(2)):
                     r_iops = int(float(match.group(1)) * 1000)
                 else:
                     r_iops = int(match.group(1))
             elif re.match(r'  write:', log_list[i]):
-                match = re.match(r'\s*write: IOPS=(.+)(k?),', log_list[i])
+                match = re.match(r'\s*write: IOPS=([^k]+)(k?),', log_list[i])
                 if re.search('k', match.group(2)):
                     w_iops = int(float(match.group(1)) * 1000)
                 else:

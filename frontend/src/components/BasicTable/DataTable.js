@@ -107,8 +107,8 @@ class DataTable extends React.Component {
     this.rowSelection = {
       onChange: (selectedRowKeys, selectedRows) => {
         console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows)
-        this.setState({ selectedRowKeys: selectedRows })
-        this.props.handleSelectItems(selectedRows)
+        // this.setState({ selectedRowKeys: selectedRows })
+        this.props.handleSelectItems(selectedRowKeys, selectedRows)
       },
       getCheckboxProps: record => ({
         disabled: record.name === 'Disabled User',    // Column configuration not to be checked

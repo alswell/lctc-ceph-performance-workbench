@@ -503,11 +503,12 @@ class TestTestForm extends React.Component {
             help={userNameError || ''}
           >
             {getFieldDecorator('Runtime', {
+              initialValue: "120",
               rules: [
                 { required: true, message: 'Please input the Run Time!' },
               ],
             })(
-              <Input defaultValue="120" placeholder="120" />
+              <Input placeholder="120" />
             )}
           </FormItem>
           <FormItem
@@ -517,6 +518,7 @@ class TestTestForm extends React.Component {
             help={userNameError || ''}
           >
             {getFieldDecorator('PoolName', {
+              initialValue: "rbd",
               rules: [
                 { required: true, message: 'Please input the Pool Name!' },
               ],

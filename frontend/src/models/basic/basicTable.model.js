@@ -4,6 +4,7 @@
 export default {
   state: {
     selectedItems: [],
+    selectedRowKeys: [],
     refresh: 1,
   },
 
@@ -16,9 +17,10 @@ export default {
     hideModal (state, { payload: { key: key } }) {
       return { ...state, [key]: false }
     },
-    updateSelectItems (state, { payload: selectedItems }) {
+    updateSelectItems (state, { payload: {selectedRowKeys, selectedItems} }) {
       return {
         ...state,
+        selectedRowKeys,
         selectedItems,
       }
     },

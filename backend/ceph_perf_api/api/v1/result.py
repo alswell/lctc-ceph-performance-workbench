@@ -14,7 +14,7 @@ class FIOTESTS(generic.View):
     def get(self, request):
         print dict(request.GET)
         f = {}
-        if len(dict(request.GET)) > 0:
+        if len(dict(request.GET)) == 1 and dict(request.GET).has_key('jobid'):
             output = {}
             for key, values in dict(request.GET).items():
                 for value in values:
@@ -30,11 +30,10 @@ class FIOTESTS(generic.View):
                             result['clientnum'],
                             result['readwrite']
                         )
-                        if key == "jobid":
-                            j = {}
-                            j['id'] = value
-                            job_r = models.Jobs.objects.filter(**j).all()
-                            result_j = utils.query_to_dict(job_r)[0]
+                        j = {}
+                        j['id'] = value
+                        job_r = models.Jobs.objects.filter(**j).all()
+                        result_j = utils.query_to_dict(job_r)[0]
                         if output.has_key(case_name):
                             output[case_name]['{}_iops'.format(value)] = result['iops']
                             output[case_name]['{}_lat'.format(value)] = result['lat']
@@ -58,8 +57,10 @@ class FIOTESTS(generic.View):
                 tmp_dic.update(value)
                 d.append(tmp_dic)
             return d
+
         else:
-            result = models.Result.objects.filter(**f).all()
+            filter_param = utils.parse_filter_param(request.DATA, request.GET)
+            result = models.Result.objects.filter(**filter_param).all()
             d = utils.query_to_dict(result)
             return {"total": len(d), "data": d}
 

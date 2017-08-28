@@ -14,12 +14,7 @@ export default {
    setup ({ dispatch,history }) {
     
     history.listen(location => {
-        // console.log(location)
-        let param = parse(window.location.search,{
-        ignoreQueryPrefix:true
-      })
-
-      dispatch({type:'setId',payload:param})
+        
       })
       
       // console.log(location)
@@ -42,11 +37,5 @@ export default {
   reducers: {
     ...model.reducers,
 
-    setId(state,{payload:param}){
-      return {
-        ...state,
-        jobid:param.jobid
-      }
-    }
   },
 }

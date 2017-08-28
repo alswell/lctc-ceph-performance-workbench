@@ -16,20 +16,44 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import styles from './Container.less'
+import {fetchAndNotification} from "../../services/restfulService";
 //import Container from "../../routes/chart/lineChart/index"
 
 
 
 class FioTestModal extends React.Component {
-  // constructor (props) {
-  //   super(props)
-  // }
+  constructor(props) {
+    super(props);
+    this.state = {
+      spinning: true,
+      data: {},
+    }
+  }
 
-  componentDidMount () {
+  componentDidMount() {
+    this.fetchDetail()
+  }
 
+  fetchDetail = () => {
+    const caseids = this.props.selectedItems.selectedRowKeys
+
+    fetchAndNotification({
+      url: `fiotest`,
+      method: 'get',
+      params: {'id': caseids},
+      notifications:{
+        error: `获取数据失败！`,
+      }
+    }).then((result) => {
+      this.setState({
+        spinning: false,
+        data: result.data
+      })
+    })
   }
 
     render () {
+      console.log(this.state.data)
 
       const Container = ({ children, ratio = 5 / 2, minHeight = 250, maxHeight = 350 }) => <div className={styles.container} style={{ minHeight, maxHeight }}>
         <div style={{ marginTop: `${100 / ratio}%` || '100%' }}></div>
@@ -72,7 +96,7 @@ class FioTestModal extends React.Component {
           width={1000}
           footer={null}
         >
-          <SimpleLineChart data={this.props.selectedItems} type={this.props.type}/>
+          <SimpleLineChart data={this.state.data.data} type={this.props.type}/>
         </Modal>
       </div>
     )
