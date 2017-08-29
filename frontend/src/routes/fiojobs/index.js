@@ -129,9 +129,12 @@ class HostPage extends React.Component {
       },
       errorMsg: 'get job table error',
       refresh: this.props.host.refresh,
-      handleSelectItems: (selectedRows) => {
-        this.props.dispatch({ type: 'fiojobs/updateSelectItems', payload: selectedRows })
-      },
+      handleSelectItems: (selectedRowKeys, selectedRows) => {
+        this.props.dispatch({
+          type: "fiojobs/updateSelectItems",
+          payload: [selectedRowKeys, selectedRows]
+        });
+      }
     }
 
     this.iopsModalProps = {

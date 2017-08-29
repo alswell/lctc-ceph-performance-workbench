@@ -41,7 +41,8 @@ class CpuModal extends React.Component {
 
   fetchDetail = () => {
     fetchAndNotification({
-      url: `sarcpu?caseid=${this.state.id}`,
+      //url: `sarcpu?caseid=${this.state.id}`,
+      url: this.state.id ? `sarcpu?caseid=${this.state.id}/`:`sarcpu`,
       method: 'get',
       notifications:{
         error: `获取数据失败！`,

@@ -13,6 +13,7 @@ import CpuModal from '../../components/modals/CpuModal'
 import NicModal from '../../components/modals/NicModal'
 import DiskModal from '../../components/modals/DiskModal'
 import { fetchAndNotification } from '../../services/restfulService'
+import qs from 'qs'
 
 const confirm = Modal.confirm
 const TabPane = Tabs.TabPane;
@@ -22,6 +23,8 @@ class SysData extends React.Component {
     super(props);
     this.state = {
       checkedItems: [],
+      id: window.location.search ? qs.parse(window.location.search,{ignoreQueryPrefix:true}).caseid
+        : ""
     }
   }
 
@@ -134,9 +137,12 @@ class SysData extends React.Component {
       },
       errorMsg: 'get sar cpu table error',
       refresh: this.props.host.refresh,
-      handleSelectItems: (selectedRows) => {
-        this.props.dispatch({ type: 'sysdata/updateSelectItems', payload: selectedRows })
-      },
+      handleSelectItems: (selectedRowKeys, selectedRows) => {
+        this.props.dispatch({
+          type: "sysdata/updateSelectItems",
+          payload: [selectedRowKeys, selectedRows]
+        });
+      }
     }
 
     this.memtableDataProps = {
@@ -209,9 +215,12 @@ class SysData extends React.Component {
       },
       errorMsg: 'get sarmem table error',
       refresh: this.props.host.refresh,
-      handleSelectItems: (selectedRows) => {
-        this.props.dispatch({ type: 'sysdata/updateSelectItems', payload: selectedRows })
-      },
+      handleSelectItems: (selectedRowKeys, selectedRows) => {
+        this.props.dispatch({
+          type: "sysdata/updateSelectItems",
+          payload: [selectedRowKeys, selectedRows]
+        });
+      }
     }
 
     this.nictableDataProps = {
@@ -278,9 +287,12 @@ class SysData extends React.Component {
       },
       errorMsg: 'get sarnic table error',
       refresh: this.props.host.refresh,
-      handleSelectItems: (selectedRows) => {
-        this.props.dispatch({ type: 'sysdata/updateSelectItems', payload: selectedRows })
-      },
+      handleSelectItems: (selectedRowKeys, selectedRows) => {
+        this.props.dispatch({
+          type: "sysdata/updateSelectItems",
+          payload: [selectedRowKeys, selectedRows]
+        });
+      }
     }
 
     this.iostattableDataProps = {
@@ -370,9 +382,12 @@ class SysData extends React.Component {
       },
       errorMsg: 'get iostat table error',
       refresh: this.props.host.refresh,
-      handleSelectItems: (selectedRows) => {
-        this.props.dispatch({ type: 'sysdata/updateSelectItems', payload: selectedRows })
-      },
+      handleSelectItems: (selectedRowKeys, selectedRows) => {
+        this.props.dispatch({
+          type: "sysdata/updateSelectItems",
+          payload: [selectedRowKeys, selectedRows]
+        });
+      }
     }
 
     this.cephstatustableDataProps = {
@@ -455,9 +470,12 @@ class SysData extends React.Component {
       },
       errorMsg: 'get sarnic table error',
       refresh: this.props.host.refresh,
-      handleSelectItems: (selectedRows) => {
-        this.props.dispatch({ type: 'sysdata/updateSelectItems', payload: selectedRows })
-      },
+      handleSelectItems: (selectedRowKeys, selectedRows) => {
+        this.props.dispatch({
+          type: "sysdata/updateSelectItems",
+          payload: [selectedRowKeys, selectedRows]
+        });
+      }
     }
 
     this.cephinfotableDataProps = {
@@ -497,9 +515,12 @@ class SysData extends React.Component {
       },
       errorMsg: 'get cephinfo table error',
       refresh: this.props.host.refresh,
-      handleSelectItems: (selectedRows) => {
-        this.props.dispatch({ type: 'sysdata/updateSelectItems', payload: selectedRows })
-      },
+      handleSelectItems: (selectedRowKeys, selectedRows) => {
+        this.props.dispatch({
+          type: "sysdata/updateSelectItems",
+          payload: [selectedRowKeys, selectedRows]
+        });
+      }
     }
 
     this.poolinfotableDataProps = {
@@ -531,9 +552,12 @@ class SysData extends React.Component {
       },
       errorMsg: 'get poolinfo table error',
       refresh: this.props.host.refresh,
-      handleSelectItems: (selectedRows) => {
-        this.props.dispatch({ type: 'sysdata/updateSelectItems', payload: selectedRows })
-      },
+      handleSelectItems: (selectedRowKeys, selectedRows) => {
+        this.props.dispatch({
+          type: "sysdata/updateSelectItems",
+          payload: [selectedRowKeys, selectedRows]
+        });
+      }
     }
 
     this.batchModalProps = {
@@ -583,7 +607,10 @@ class SysData extends React.Component {
                   <Col span={2}><Checkbox value="idle">%idle</Checkbox></Col>
                 </Row>
               </Checkbox.Group>
-              <Button type="primary" onClick={this.showModal.bind(this, 'batchModalVisible')}
+              <Button 
+                type="primary"
+                onClick={this.showModal.bind(this, 'batchModalVisible')}
+                disabled={this.state.id ? false : this.props.host.selectedItems.length === 0}
               >Chart</Button>
             <DataTable
               {...this.cputableDataProps}
@@ -606,6 +633,7 @@ class SysData extends React.Component {
                 </Row>
               </Checkbox.Group>
               <Button type="primary" onClick={this.showModal.bind(this, 'batchModalVisible')}
+                disabled={this.state.id ? false : this.props.host.selectedItems.length === 0}
               >Chart</Button>  
             <DataTable
               {...this.memtableDataProps}
@@ -625,6 +653,7 @@ class SysData extends React.Component {
                 </Row>
               </Checkbox.Group>
               <Button type="primary" onClick={this.showModal.bind(this, 'batchModalVisible')}
+                disabled={this.state.id ? false : this.props.host.selectedItems.length === 0}
               >Chart</Button> 
             <DataTable
               {...this.nictableDataProps}
@@ -649,6 +678,7 @@ class SysData extends React.Component {
                 </Row>
               </Checkbox.Group>
               <Button type="primary" onClick={this.showModal.bind(this, 'batchModalVisible')}
+                disabled={this.state.id ? false : this.props.host.selectedItems.length === 0}
               >Chart</Button> 
             <DataTable
               {...this.iostattableDataProps}

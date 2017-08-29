@@ -17,7 +17,7 @@ export default {
     hideModal (state, { payload: { key: key } }) {
       return { ...state, [key]: false }
     },
-    updateSelectItems (state, { payload: {selectedRowKeys, selectedItems} }) {
+    updateSelectItems (state, { payload: [selectedRowKeys, selectedItems] }) {
       return {
         ...state,
         selectedRowKeys,

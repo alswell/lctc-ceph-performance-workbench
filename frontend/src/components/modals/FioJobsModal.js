@@ -32,7 +32,6 @@ class FioJobsModal extends React.Component {
     this.state = {
       spinning: true,
       data: {},
-      id: this.props.selectedItems ? this.props.selectedItems.id : ""
     }
   }
 

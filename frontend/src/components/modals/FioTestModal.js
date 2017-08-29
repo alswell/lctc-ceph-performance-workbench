@@ -35,7 +35,7 @@ class FioTestModal extends React.Component {
   }
 
   fetchDetail = () => {
-    const caseids = this.props.selectedItems.selectedRowKeys
+    const caseids = this.props.selectedRowKeys
 
     fetchAndNotification({
       url: `fiotest`,
@@ -111,6 +111,7 @@ FioTestModal.propTypes = {
   onOk: PropTypes.function,
   onCancel: PropTypes.function,
   selectedItems: PropTypes.array,
+  selectedRowKeys: PropTypes.array,
   type: PropTypes.string,
 }
 

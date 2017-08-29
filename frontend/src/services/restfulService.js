@@ -8,7 +8,7 @@ import qs from 'qs'
 
 let instance = axios.create({
   baseURL: config.uri.api,
-  timeout: 10000,
+  timeout: 60000,
   // headers: {'X-Custom-Header': 'foobar'}
 })
 

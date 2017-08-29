@@ -201,7 +201,7 @@ class FioTest extends React.Component {
       handleSelectItems: (selectedRowKeys, selectedRows) => {
         this.props.dispatch({
           type: "fiotest/updateSelectItems",
-          payload: {selectedRowKeys, selectedRows}
+          payload: [selectedRowKeys, selectedRows]
         });
       }
     };
@@ -213,6 +213,7 @@ class FioTest extends React.Component {
       type: "iops",
       wrapClassName: "vertical-center-modal",
       selectedItems: this.props.host.selectedItems,
+      selectedRowKeys: this.props.host.selectedRowKeys,
       onCancel: () => {
         let { dispatch } = this.props;
         dispatch({
@@ -231,6 +232,7 @@ class FioTest extends React.Component {
       type: "lat",
       wrapClassName: "vertical-center-modal",
       selectedItems: this.props.host.selectedItems,
+      selectedRowKeys: this.props.host.selectedRowKeys,
       onCancel: () => {
         let { dispatch } = this.props;
         dispatch({
@@ -249,6 +251,7 @@ class FioTest extends React.Component {
       type: "bw",
       wrapClassName: "vertical-center-modal",
       selectedItems: this.props.host.selectedItems,
+      selectedRowKeys: this.props.host.selectedRowKeys,
       onCancel: () => {
         let { dispatch } = this.props;
         dispatch({
