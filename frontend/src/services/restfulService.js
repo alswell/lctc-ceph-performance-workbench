@@ -88,7 +88,7 @@ export async function fetchAndNotification ({ url, params = null, method = 'get'
           type: 'error',
         });
       }
-      return result;
+      return Promise.reject(result);
     })
 }
 

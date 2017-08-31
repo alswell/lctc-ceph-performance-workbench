@@ -15,3 +15,7 @@ class JobAPI(object):
     def run_fio(self, dict_args):
         print dict_args
         self.client.cast({}, 'run_fio', body=dict_args)
+
+    def deploy(self, dict_args):
+        print dict_args
+        self.client.cast({}, 'deploy', body=dict_args)

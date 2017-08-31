@@ -181,6 +181,15 @@ const Routers = function ({ history, app }) {
           },
         },
         {
+          path: 'deploy',
+          getComponent (nextState, cb) {
+            require.ensure([], require => {
+              registerModel(app, require('./models/deploy.model'))
+              cb(null, require('./routes/deploy/'))
+            }, 'deploy')
+          },
+        },
+        {
           path: 'sysdata/:caseid',
           getComponent (nextState, cb) {
             require.ensure([], require => {

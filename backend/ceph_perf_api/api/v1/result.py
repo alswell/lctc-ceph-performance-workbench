@@ -60,7 +60,7 @@ class FIOTESTS(generic.View):
 
         else:
             filter_param = utils.parse_filter_param(request.DATA, request.GET)
-            result = models.Result.objects.filter(**filter_param).all()
+            result = models.Result.objects.filter(**filter_param).all().order_by('-id')
             d = utils.query_to_dict(result)
             return {"total": len(d), "data": d}
 

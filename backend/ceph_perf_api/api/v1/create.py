@@ -14,7 +14,7 @@ from fiotest.fio_test import build_suite
 from fiotest.fio_test import run_suite
 
 @urls.register
-class UserInfos(generic.View):
+class CreateFioJob(generic.View):
     url_regex = r'^create$'
 
 
@@ -81,6 +81,7 @@ class UserInfos(generic.View):
     @utils.json_response
     def post(self, request):
         body = request.DATA
+        print body
 
         suite_dir = self.create_suite(body)
         runfio = run_suite.RunFIO(suite_dir, todb=True)

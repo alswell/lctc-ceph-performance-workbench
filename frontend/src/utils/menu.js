@@ -158,26 +158,32 @@ module.exports = [
   //   router: '/host',
   //   icon: 'setting',
   // },
-  
+  // {
+  //   id: 627,
+  //   // bpid: 1,
+  //   name: 'Ceph cluster',
+  //   router: '/deploy',
+  //   icon: 'laptop',
+  // },
   {
     id: 625,
     // bpid: 1,
     name: 'Fio Jobs',
     router: '/fiojobs',
-    icon: 'setting',
+    icon: 'laptop',
   },
   {
     id: 624,
     // bpid: 1,
     name: 'Fio Test Result',
     router: '/fiotest',
-    icon: 'setting',
+    icon: 'laptop',
   },
   {
     id: 626,
     // bpid: 1,
     name: 'Sys Data',
     router: '/sysdata',
-    icon: 'setting',
+    icon: 'laptop',
   },
 ]

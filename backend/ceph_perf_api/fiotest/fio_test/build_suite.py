@@ -61,16 +61,8 @@ class FIOTest(object):
         print "=================================="
         suite_dir = "{}/test-suites/{}".format(os.getcwd(), suitename)
         if os.path.exists(suite_dir):
-            try:
-                shutil.rmtree(suite_dir)
-            except Exception, e:
-                print "remove the previous test suite dir fail:{}".format(e)
-                sys.exit(1)
-        try:
-            os.makedirs(path)
-        except Exception, e:
-            print "make test suite dir fail:{}".format(e)
-            sys.exit(1)
+            shutil.rmtree(suite_dir)
+        os.makedirs(path)
         return suite_dir
     
     def getlist(self, data):

@@ -15,7 +15,7 @@ class SARCPUS(generic.View):
         for key, value in dict(request.GET).items():
             f[key] = value[0]
         print f
-        result = models.SarCPU.objects.filter(**f).all()
+        result = models.SarCPU.objects.filter(**f).all().order_by('-id')
         d = utils.query_to_dict(result)
         return {"total": len(d), "data": d}
 
@@ -40,7 +40,7 @@ class SARMEMS(generic.View):
         for key, value in dict(request.GET).items():
             f[key] = value[0]
         print f
-        result = models.SarMem.objects.filter(**f).all()
+        result = models.SarMem.objects.filter(**f).all().order_by('-id')
         d = utils.query_to_dict(result)
         return {"total": len(d), "data": d}
 
@@ -65,7 +65,7 @@ class SARNICS(generic.View):
         for key, value in dict(request.GET).items():
             f[key] = value[0]
         print f
-        result = models.SarNic.objects.filter(**f).all()
+        result = models.SarNic.objects.filter(**f).all().order_by('-id')
         d = utils.query_to_dict(result)
         return {"total": len(d), "data": d}
 
@@ -90,7 +90,7 @@ class Iostats(generic.View):
         for key, value in dict(request.GET).items():
             f[key] = value[0]
         print f
-        result = models.Iostat.objects.filter(**f).all()
+        result = models.Iostat.objects.filter(**f).all().order_by('-id')
         d = utils.query_to_dict(result)
         return {"total": len(d), "data": d}
 
@@ -115,7 +115,7 @@ class CephStatuss(generic.View):
         for key, value in dict(request.GET).items():
             f[key] = value[0]
         print f
-        result = models.CephStatus.objects.filter(**f).all()
+        result = models.CephStatus.objects.filter(**f).all().order_by('-id')
         d = utils.query_to_dict(result)
         return {"total": len(d), "data": d}
 
@@ -140,7 +140,7 @@ class CephInfos(generic.View):
         for key, value in dict(request.GET).items():
             f[key] = value[0]
         print f
-        result = models.CephInfo.objects.filter(**f).all()
+        result = models.CephInfo.objects.filter(**f).all().order_by('-id')
         d = utils.query_to_dict(result)
         return {"total": len(d), "data": d}
 
@@ -165,7 +165,7 @@ class CephPoolInfos(generic.View):
         for key, value in dict(request.GET).items():
             f[key] = value[0]
         print f
-        result = models.CephPoolInfo.objects.filter(**f).all()
+        result = models.CephPoolInfo.objects.filter(**f).all().order_by('-id')
         d = utils.query_to_dict(result)
         return {"total": len(d), "data": d}
 
@@ -190,7 +190,7 @@ class PerfDumps(generic.View):
         for key, value in dict(request.GET).items():
             f[key] = value[0]
         print f
-        result = models.PerfDump.objects.filter(**f).all()
+        result = models.PerfDump.objects.filter(**f).all().order_by('-id')
         d = utils.query_to_dict(result)
         return {"total": len(d), "data": d}
 

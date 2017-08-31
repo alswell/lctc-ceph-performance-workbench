@@ -1,6 +1,3 @@
-#!/bin/bash
-
-
 # The sh file runs on admin node.
 #
 # Prepare:
@@ -89,6 +86,7 @@ else
     cd ${DIR_MYCLUSTER}
 fi
 
+echo ceph-deploy new $mon_list
 ceph-deploy new $mon_list
 error_check
 
@@ -124,19 +122,23 @@ done
 export CEPH_DEPLOY_REPO_URL=http://mirrors.163.com/ceph/rpm-luminous/el7/
 export CEPH_DEPLOY_GPG_URL=http://mirrors.163.com/ceph/keys/release.asc
 
+echo ceph-deploy install ${deploy_list}
 ceph-deploy install ${deploy_list}
 error_check
 
 
 # mon initial
-ceph-deploy mon create-initial
+echo ceph-deploy --overwrite-conf mon create-initial
+ceph-deploy --overwrite-conf mon create-initial
 error_check
 
 # manager create
-ceph-deploy mgr create ${mgr_list}
+echo ceph-deploy --overwrite-conf mgr create ${mgr_list}
+ceph-deploy --overwrite-conf mgr create ${mgr_list}
 error_check
 
 # ceph config syn
+echo ceph-deploy --overwrite-conf admin ${deploy_list}
 ceph-deploy --overwrite-conf admin ${deploy_list}
 error_check
 
@@ -148,6 +150,7 @@ for item in $host_disk_journal_list
 do
     OIFS=$IFS; IFS=":"; set -- $item; osds_host_name=$1;osds_disk=$2;osds_journal=$3; IFS=$OIFS
 
+    echo ceph-deploy disk zap ${osds_host_name}:${osds_disk}
     ceph-deploy disk zap ${osds_host_name}:${osds_disk}
 
     for host_journal in $host_journal_list
@@ -157,12 +160,14 @@ do
         fi
     done
 
+    echo ceph-deploy disk zap ${osds_host_name}:${osds_journal}
     ceph-deploy disk zap ${osds_host_name}:${osds_journal}
     host_journal_list="${host_journal_list} ${osds_host_name}:${osds_journal}"
 done
 
 for item in $host_disk_journal_list
 do
+    echo ceph-deploy osd prepare --filestore $item
     ceph-deploy osd prepare --filestore $item
     error_check
 done

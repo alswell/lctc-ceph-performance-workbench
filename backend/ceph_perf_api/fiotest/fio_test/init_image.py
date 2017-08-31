@@ -27,18 +27,10 @@ def create_image(image_size, image_count, image_pool, client, client_password):
 def fullfill_file(image_size, image_count, image_pool):
     dir_path = '{}/full_fill/'.format(os.getcwd())
     if not os.path.exists(dir_path):
-        try:
-            os.makedirs(dir_path)
-        except Exception, e:
-            print "make full fill config file dir fail:{}".format(e)
-            sys.exit(1)
+        os.makedirs(dir_path)
     else:
-        try:
-            shutil.rmtree(dir_path)
-            os.makedirs(dir_path)
-        except Exception, e:
-            print "remove old full fill dir and make new one fail:{}".format(e)
-            sys.exit(1)
+        shutil.rmtree(dir_path)
+        os.makedirs(dir_path)
 
     for i in range(int(image_count)):
         with open('{}/test{}'.format(dir_path, i), 'aw') as config_f:
@@ -65,8 +57,7 @@ def fullfill(path, size, client, client_password):
     output = child3.communicate()[0].replace('\n', '')
     if output == '':
         print "===={} without fio server".format(client)
-        print "====Please run \"nohup fio --server &\" in {}".format(client)
-        sys.exit(1)
+        raise Exception("====Please run \"nohup fio --server &\" in {}".format(client))
 
         '''
         try:
@@ -96,11 +87,9 @@ def fullfill(path, size, client, client_password):
         match = re.match(r'([^\s]*)\s+([^\s]*)\s+([^\s]*)', _status)
         if re.match('testimage_{}'.format(size), match.group(1)):
            if match.group(2) != '{}M'.format(size):
-                print "Error: image error, please check the image name."
-                sys.exit(1)
+                raise Exception("Error: image error, please check the image name.")
            if match.group(3) != '{}M'.format(size):
-                print "full fill {} fail! The use size is {} which should be {}.".format(match.group(1), match.group(3), size)
-                sys.exit(1)
+                raise Exception("full fill {} fail! The use size is {} which should be {}.".format(match.group(1), match.group(3), size))
 
 
 def get_rbd_list(client, client_password):
@@ -146,8 +135,7 @@ def main():
                 client_ip = client_data['ip']
                 client_password = client_data['password']
     if not client_password:
-        print "Error: can't find {} in ceph_hw_info.yml.".format(client)
-        sys.exit(1)
+        raise Exception("Error: can't find {} in ceph_hw_info.yml.".format(client))
     client_password = str(client_password)
 
 

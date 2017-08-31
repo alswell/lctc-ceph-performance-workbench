@@ -6,7 +6,7 @@ module.exports = {
   pageSize: 4,
   name: 'AntD Admin',
   prefix: 'antdAdmin',
-  footerText: 'Ant Design Admin  © 2017 zuiidea',
+  footerText: 'Lenovo LCTC  © 2017 zelin',
   logo: '/logo.png',
   iconFontCSS: '/iconfont.css',
   iconFontJS: '/iconfont.js',

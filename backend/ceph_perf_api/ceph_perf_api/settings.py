@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'mysql',
     'fiotest',
+    'ITuning_ceph_deploy',
 ]
 
 MIDDLEWARE = [

@@ -58,11 +58,7 @@ class SysInfo(SysData):
         ssh.close()
 
         if not os.path.exists(log_dir):
-            try:
-                os.makedirs(log_dir)
-            except Exception, e:
-                print "make sysinfo log dir fail:{}".format(e)
-                sys.exit(1)
+            os.makedirs(log_dir)
         for log in ceph_config_file_list:
             remotepath = '/tmp/{}'.format(log)
             localpath = '{}/{}_{}'.format(log_dir, host, log)
@@ -261,11 +257,7 @@ def get_ceph_config_file_sds(log_dir, client):
     sftp = paramiko.SFTPClient.from_transport(t)
     remotepath = '/etc/ceph/ceph.conf'
     if not os.path.exists(log_dir):
-        try:
-            os.makedirs(log_dir)
-        except Exception, e:
-            print "make log dir fail:{}".format(e)
-            sys.exit(1)
+        os.makedirs(log_dir)
 
     localpath = '{}/{}_ceph.conf'.format(log_dir, client)
     sftp.get(remotepath, localpath)

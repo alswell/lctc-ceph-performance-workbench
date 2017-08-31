@@ -41,8 +41,7 @@ class SysData(object):
                     self.client = client_data['ip']
                     self.client_password = client_data['password']
         if not self.client_password:
-            print "Error: can't find {} in ceph_hw_info.yml.".format(client)
-            sys.exit(1)
+            raise Exception("Error: can't find {} in ceph_hw_info.yml.".format(client))
 
         self.client_password = str(self.client_password)
         node_name, node_data = ceph_info['ceph-node'].popitem()
@@ -83,11 +82,7 @@ class SysData(object):
         sftp = paramiko.SFTPClient.from_transport(t)
         remotepath = '/tmp/{}'.format(log)
         if not os.path.exists(log_dir):
-            try:
-                os.makedirs(log_dir)
-            except Exception, e:
-                print "make sysdata log dir fail:{}".format(e)
-                sys.exit(1)
+            os.makedirs(log_dir)
 
         localpath = '{}/{}_{}'.format(log_dir, host, log)
         print host, remotepath, localpath
@@ -184,11 +179,7 @@ class SysData(object):
 
         time.sleep(2)
         if not os.path.exists(log_dir):
-            try:
-                os.makedirs(log_dir)
-            except Exception, e:
-                print "make sysdata log dir fail:{}".format(e)
-                sys.exit(1)
+            os.makedirs(log_dir)
         for log in ceph_perfdump_file_list:
             remotepath = '/tmp/{}'.format(log)
             localpath = '{}/{}_{}'.format(log_dir, host, log)

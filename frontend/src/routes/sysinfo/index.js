@@ -84,13 +84,13 @@ class SysInfo extends React.Component {
           title: 'Job ID',
           dataIndex: 'jobid',
           key: 'jobid',
-          width: 60,
+          //width: 60,
           sorter: true,
         }, {
           title: 'Node',
           dataIndex: 'node',
           key: 'node',
-          width: 80,
+          //width: 80,
         }, {
           title: 'HyperThreading',
           dataIndex: 'HyperThreading',
@@ -158,7 +158,7 @@ class SysInfo extends React.Component {
           title: 'Job ID',
           dataIndex: 'jobid',
           key: 'jobid',
-          width: 60,
+          //width: 60,
           sorter: true,
         }, {
           title: 'Node',
@@ -209,7 +209,7 @@ class SysInfo extends React.Component {
           title: 'Job ID',
           dataIndex: 'jobid',
           key: 'jobid',
-          width: 60,
+          //width: 60,
           sorter: true,
         }, {
           title: 'Node',
@@ -339,6 +339,7 @@ class SysInfo extends React.Component {
           <TabPane tab="hwinfo" key="1">
             <DataTable
               {...this.hwinfotableDataProps}
+              scroll={{ x: 1600 }}
             />
           </TabPane>
           <TabPane tab="osinfo" key="2">

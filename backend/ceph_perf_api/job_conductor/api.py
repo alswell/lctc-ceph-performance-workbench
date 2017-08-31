@@ -14,3 +14,7 @@ class API(object):
     def run_fio(self, dict_args):
         LOG.info("from api: %s", dict_args)
         self.rpcapi.run_fio(dict_args)
+
+    def deploy(self, dict_args):
+        LOG.info("from api: %s", dict_args)
+        self.rpcapi.deploy(dict_args)

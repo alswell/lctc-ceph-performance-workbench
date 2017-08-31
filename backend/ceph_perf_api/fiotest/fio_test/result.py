@@ -95,8 +95,7 @@ class Result(object):
             ws.cell(row = row, column = column).border = self.border
             ws.cell(row = row, column = column).number_format = 'General'
         else:
-            print "Error: block size in log does not match log file name!"
-            sys.exit(1)
+            raise Exception("Error: block size in log does not match log file name!")
         return result
     
     def fill_iodepth(self, result, iodepth_log, ws, row, column):
@@ -106,8 +105,7 @@ class Result(object):
             ws.cell(row = row, column = column).border = self.border
             ws.cell(row = row, column = column).number_format = 'General'
         else:
-            print "Error: iodepth in log does not match log file name!"
-            sys.exit(1)
+            raise Exception("Error: iodepth in log does not match log file name!")
         return result
     
     def fill_numjob(self, result, numjob_log, ws, row, column):
@@ -117,8 +115,7 @@ class Result(object):
             ws.cell(row = row, column = column).border = self.border
             ws.cell(row = row, column = column).number_format = 'General'
         else:
-            print "Error: numberjob in log does not match log file name!"
-            sys.exit(1)
+            raise Exception("Error: numberjob in log does not match log file name!")
         return result
     
     def fill_imagenum(self, path, results, imagenum_log, ws, row, column):
@@ -131,8 +128,7 @@ class Result(object):
             ws.cell(row = row, column = column).value = '{}/{}'.format(match_imagenum.group(1), num_clients)
             ws.cell(row = row, column = column).border = self.border
         else:
-            print "Error: image number in log does not match log file name!"
-            sys.exit(1)
+            raise Exception("Error: image number in log does not match log file name!")
         return match_imagenum.group(1), num_clients
     
     def fill_readwrite(self, result, rw_log, rpercent_log, ws, row, column):
@@ -140,8 +136,7 @@ class Result(object):
             ws.cell(row = row, column = column).value = '{}{}'.format(rw_log, rpercent_log)
             ws.cell(row = row, column = column).border = self.border
         else:
-            print "Error: rw in log does not match log file name!"
-            sys.exit(1)
+            raise Exception("Error: rw in log does not match log file name!")
         rpercent_log = re.sub('%', '', rpercent_log)
         return rw_log+rpercent_log
     
@@ -185,8 +180,7 @@ class Result(object):
                 elif re.match(r'Mi', unit):
                     read_bw = float(match.group(1))
                 else:
-                    print "Error: Unrecognized BW unit {}.".format(unit)
-                    sys.exit(1)
+                    raise Exception("Error: Unrecognized BW unit {}.".format(unit))
             elif re.match(r'  write:', log_list[i]):
                 match = re.match(r'\s*write: IOPS=.+k?, BW=(\d+\.?\d*)(\S+)', log_list[i])
                 unit = match.group(2)
@@ -197,8 +191,7 @@ class Result(object):
                 elif re.match(r'Mi', unit):
                     write_bw = float(match.group(1))
                 else:
-                    print "Error: Unrecognized BW unit {}.".format(match.group(2))
-                    sys.exit(1)
+                    raise Exception("Error: Unrecognized BW unit {}.".format(match.group(2)))
     
         bw = read_bw + write_bw
         ws.cell(row = row, column = column).value = read_bw
@@ -220,8 +213,7 @@ class Result(object):
                 elif match_lat.group(1) == 'usec':
                     _lat = float(match_lat.group(2)) / 1000
                 else:
-                    print "Error: Unrecognized lat unit {}.".format(match_lat.group(1))
-                    sys.exit(1)
+                    raise Exception("Error: Unrecognized lat unit {}.".format(match_lat.group(1)))
             if _lat > lat:
                 lat = _lat
     
@@ -339,8 +331,7 @@ class Result(object):
                 readwrite = self.fill_readwrite(result_match.group(1), rw_log, rpercent_log, ws, row, 10)
                 bs = self.fill_bs(result_match.group(2), bs_log, ws, row, 3)
                 if result_match.group(3) != 'rbd':
-                    print "Error: The ioengine in log is not 'rbd'!"
-                    sys.exit(1)
+                    raise Exception("Error: The ioengine in log is not 'rbd'!")
                 iodepth = self.fill_iodepth(result_match.group(4), iodepth_log, ws, row, 4)
         
                 #fill numberjob    

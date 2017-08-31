@@ -45,10 +45,9 @@ class RunFIO(object):
                     output = result.output
                     if result.output == '' and result.returncode == 1:
                         print "===={} without fio server".format(client)
-                        print "====Please run \"nohup fio --server &\" in {}".format(client)
                         fionoserver = True
             if fionoserver:
-                sys.exit(1)
+                raise Exception("====Please run \"nohup fio --server &\" in {}".format(client))
 
     def __checkandstart_fioser(self, path, suitename):
         with open('{}/fioserver_list.conf'.format(path, suitename), 'r') as f:
@@ -62,13 +61,9 @@ class RunFIO(object):
                         output = result.output
                         if result.output == '' and result.returncode == 1:
                             print "================={} without fio server".format(client)
-                            try:
-                                os.system(
-                                    "sshpass -p {} ssh -o StrictHostKeyChecking=no {} fio --server &".format(self.client_password, client)
-                                )
-                            except Exception, e:
-                                print e
-                                sys.exit(1)
+                            os.system(
+                                "sshpass -p {} ssh -o StrictHostKeyChecking=no {} fio --server &".format(self.client_password, client)
+                            )
                             continue
                         else:
                             print result
@@ -134,11 +129,7 @@ class RunFIO(object):
             jobtime
         )
         if not os.path.exists(log_dir):
-            try:
-                os.makedirs(log_dir)
-            except Exception, e:
-                print "make log dir fail:{}".format(e)
-                sys.exit(1)
+            os.makedirs(log_dir)
         return log_dir
 
     def run(self, path, jobname, jobid, ceph_config={}):
@@ -177,8 +168,7 @@ class RunFIO(object):
                     for client in clients:
                         config = '{}_{}.config'.format(match_config.group(1), n)
                         if configs.count(config) == 0:
-                            print "can't find {} in {}/config/!".format(config, path)
-                            sys.exit(1)
+                            raise Exception("can't find {} in {}/config/!".format(config, path), config)
                         cmd = cmd + ['--client', client.strip(), '{}/config/{}'.format(path, config)]
                         n = n + 1
                     i = i + 1
@@ -256,20 +246,15 @@ class RunFIO(object):
         print output_file
         print "============================="
     
-        try:
-            sysdata_dir_list = subprocess.check_output(
-                'ls {} | grep sysdata'.format(log_dir),
-                shell=True).split('\n')
-        except Exception, e:
-            print e
-            sys.exit(0)
-        else:
-            del sysdata_dir_list[-1]
-            for sysdata_dir in sysdata_dir_list:
-                self.sysdata.deal_with_sysdata_logfile(
-                    log_dir,
-                    sysdata_dir,
-                )
+        sysdata_dir_list = subprocess.check_output(
+            'ls {} | grep sysdata'.format(log_dir),
+            shell=True).split('\n')
+        del sysdata_dir_list[-1]
+        for sysdata_dir in sysdata_dir_list:
+            self.sysdata.deal_with_sysdata_logfile(
+                log_dir,
+                sysdata_dir,
+            )
 
         self.sysinfo.deal_with_sysinfo_logfile(
             '{}/sysinfo'.format(log_dir),
@@ -325,11 +310,9 @@ class RunFIO(object):
                     stdin, stdout, stderr = ssh.exec_command(cmd)
                     output = stdout.readlines()
                     if len(output) < 1:
-                        print "Error: Can't find {} in ceph conf!".format(ceph_key)
-                        sys.exit(1)
+                        raise Exception("Error: Can't find {} in ceph conf!".format(ceph_key), ceph_key)
                     elif len(output) > 1:
-                        print "Error: find {} in ceph conf fail:{}".format(ceph_key, output)
-                        sys.exit(1)
+                        raise Exception("Error: find {} in ceph conf fail:{}".format(ceph_key, output), ceph_key)
                     else:
                         cephkey_match = re.search('".*": "(.*)",', output[0])
                         org_osd_config[ceph_key] = cephkey_match.group(1)
@@ -409,12 +392,8 @@ def main():
         else:
             for test in tests:
                 if test == args.suitename:
-                    try:
-                        os.system(
-                            'cd {}/test-suites/{}/config/; ls *config'.format(os.getcwd(), test))
-                    except Exception, e:
-                        print e
-                        sys.exit(1)
+                    os.system(
+                        'cd {}/test-suites/{}/config/; ls *config'.format(os.getcwd(), test))
         sys.exit(0)
 
     path = "{}/test-suites/{}".format(os.getcwd(), args.suitename)
