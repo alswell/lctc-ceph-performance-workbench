@@ -543,19 +543,23 @@ class ToDB(object):
         disk_name,
         disk_size,
         disk_model,
-        disk_speed
+        disk_speed,
+        read_ahead,
+        IOscheduler,
     ):
         sql = "INSERT INTO fiotest_diskinfo(jobid_id, \
         node, disk_name, disk_size, \
-        disk_model, disk_speed ) \
+        disk_model, disk_speed, read_ahead, IOscheduler ) \
             VALUES ('{}', '{}', '{}', \
-            '{}', '{}', '{}' )".format(
+            '{}', '{}', '{}', '{}', '{}' )".format(
                 jobid,
                 host,
                 disk_name,
                 disk_size,
                 disk_model,
-                disk_speed
+                disk_speed,
+                read_ahead,
+                IOscheduler,
             )
         try:
             self.cursor.execute(sql)
@@ -596,19 +600,18 @@ class ToDB(object):
 
     def insert_tb_osinfo(self, jobid, host, **kwargs):
         sql = "INSERT INTO fiotest_osinfo(jobid_id, \
-        node, PIDnumber, read_ahead, \
-        IOscheduler, dirty_background_ratio, \
-        dirty_ratio, MTU ) \
-            VALUES ('{}', '{}', '{}', '{}', \
-            '{}', '{}', '{}', '{}')".format(
+        node, PIDnumber, \
+        dirty_background_ratio, \
+        dirty_ratio, PublicMTU, ClusterMTU ) \
+            VALUES ('{}', '{}', \
+            '{}', '{}', '{}', '{}', '{}' )".format(
                 jobid,
                 host,
                 kwargs['PIDnumber'],
-                kwargs['read_ahead'],
-                kwargs['IOscheduler'],
                 kwargs['dirty_background_ratio'],
                 kwargs['dirty_ratio'],
-                kwargs['MTU'],
+                kwargs['PublicMTU'],
+                kwargs['ClusterMTU'],
             )
         try:
             self.cursor.execute(sql)

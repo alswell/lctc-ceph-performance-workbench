@@ -90,7 +90,7 @@ class SysInfo(SysData):
         speed = ''
         for line in result:
             model_match = re.match('Device Model:\s+(.*)$', line)
-            speed_match = re.match('Rotation Rate::\s+(.*)$', line)
+            speed_match = re.match('Rotation Rate:\s+(.*)$', line)
             if model_match:
                 model = model_match.group(1)
             if speed_match:
@@ -120,10 +120,24 @@ class SysInfo(SysData):
                         disk_size = match.group(2)
                         cmd = 'smartctl -i /dev/{}'.format(disk_name)
                         stdin, stdout, stderr = ssh.exec_command(cmd)
-                        result = stdout.read()
-                        with open('{}/{}_{}_smartctl.txt'.format(path, ip, disk_name), 'w') as smartctl_f:
-                            smartctl_f.write(result)
-                        disk_model, disk_speed = self.deal_with_smartctl(result)
+                        smartctl = stdout.read()
+                        disk_model, disk_speed = self.deal_with_smartctl(smartctl.split('\n'))
+
+                        cmd = 'cat /sys/block/{}/queue/read_ahead_kb'.format(disk_name)
+                        stdin, stdout, stderr = ssh.exec_command(cmd)
+                        output = stdout.read()
+                        read_ahead_kb = re.sub('\n', '', output)
+
+                        cmd = 'cat /sys/block/{}/queue/scheduler'.format(disk_name)
+                        stdin, stdout, stderr = ssh.exec_command(cmd)
+                        output = stdout.read()
+                        scheduler = re.sub('\n', '', output)
+                        
+                        with open('{}/{}_{}_diskinfo.txt'.format(path, ip, disk_name), 'w') as diskinfo_f:
+                            diskinfo_f.write(smartctl)
+                            diskinfo_f.write(read_ahead_kb)
+                            diskinfo_f.write(scheduler)
+
                         if self.havedb:
                             self.db.insert_tb_diskinfo(
                                 jobid,
@@ -131,7 +145,9 @@ class SysInfo(SysData):
                                 disk_name,
                                 disk_size,
                                 disk_model,
-                                disk_speed
+                                disk_speed,
+                                read_ahead_kb,
+                                scheduler,
                             )
             ssh.close()
 
@@ -207,6 +223,29 @@ class SysInfo(SysData):
             if self.havedb:
                 self.db.insert_tb_hwinfo(jobid, host, **hw_info)
 
+    def get_network_mtu(self, host):
+        ssh = paramiko.SSHClient()
+        ssh.load_system_host_keys()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+        ssh.connect(hostname=self.nodes[host]['public_ip'], port=22, username='root', password=self.host_password)
+        stdin, stdout, stderr = ssh.exec_command(
+            'ifconfig | grep "inet " -B 1')
+        result = stdout.read()
+        ssh.close()
+
+        results = result.split('--')
+        for result in results:
+            result = re.sub('\n', '', result)
+            match = re.match('(\S+):.*mtu (\d+)\s+inet (\S+) ', result)
+            ip = match.group(3)
+            if self.ip_in_subnet(ip, self.network['public_network']):
+                public_mtu = match.group(1)+":"+match.group(2)
+            elif self.ip_in_subnet(ip, self.network['cluster_network']):
+                cluster_mtu = match.group(1)+":"+match.group(2)
+
+        return cluster_mtu, public_mtu
+
     def get_os_info(self, jobid, path):
         for host in self.host_list:
             os_info = {}
@@ -231,12 +270,16 @@ class SysInfo(SysData):
             output = stdout.read()
             os_info['dirty_ratio'] = re.sub('\n', '', output)
 
-            cmd = 'ps -ef | wc -l'
+            cmd = 'cat /proc/sys/kernel/pid_max'
             stdin, stdout, stderr = ssh.exec_command(cmd)
             output = stdout.read()
             os_info['PIDnumber'] = re.sub('\n', '', output)
 
-            os_info.update(self.nodes[host]['osinfo'])
+            cluster_mtu, public_mtu = self.get_network_mtu(host)
+            os_info['PublicMTU'] = public_mtu
+            os_info['ClusterMTU'] = cluster_mtu
+
+            #os_info.update(self.nodes[host]['osinfo'])
 
             json.dump(os_info, open('{}/{}_os_info.json'.format(path, host), 'w'), indent=2)
             if self.havedb:

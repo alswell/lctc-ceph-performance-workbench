@@ -294,9 +294,9 @@ class SysData(object):
             result = re.sub('\n', '', result)
             match = re.match('(\S+):.*inet (\S+) ', result)
             ip = match.group(2)
-            if self.nodes[host]['public_ip'] == ip:
+            if self.ip_in_subnet(ip, self.network['public_network']):
                 public_n = match.group(1)
-            elif ip_in_subnet(ip, self.network['cluster_network']):
+            elif self.ip_in_subnet(ip, self.network['cluster_network']):
                 cluster_n = match.group(1)
 
         return cluster_n, public_n
@@ -574,51 +574,51 @@ class SysData(object):
             self.deal_with_cephstatuslog(casename, path)
             self.deal_with_cephinfo(casename, path)
 
-def format_subnet(subnet_input):
-    if subnet_input.find("/") == -1:
-        return subnet_input + "/255.255.255.255"
-
-    else:
-        subnet = subnet_input.split("/")
-        if len(subnet[1]) < 3:
-            mask_num = int(subnet[1])
-            last_mask_num = mask_num % 8
-            last_mask_str = ""
-            for i in range(last_mask_num):
-                last_mask_str += "1"
-            if len(last_mask_str) < 8:
-                for i in range(8-len(last_mask_str)):
-                    last_mask_str += "0"
-            last_mask_str = str(int(last_mask_str,2))
-            if mask_num / 8 == 0:
-                subnet = subnet[0] + "/" + last_mask_str +"0.0.0"
-            elif mask_num / 8 == 1:
-                subnet = subnet[0] + "/255." + last_mask_str +".0.0"
-            elif mask_num / 8 == 2 :
-                subnet = subnet[0] + "/255.255." + last_mask_str +".0"
-            elif mask_num / 8 == 3:
-                subnet = subnet[0] + "/255.255.255." + last_mask_str
-            elif mask_num / 8 == 4:
-                subnet = subnet[0] + "/255.255.255.255"
-            subnet_input = subnet
-
-        subnet_array = subnet_input.split("/")
-        subnet_true = socket.inet_ntoa(
-            struct.pack(
-                "!I",
-                struct.unpack(
+    def format_subnet(self, subnet_input):
+        if subnet_input.find("/") == -1:
+            return subnet_input + "/255.255.255.255"
+    
+        else:
+            subnet = subnet_input.split("/")
+            if len(subnet[1]) < 3:
+                mask_num = int(subnet[1])
+                last_mask_num = mask_num % 8
+                last_mask_str = ""
+                for i in range(last_mask_num):
+                    last_mask_str += "1"
+                if len(last_mask_str) < 8:
+                    for i in range(8-len(last_mask_str)):
+                        last_mask_str += "0"
+                last_mask_str = str(int(last_mask_str,2))
+                if mask_num / 8 == 0:
+                    subnet = subnet[0] + "/" + last_mask_str +"0.0.0"
+                elif mask_num / 8 == 1:
+                    subnet = subnet[0] + "/255." + last_mask_str +".0.0"
+                elif mask_num / 8 == 2 :
+                    subnet = subnet[0] + "/255.255." + last_mask_str +".0"
+                elif mask_num / 8 == 3:
+                    subnet = subnet[0] + "/255.255.255." + last_mask_str
+                elif mask_num / 8 == 4:
+                    subnet = subnet[0] + "/255.255.255.255"
+                subnet_input = subnet
+    
+            subnet_array = subnet_input.split("/")
+            subnet_true = socket.inet_ntoa(
+                struct.pack(
                     "!I",
-                    socket.inet_aton(subnet_array[0])
-                )[0] & struct.unpack(
-                    "!I",
-                    socket.inet_aton(subnet_array[1])
-                )[0]
-            )
-        ) + "/" + subnet_array[1]
-        return subnet_true
-
-def ip_in_subnet(ip,subnet):
-    subnet = format_subnet(str(subnet))
-    subnet_array = subnet.split("/")
-    ip = format_subnet(ip + "/" + subnet_array[1])
-    return ip == subnet
+                    struct.unpack(
+                        "!I",
+                        socket.inet_aton(subnet_array[0])
+                    )[0] & struct.unpack(
+                        "!I",
+                        socket.inet_aton(subnet_array[1])
+                    )[0]
+                )
+            ) + "/" + subnet_array[1]
+            return subnet_true
+    
+    def ip_in_subnet(self, ip, subnet):
+        subnet = self.format_subnet(str(subnet))
+        subnet_array = subnet.split("/")
+        ip = self.format_subnet(ip + "/" + subnet_array[1])
+        return ip == subnet

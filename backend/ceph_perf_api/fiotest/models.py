@@ -238,22 +238,23 @@ class HWInfo(models.Model):
 class DiskInfo(models.Model):
     id = models.AutoField(primary_key=True)
     jobid = models.ForeignKey("Jobs",to_field='id')
-    node = models.CharField(max_length=20)
-    disk_name = models.CharField(max_length=20)
-    disk_size = models.CharField(max_length=20)
-    disk_model = models.CharField(max_length=20)
-    disk_speed = models.CharField(max_length=20)
+    node = models.CharField(max_length=100)
+    disk_name = models.CharField(max_length=100)
+    disk_size = models.CharField(max_length=100)
+    disk_model = models.CharField(max_length=100)
+    disk_speed = models.CharField(max_length=100)
+    read_ahead = models.IntegerField(null=True)
+    IOscheduler = models.CharField(max_length=100, null=True)
 
 class OSInfo(models.Model):
     id = models.AutoField(primary_key=True)
     jobid = models.ForeignKey("Jobs",to_field='id')
     node = models.CharField(max_length=20)
     PIDnumber = models.IntegerField(null=True)
-    read_ahead = models.CharField(max_length=20, null=True)
-    IOscheduler = models.CharField(max_length=20, null=True)
     dirty_background_ratio = models.CharField(max_length=20, null=True)
     dirty_ratio = models.CharField(max_length=20, null=True)
-    MTU = models.CharField(max_length=20, null=True)
+    PublicMTU = models.CharField(max_length=50, null=True)
+    ClusterMTU = models.CharField(max_length=50, null=True)
 
 class CephStatus(models.Model):
     id = models.AutoField(primary_key=True)

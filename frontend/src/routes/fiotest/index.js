@@ -32,11 +32,16 @@ class FioTest extends React.Component {
 
   handleMenuClick = (record, e) => {
     if (e.key === "1") {
-      let { dispatch } = this.props;
-      dispatch({
-        type: "fiotest/showModal",
-        payload: {
-          key: "modalVisible"
+      confirm({
+        title: "Are you sure delete this record?",
+        onOk() {
+          console.log(record);
+          confirm({
+        title: "Are you sure delete this record?",
+        onOk() {
+          console.log(record);
+        }
+      });
         }
       });
     } else if (e.key === "2") {
@@ -64,25 +69,6 @@ class FioTest extends React.Component {
   };
 
   init = () => {
-    this.modalProps = {
-      visible: this.props.host.modalVisible,
-      maskClosable: true,
-      title: "test",
-      wrapClassName: "vertical-center-modal",
-      onOk: data => {
-        console.log(data);
-      },
-      onCancel: () => {
-        let { dispatch } = this.props;
-        dispatch({
-          type: "fiotest/hideModal",
-          payload: {
-            key: "modalVisible"
-          }
-        });
-      }
-    };
-
     this.tableDataProps = {
       columns: [
         {
@@ -149,22 +135,22 @@ class FioTest extends React.Component {
           key: "iops"
         },
         {
-          title: "Read BW",
+          title: "Read BW(MiB/s)",
           dataIndex: "r_bw",
           key: "r_bw"
         },
         {
-          title: "Write BW",
+          title: "Write BW(MiB/s)",
           dataIndex: "w_bw",
           key: "w_bw"
         },
         {
-          title: "BW",
+          title: "BW(MiB/s)",
           dataIndex: "bw",
           key: "bw"
         },
         {
-          title: "LAT",
+          title: "LAT(ms)",
           dataIndex: "lat",
           key: "lat"
         },

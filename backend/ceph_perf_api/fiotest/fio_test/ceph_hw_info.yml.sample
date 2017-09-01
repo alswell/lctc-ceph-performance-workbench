@@ -1,61 +1,115 @@
 ceph-client:
   client-1:
-    ip: 10.240.217.101
+    ip: 10.240.217.131
     user: root
-    password: passw0rd
+    password: 111111
 ceph-node:
-  worker-1:
-    public_ip: 192.168.230.168
+  ceph-4:
+    public_ip: 10.240.217.77
     user: root
     password: passw0rd
     osd:
       osd.0:
-        osd-disk: /dev/sda
-        journal-disk: /dev/sdb
-    hwinfo:
-      HyperThreading: 
-      VirtualTechnology:
-      NUMA:
-      OperatingModes:
-    osinfo:
-      read_ahead:
-      IOscheduler:
-      MTU:
-  worker-2:
-    public_ip: 192.168.230.140
-    user: root
-    password: passw0rd
-    osd:
+        osd-disk: /dev/sdd
+        journal-disk: /dev/sda
       osd.1:
-        osd-disk: /dev/sda
+        osd-disk: /dev/sde
+        journal-disk: /dev/sda
+      osd.2:
+        osd-disk: /dev/sdf
+        journal-disk: /dev/sda
+      osd.3:
+        osd-disk: /dev/sdg
+        journal-disk: /dev/sda
+      osd.4:
+        osd-disk: /dev/sdh
+        journal-disk: /dev/sdb
+      osd.5:
+        osd-disk: /dev/sdi
+        journal-disk: /dev/sdb
+      osd.6:
+        osd-disk: /dev/sdj
+        journal-disk: /dev/sdb
+      osd.7:
+        osd-disk: /dev/sdk
         journal-disk: /dev/sdb
     hwinfo:
-      HyperThreading: 
-      VirtualTechnology:
-      NUMA:
-      OperatingModes:
+      HyperThreading: enable
+      VirtualTechnology: enable
+      NUMA: enable
+      OperatingModes: max performance
     osinfo:
-      read_ahead:
-      IOscheduler:
-      MTU:
-  worker-3:
-    public_ip: 192.168.230.222
+  ceph-5:
+    public_ip: 10.240.217.78
     user: root
     password: passw0rd
     osd:
-      osd.2:
-        osd-disk: /dev/sda
+      osd.8:
+        osd-disk: /dev/sdd
+        journal-disk: /dev/sda
+      osd.9:
+        osd-disk: /dev/sde
+        journal-disk: /dev/sda
+      osd.10:
+        osd-disk: /dev/sdf
+        journal-disk: /dev/sda
+      osd.11:
+        osd-disk: /dev/sdg
+        journal-disk: /dev/sda
+      osd.12:
+        osd-disk: /dev/sdh
+        journal-disk: /dev/sdb
+      osd.13:
+        osd-disk: /dev/sdi
+        journal-disk: /dev/sdb
+      osd.14:
+        osd-disk: /dev/sdj
+        journal-disk: /dev/sdb
+      osd.15:
+        osd-disk: /dev/sdk
         journal-disk: /dev/sdb
     hwinfo:
-      HyperThreading: 
-      VirtualTechnology:
-      NUMA:
-      OperatingModes:
+      HyperThreading: enable 
+      VirtualTechnology: enable
+      NUMA: enable
+      OperatingModes: max performance
     osinfo:
-      read_ahead:
-      IOscheduler:
-      MTU:
+  ceph-6:
+    public_ip: 10.240.217.79
+    user: root
+    password: passw0rd
+    osd:
+      osd.16:
+        osd-disk: /dev/sdd
+        journal-disk: /dev/sda
+      osd.17:
+        osd-disk: /dev/sde
+        journal-disk: /dev/sda
+      osd.18:
+        osd-disk: /dev/sdf
+        journal-disk: /dev/sda
+      osd.19:
+        osd-disk: /dev/sdg
+        journal-disk: /dev/sda
+      osd.20:
+        osd-disk: /dev/sdh
+        journal-disk: /dev/sdb
+      osd.21:
+        osd-disk: /dev/sdi
+        journal-disk: /dev/sdb
+      osd.22:
+        osd-disk: /dev/sdj
+        journal-disk: /dev/sdb
+      osd.23:
+        osd-disk: /dev/sdk
+        journal-disk: /dev/sdb
+    hwinfo:
+      HyperThreading: enable
+      VirtualTechnology: enable
+      NUMA: enable
+      OperatingModes: max performance
+    osinfo:
 
 ceph-network:
-  public_network: 192.168.230.0/24
-  cluster_network: 192.168.220.0/24
+  public_network: 192.168.3.0/24
+  cluster_network: 172.2.100.0/24

@@ -169,15 +169,7 @@ class SysInfo extends React.Component {
           title: 'PIDnumber',
           dataIndex: 'PIDnumber',
           key: 'PIDnumber',
-        }, {
-          title: 'read_ahead',
-          dataIndex: 'read_ahead',
-          key: 'read_ahead',
-        }, {
-          title: 'IOscheduler',
-          dataIndex: 'IOscheduler',
-          key: 'IOscheduler',
-        },
+        }, 
         {
           title: 'dirty_background_ratio',
           dataIndex: 'dirty_background_ratio',
@@ -187,9 +179,13 @@ class SysInfo extends React.Component {
           dataIndex: 'dirty_ratio',
           key: 'dirty_ratio',
         }, {
-          title: 'MTU',
-          dataIndex: 'MTU',
-          key: 'MTU',
+          title: 'Public network MTU',
+          dataIndex: 'PublicMTU',
+          key: 'PublicMTU',
+        },{
+          title: 'Cluster network MTU',
+          dataIndex: 'ClusterMTU',
+          key: 'ClusterMTU',
         },
       ],
       fetchData: {
@@ -232,6 +228,15 @@ class SysInfo extends React.Component {
           title: 'Speed',
           dataIndex: 'disk_speed',
           key: 'disk_speed',
+        },
+        {
+          title: 'read_ahead',
+          dataIndex: 'read_ahead',
+          key: 'read_ahead',
+        }, {
+          title: 'IOscheduler',
+          dataIndex: 'IOscheduler',
+          key: 'IOscheduler',
         },
       ],
       fetchData: {
