@@ -38,11 +38,13 @@ class Manager(object):
                     body['suite_dir'],
                     body['jobname'],
                     body['jobid']
-                )
-    
+                ) 
         except Exception, e:
-            jobinfo = {'status': "Failed"}
-            runfio.db.update_jobs(body['jobid'], **jobinfo)
+            runfio = run_suite.RunFIO(body['suite_dir'], todb=True)
+            job_status = runfio.db.query_jobs(body['jobid'])[0][3]
+            if job_status != "Canceled":
+                jobinfo = {'status': "Failed"}
+                runfio.db.update_jobs(body['jobid'], **jobinfo)
             print e
         else:
             runfio.store_logfile_FS(log_dir)
