@@ -32,7 +32,7 @@ class HostPage extends React.Component {
           fetchAndNotification({
             url: 'fiojobs',
             method: 'put',
-            params: { id: record.id, status: "Cancel" },
+            params: { id: record.id, status: "Canceling" },
             notifications: {
               title: 'Cancel Action',
               success: `${record.name} 操作成功！`,

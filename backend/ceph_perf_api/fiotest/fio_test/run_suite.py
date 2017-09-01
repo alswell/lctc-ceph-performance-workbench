@@ -152,7 +152,7 @@ class RunFIO(object):
         if self.todb:
             db = ToDB()
             job_status = db.query_jobs(jobid)[0][3]
-            if job_status == "Cancel":
+            if job_status == "Canceling":
                 self.reset_ceph_config(org_ceph_config)
                 raise Exception("Job Canceled!!!")
             else:
@@ -169,7 +169,7 @@ class RunFIO(object):
         if self.todb:
             db = ToDB()
             job_status = db.query_jobs(jobid)[0][3]
-            if job_status == "Cancel":
+            if job_status == "Canceling":
                 self.reset_ceph_config(org_ceph_config)
                 raise Exception("Job Canceled!!!")
             else:
@@ -192,7 +192,9 @@ class RunFIO(object):
                     print "==========job status=============="
                     print job_status
                     print "==========job status=============="
-                    if job_status == "Cancel":
+                    if job_status == "Canceling":
+                        job_info = {'status': "Canceled"}
+                        db.update_jobs(jobid, **job_info)
                         self.reset_ceph_config(org_ceph_config)
                         raise Exception("Job Canceled!!!")
 

@@ -403,11 +403,12 @@ class SysData extends React.Component {
           dataIndex: 'time',
           key: 'time',
           sorter: true,
-          width: 150,
+          width: 140,
         }, {
           title: 'Health',
           dataIndex: 'health_overall_status',
           key: 'health_overall_status',
+          width: 120,
         }, {
           title: 'Health Summary',
           dataIndex: 'health_summary',
@@ -424,19 +425,23 @@ class SysData extends React.Component {
           title: 'monmap_mons',
           dataIndex: 'monmap_mons',
           key: 'monmap_mons',
+          width: 500,
         },
         {
           title: 'osdmap_osdmap_num_osds',
           dataIndex: 'osdmap_osdmap_num_osds',
           key: 'osdmap_osdmap_num_osds',
+          width: 60,
         }, {
           title: 'osdmap_osdmap_num_up_osds',
           dataIndex: 'osdmap_osdmap_num_up_osds',
           key: 'osdmap_osdmap_num_up_osds',
+          width: 60,
         }, {
           title: 'osdmap_osdmap_num_in_osds',
           dataIndex: 'osdmap_osdmap_num_in_osds',
           key: 'osdmap_osdmap_num_in_osds',
+          width: 60,
         },
         {  
           title: 'pgmap_pgs_by_state',
@@ -688,6 +693,7 @@ class SysData extends React.Component {
           <TabPane tab="Ceph status" key="5">
             <DataTable
               {...this.cephstatustableDataProps}
+              scroll={{ x: 2000 }}
             />
           </TabPane>
            <TabPane tab="Ceph info" key="6">

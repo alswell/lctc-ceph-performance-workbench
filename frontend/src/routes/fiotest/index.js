@@ -172,7 +172,7 @@ class FioTest extends React.Component {
           title: "Full Case Name",
           dataIndex: "case_name",
           key: "case_name",
-          //width: 350,
+          width: 350,
           sorter: true
         }
       ],
