@@ -1,12 +1,12 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Breadcrumb, Icon } from 'antd'
-import { Link } from 'dva/router'
+import {Breadcrumb, Icon} from 'antd'
+import {Link} from 'dva/router'
 import styles from './Bread.less'
 import pathToRegexp from 'path-to-regexp'
-import { queryArray } from '../../utils'
+import {queryArray} from '../../utils'
 
-const Bread = ({ menu }) => {
+const Bread = ({menu}) => {
   // 匹配当前路由
   let pathArray = []
   let current
@@ -24,9 +24,9 @@ const Bread = ({ menu }) => {
     }
   }
 
-  if (!current) {
-    pathArray.push(menu[0])
-    pathArray.push({
+  if (!current ) {
+    pathArray.push(menu[0]);
+    !pathToRegexp("/").exec(location.pathname) && pathArray.push({
       id: 404,
       name: 'Not Found',
     })
@@ -38,19 +38,26 @@ const Bread = ({ menu }) => {
   const breads = pathArray.map((item, key) => {
     const content = (
       <span>{item.icon
-          ? <Icon type={item.icon} style={{ marginRight: 4 }} />
-          : ''}{item.name}</span>
-    )
-    return (
-      <Breadcrumb.Item key={key}>
-        {((pathArray.length - 1) !== key)
-          ? <Link to={item.router}>
-              {content}
+        ? <Icon type={item.icon} style={{marginRight: 4}}/>
+        : ''}{item.name}</span>
+    );
+    //如果有router，并且不是最后一个，则显示link，可以跳转
+    if (item.router && (pathArray.length - 1) !== key) {
+      return (
+        <Breadcrumb.Item key={key}>
+          <Link to={item.router}>
+            {content}
           </Link>
-          : content}
-      </Breadcrumb.Item>
-    )
-  })
+        </Breadcrumb.Item>
+      )
+    } else {
+      return (
+        <Breadcrumb.Item key={key}>
+          {content}
+        </Breadcrumb.Item>
+      )
+    }
+  });
 
   return (
     <div className={styles.bread}>

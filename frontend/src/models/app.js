@@ -1,120 +1,117 @@
-import { query, logout } from '../services/app'
-import { routerRedux } from 'dva/router'
-import { parse } from 'qs'
-import { config } from '../utils'
-const { prefix } = config
+import { query, logout } from "../services/app";
+import { routerRedux } from "dva/router";
+import { parse } from "qs";
+import { config } from "../utils";
+const { prefix } = config;
 
 export default {
-  namespace: 'app',
+  namespace: "app",
   state: {
     user: {},
     menuPopoverVisible: false,
-    siderFold: localStorage.getItem(`${prefix}siderFold`) === 'true',
-    darkTheme: localStorage.getItem(`${prefix}darkTheme`) === 'true',
+    siderFold: localStorage.getItem(`${prefix}siderFold`) === "true",
+    darkTheme: localStorage.getItem(`${prefix}darkTheme`) === "true",
     isNavbar: document.body.clientWidth < 769,
-    navOpenKeys: JSON.parse(localStorage.getItem(`${prefix}navOpenKeys`)) || [],
+    navOpenKeys: JSON.parse(localStorage.getItem(`${prefix}navOpenKeys`)) || []
   },
   subscriptions: {
-
-    setup ({ dispatch }) {
+    setup({ dispatch, history }) {
       // dispatch({ type: 'query' })
-      let tid
+      let tid;
       window.onresize = () => {
-        clearTimeout(tid)
+        clearTimeout(tid);
         tid = setTimeout(() => {
-          dispatch({ type: 'changeNavbar' })
-        }, 300)
-      }
-    },
+          dispatch({ type: "changeNavbar" });
+        }, 300);
+      };
 
+      history.listen(location => {
+
+      });
+    }
   },
   effects: {
-
-    *query ({
-      payload,
-    }, { call, put }) {
-      const data = yield call(query, parse(payload))
+    *query({ payload }, { call, put }) {
+      const data = yield call(query, parse(payload));
       if (data.success && data.user) {
         yield put({
-          type: 'querySuccess',
-          payload: data.user,
-        })
-        if (location.pathname === '/login') {
-          yield put(routerRedux.push('/dashboard'))
+          type: "querySuccess",
+          payload: data.user
+        });
+        if (location.pathname === "/login") {
+          yield put(routerRedux.push("/dashboard"));
         }
       } else {
-        if (config.openPages && config.openPages.indexOf(location.pathname) < 0) {
-          let from = location.pathname
-          window.location = `${location.origin}/login?from=${from}`
+        if (
+          config.openPages &&
+          config.openPages.indexOf(location.pathname) < 0
+        ) {
+          let from = location.pathname;
+          window.location = `${location.origin}/login?from=${from}`;
         }
       }
     },
 
-    *logout ({
-      payload,
-    }, { call, put }) {
-      const data = yield call(logout, parse(payload))
+    *logout({ payload }, { call, put }) {
+      const data = yield call(logout, parse(payload));
       if (data.success) {
-        yield put({ type: 'query' })
+        yield put({ type: "query" });
       } else {
-        throw (data)
+        throw data;
       }
     },
 
-    *changeNavbar ({
-      payload,
-    }, { put, select }) {
-      const { app } = yield(select(_ => _))
-      const isNavbar = document.body.clientWidth < 769
+    *changeNavbar({ payload }, { put, select }) {
+      const { app } = yield select(_ => _);
+      const isNavbar = document.body.clientWidth < 769;
       if (isNavbar !== app.isNavbar) {
-        yield put({ type: 'handleNavbar', payload: isNavbar })
+        yield put({ type: "handleNavbar", payload: isNavbar });
       }
-    },
-
+    }
   },
   reducers: {
-    querySuccess (state, { payload: user }) {
+    querySuccess(state, { payload: user }) {
       return {
         ...state,
-        user,
-      }
+        user
+      };
     },
 
-    switchSider (state) {
-      localStorage.setItem(`${prefix}siderFold`, !state.siderFold)
+    switchSider(state) {
+      localStorage.setItem(`${prefix}siderFold`, !state.siderFold);
       return {
         ...state,
-        siderFold: !state.siderFold,
-      }
+        siderFold: !state.siderFold
+      };
     },
 
-    switchTheme (state) {
-      localStorage.setItem(`${prefix}darkTheme`, !state.darkTheme)
+    switchTheme(state) {
+      localStorage.setItem(`${prefix}darkTheme`, !state.darkTheme);
       return {
         ...state,
-        darkTheme: !state.darkTheme,
-      }
+        darkTheme: !state.darkTheme
+      };
     },
 
-    switchMenuPopver (state) {
+    switchMenuPopver(state) {
       return {
         ...state,
-        menuPopoverVisible: !state.menuPopoverVisible,
-      }
+        menuPopoverVisible: !state.menuPopoverVisible
+      };
     },
 
-    handleNavbar (state, { payload }) {
+    handleNavbar(state, { payload }) {
       return {
         ...state,
-        isNavbar: payload,
-      }
+        isNavbar: payload
+      };
     },
 
-    handleNavOpenKeys (state, { payload: navOpenKeys }) {
+    handleNavOpenKeys(state, { payload: navOpenKeys }) {
       return {
         ...state,
-        ...navOpenKeys,
-      }
-    },
-  },
-}
+        ...navOpenKeys
+      };
+    }
+  }
+};

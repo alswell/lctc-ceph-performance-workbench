@@ -54,7 +54,9 @@ class FIOTest(object):
         ]
 
     def create_suite_dir(self, suitename):
+        current_date = re.sub('\s', '', str(datetime.datetime.now()))
         suitename = re.sub('_', '', suitename)
+        suitename = suitename + '_' + current_date
         path = "{}/test-suites/{}/config".format(os.getcwd(), suitename)
         print "=================================="
         print "test suite dir is: {}/test-suites/{}".format(os.getcwd(), suitename)
@@ -235,8 +237,6 @@ def main():
     cephconfigs = fio_test.getlist(args.cephconfig)
 
     path = fio_test.create_suite_dir(args.suitename)
-
-    current_date = str(datetime.datetime.now())
 
     if args.clientslist:
         clientslist = fio_test.getlist(args.clientslist)

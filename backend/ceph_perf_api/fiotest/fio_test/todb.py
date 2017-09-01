@@ -9,17 +9,6 @@ class ToDB(object):
         self.cursor = self.db.cursor()
 
     def insert_tb_result(self, **kwargs):
-        sql = "SELECT * FROM fiotest_jobs \
-            WHERE time = '{}'".format(kwargs['jobtime'])
-        try:
-            self.cursor.execute(sql)
-            results = self.cursor.fetchall()
-            for row in results:
-                jobid = row[0]
-        except:
-            print sql
-            self.db.rollback()
-
         sql = "INSERT INTO fiotest_result(jobid_id, case_name, short_name, time, \
             status, blocksize, iodepth, numberjob, imagenum, \
             clientnum, r_iops, w_iops, iops, readwrite, lat, r_bw, w_bw, bw ) \
@@ -27,7 +16,7 @@ class ToDB(object):
             '{}', '{}', '{}', '{}', \
             '{}', '{}', '{}', '{}', '{}', \
             '{}', '{}', '{}', '{}', '{}' )".format(
-                jobid,
+                kwargs['jobid'],
                 kwargs['case_name'],
                 '{}_{}_{}_{}_{}_{}'.format(
                     kwargs['blocksize'],
@@ -214,17 +203,7 @@ class ToDB(object):
             print sql
             self.db.rollback()
 
-    def insert_tb_cephconfigdata(self, jobtime, node, osd, **kwargs):
-        sql = "SELECT * FROM fiotest_jobs \
-            WHERE time = '{}'".format(jobtime)
-        try:
-            self.cursor.execute(sql)
-            results = self.cursor.fetchall()
-            for row in results:
-                jobid = row[0]
-        except:
-            print sql
-            self.db.rollback()
+    def insert_tb_cephconfigdata(self, jobid, node, osd, **kwargs):
         sql = "INSERT INTO fiotest_cephconfig(jobid_id, node, osd, \
             filestore_expected_throughput_bytes, \
             filestore_expected_throughput_ops, filestore_max_sync_interval, \
@@ -547,25 +526,25 @@ class ToDB(object):
                 print sql
                 self.db.rollback()
 
+    def query_jobs(self, jobid):
+        sql = "SELECT * FROM fiotest_jobs \
+            WHERE id = '{}'".format(jobid)
+        try:
+            self.cursor.execute(sql)
+            results = self.cursor.fetchall()
+        except:
+            print "Error: unable to fecth data"
+
+        return results
+
     def insert_tb_diskinfo(self,
-        jobtime,
+        jobid,
         host,
         disk_name,
         disk_size,
         disk_model,
         disk_speed
     ):
-        sql = "SELECT * FROM fiotest_jobs \
-            WHERE time = '{}'".format(jobtime)
-        try:
-            self.cursor.execute(sql)
-            results = self.cursor.fetchall()
-            for row in results:
-                jobid = row[0]
-        except:
-            print sql
-            self.db.rollback()
-
         sql = "INSERT INTO fiotest_diskinfo(jobid_id, \
         node, disk_name, disk_size, \
         disk_model, disk_speed ) \
@@ -585,18 +564,7 @@ class ToDB(object):
             print sql
             self.db.rollback()
 
-    def insert_tb_hwinfo(self, jobtime, host, **kwargs):
-        sql = "SELECT * FROM fiotest_jobs \
-            WHERE time = '{}'".format(jobtime)
-        try:
-            self.cursor.execute(sql)
-            results = self.cursor.fetchall()
-            for row in results:
-                jobid = row[0]
-        except:
-            print sql
-            self.db.rollback()
-
+    def insert_tb_hwinfo(self, jobid, host, **kwargs):
         sql = "INSERT INTO fiotest_hwinfo(jobid_id, \
         node, HyperThreading, VirtualTechnology, \
         NUMA, OperatingModes, \
@@ -626,18 +594,7 @@ class ToDB(object):
             print sql
             self.db.rollback()
 
-    def insert_tb_osinfo(self, jobtime, host, **kwargs):
-        sql = "SELECT * FROM fiotest_jobs \
-            WHERE time = '{}'".format(jobtime)
-        try:
-            self.cursor.execute(sql)
-            results = self.cursor.fetchall()
-            for row in results:
-                jobid = row[0]
-        except:
-            print sql
-            self.db.rollback()
-
+    def insert_tb_osinfo(self, jobid, host, **kwargs):
         sql = "INSERT INTO fiotest_osinfo(jobid_id, \
         node, PIDnumber, read_ahead, \
         IOscheduler, dirty_background_ratio, \

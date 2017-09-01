@@ -15,13 +15,13 @@ from result import Result
 from collect_system_data import SysData
 from collect_system_info import SysInfo
 from collect_system_info import get_ceph_config_file
+from todb import ToDB
 
 class RunFIO(object):
 
     def __init__(self, path, todb=False):
         self.todb = todb
         if todb:
-            from todb import ToDB
             self.db = ToDB()
         with open('{}/fioserver_list.conf'.format(path), 'r') as f:
             clients = f.readlines()
@@ -33,6 +33,7 @@ class RunFIO(object):
         self.nodes = self.sysdata.nodes
         self.client_password = self.sysdata.client_password
         self.host_password = self.sysdata.host_password
+        self.result = Result(havedb=self.todb)
 
     def checkandstart_fioser(self, path, suitename):
         fionoserver = False
@@ -143,24 +144,58 @@ class RunFIO(object):
             cephconfig = cephconfig + key + value + '_'
         if cephconfig == '':
             cephconfig = 'default_'
-        if self.todb:
-            jobinfo = {
-                'status': 'Running',
-                'casenum': casenum,
-                'time': jobtime,
-                'ceph_config': re.sub('_', '', cephconfig)
-            }
-            self.db.update_jobs(jobid, **jobinfo)
-
         org_ceph_config = self.modify_ceph_config(ceph_config)
         print org_ceph_config
+
         log_dir = self.create_log_dir(path, jobname, cephconfig, jobtime)
+
+        if self.todb:
+            db = ToDB()
+            job_status = db.query_jobs(jobid)[0][3]
+            if job_status == "Cancel":
+                self.reset_ceph_config(org_ceph_config)
+                raise Exception("Job Canceled!!!")
+            else:
+                job_info = {'status': "Collecting sys info"}
+                db.update_jobs(jobid, **job_info)
+
+        self.sysinfo.get_all_host_sysinfo_logfile('{}/sysinfo'.format(log_dir))
+        self.sysinfo.deal_with_sysinfo_logfile(
+            '{}/sysinfo'.format(log_dir),
+            jobid,
+        )
+
         configs = os.listdir('{}/config/'.format(path))
+        if self.todb:
+            db = ToDB()
+            job_status = db.query_jobs(jobid)[0][3]
+            if job_status == "Cancel":
+                self.reset_ceph_config(org_ceph_config)
+                raise Exception("Job Canceled!!!")
+            else:
+                jobinfo = {
+                    'status': 'Running',
+                    'casenum': casenum,
+                    'time': jobtime,
+                    'ceph_config': re.sub('_', '', cephconfig)
+                }
+                db.update_jobs(jobid, **jobinfo)
+
         with open('{}/fioserver_list.conf'.format(path), 'r') as f:
             clients = f.readlines()
             num_clients = len(clients)
             i = 0
             while (i < len(configs)):
+                if self.todb:
+                    db = ToDB()
+                    job_status = db.query_jobs(jobid)[0][3]
+                    print "==========job status=============="
+                    print job_status
+                    print "==========job status=============="
+                    if job_status == "Cancel":
+                        self.reset_ceph_config(org_ceph_config)
+                        raise Exception("Job Canceled!!!")
+
                 match_config = re.match(r'(.*)_0\.config', configs[i])
                 if match_config:
                     cmd = ['fio']
@@ -216,51 +251,33 @@ class RunFIO(object):
                     time.sleep(1)
                     self.sysdata.get_all_host_sysdata_logfile('{}/sysdata_{}'.format(log_dir, log_file_name))
                     time.sleep(10)
+                    self.result.deal_with_fio_data(log_dir, log_file_name, jobid)
+                    self.sysdata.deal_with_sysdata_logfile(
+                        log_dir,
+                        'sysdata_{}'.format(log_file_name),
+                    )
                 else:
                     i = i + 1
-        if self.todb:
-            job_info = {'status': "Processing logfiles"}
-            self.db.update_jobs(jobid, **job_info)
-
-        self.sysinfo.get_all_host_sysinfo_logfile('{}/sysinfo'.format(log_dir))
         self.reset_ceph_config(org_ceph_config)
-        self.gen_result(log_dir, jobtime)
+        self.gen_result(log_dir)
     
         if self.todb:
             job_info = {'status': "Finished"}
             self.db.update_jobs(jobid, **job_info)
         return log_dir
 
-    def gen_result(self, log_dir, jobtime):
+    def gen_result(self, log_dir):
         print log_dir
         log_dir_list = log_dir.split('/')
         jobtag = log_dir_list[-1]
-        result = Result(havedb=self.todb)
-        output_file = result.deal_with_fio_data(
-            log_dir_list[-2],
-            jobtag,
+        output_file = self.result.deal_with_fio_data_toexcel(
             './result_{}'.format(jobtag),
             log_dir
         )
         print "============================="
         print output_file
         print "============================="
-    
-        sysdata_dir_list = subprocess.check_output(
-            'ls {} | grep sysdata'.format(log_dir),
-            shell=True).split('\n')
-        del sysdata_dir_list[-1]
-        for sysdata_dir in sysdata_dir_list:
-            self.sysdata.deal_with_sysdata_logfile(
-                log_dir,
-                sysdata_dir,
-            )
 
-        self.sysinfo.deal_with_sysinfo_logfile(
-            '{}/sysinfo'.format(log_dir),
-            jobtime,
-        )
-    
     def update_ceph_conffile(self, host, ceph_config):
         t = paramiko.Transport(host, "22")
         t.connect(username = "root", password = self.host_password)
@@ -281,8 +298,7 @@ class RunFIO(object):
         sftp.put('./ceph.conf', remotepath)
         sftp.put('./ceph.conf.org', '/etc/ceph/ceph.conf.org')
         t.close()
-    
-    
+
     def modify_ceph_config(self, ceph_config):
         print ceph_config
         org_all_config = {}
@@ -324,7 +340,7 @@ class RunFIO(object):
             ssh.close()
         #update_ceph_conffile(self.nodes[host][public_ip], ceph_config)
         return org_all_config
-    
+ 
     def reset_ceph_config(self, org_all_config):
         for host, host_config in org_all_config.items():
             ssh = paramiko.SSHClient()

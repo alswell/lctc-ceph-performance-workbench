@@ -25,19 +25,43 @@ class HostPage extends React.Component {
 
   handleMenuClick = (record, e) => {
     if (e.key === '1') {
-      let { dispatch } = this.props
-      dispatch({
-        type: 'fiojobs/showModal',
-        payload: {
-          key: 'modalVisible',
+      confirm({
+        title: 'Are you sure Cancel this Job?',
+        onOk :()=> {
+          console.log(record)
+          fetchAndNotification({
+            url: 'fiojobs',
+            method: 'put',
+            params: { id: record.id, status: "Cancel" },
+            notifications: {
+              title: 'Cancel Action',
+              success: `${record.name} 操作成功！`,
+              error: `${record.name} 操作失败！`,
+            },
+          }).then((result)=>{
+          //when the fetch successfully ,refresh the table
+          this.refresh()
+        })
         },
-
       })
     } else if (e.key === '2') {
       confirm({
-        title: 'Are you sure delete this record?',
-        onOk () {
+        title: 'Are you sure delete this Job?',
+        onOk :()=> {
           console.log(record)
+          fetchAndNotification({
+            url: 'fiojobs',
+            method: 'delete',
+            params: { id: record.id },
+            notifications: {
+              title: 'Delete Action',
+              success: `${record.name} 操作成功！`,
+              error: `${record.name} 操作失败！`,
+            },
+          }).then((result)=>{
+          //when the fetch successfully ,refresh the table
+          this.refresh()
+        })
         },
       })
     }
@@ -58,25 +82,6 @@ class HostPage extends React.Component {
   };
 
   init = () => {
-    this.modalProps = {
-      visible: this.props.host.modalVisible,
-      maskClosable: true,
-      title: 'test',
-      wrapClassName: 'vertical-center-modal',
-      onOk: (data) => {
-        console.log(data)
-      },
-      onCancel: () => {
-        let { dispatch } = this.props
-        dispatch({
-          type: 'fiojobs/hideModal',
-          payload: {
-            key: 'modalVisible',
-          },
-        })
-      },
-    }
-
     this.tableDataProps = {
       columns: [
         {
@@ -122,6 +127,16 @@ class HostPage extends React.Component {
           //key: 'ceph_config',
           render: (text, record) => <Link to={`sysinfo?jobid=${record.id}`}>sys info</Link>,
         },
+        {
+          title: 'Operation',
+          key: 'operation',
+          width: 100,
+          render: (text, record) => {
+            return (<DropOption onMenuClick={e => this.handleMenuClick(record, e)}
+              menuOptions={[{ key: '1', name: 'Cancel' }, { key: '2', name: 'Delete' }]}
+            />)
+          },
+        }
       ],
       fetchData: {
         url: `fiojobs`,

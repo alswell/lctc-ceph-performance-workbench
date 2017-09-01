@@ -87,3 +87,37 @@ class FIOJOBS(generic.View):
         result = models.Jobs.objects.filter(**f).all().order_by('-id')
         d = utils.query_to_dict(result)
         return {"total": len(d), "data": d}
+
+    @utils.json_response
+    def options(self, request):
+        return "option"
+
+    @utils.json_response
+    def put(self, request):
+        body = {}
+        for key, value in dict(request.DATA).items():
+            if key == 'id':
+                jobid = value
+            else:
+                body[key] = value
+        
+        result = models.Jobs.objects.filter(id=jobid).all()[0]
+        if result.status != "Finished":
+            models.Jobs.objects.filter(id=jobid).update(**body)
+            return "pass"
+        else:
+            raise Exception("Error: The Finished job can't be Cancel!")
+
+
+    @utils.json_response
+    def delete(self, request):
+        jobid = dict(request.DATA)['id']
+        result = models.Jobs.objects.filter(id=jobid).all()[0]
+        if result.status == "Failed":
+            result.delete()
+            return "delete Failed job {}".format(jobid)
+        elif result.status == "Cancel":
+            result.delete()
+            return "delete Cancel job {}".format(jobid)
+        else:
+            raise Exception("Error: The job with status {} can't be deleted!".format(result.status))

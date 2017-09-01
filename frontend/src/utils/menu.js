@@ -168,22 +168,43 @@ module.exports = [
   {
     id: 625,
     // bpid: 1,
-    name: 'Fio Jobs',
-    router: '/fiojobs',
-    icon: 'laptop',
+    name: "Fio Jobs",
+    router: "/fiojobs",
+    icon: "laptop"
   },
   {
     id: 624,
     // bpid: 1,
-    name: 'Fio Test Result',
-    router: '/fiotest',
-    icon: 'laptop',
+    name: "Fio Test Result",
+    router: "/fiotest",
+    icon: "laptop"
   },
   {
     id: 626,
     // bpid: 1,
-    name: 'Sys Data',
-    router: '/sysdata',
-    icon: 'laptop',
+    name: "Sys Data",
+    router: "/sysdata",
+    icon: "laptop"
   },
-]
+  {
+    id: 627,
+    mpid: -1,
+    bpid: 625,
+    name: "Ceph Config",
+    router: "/cephconfig/:id"
+  },
+  {
+    id: 628,
+    mpid: -1,
+    bpid: 625,
+    name: "Sys Info",
+    router: "/sysinfo"
+  },
+  {
+    id: 629,
+    mpid: -1,
+    bpid: 624,
+    name: "Performace Dump",
+    router: "/perfdump/:id"
+  },
+];

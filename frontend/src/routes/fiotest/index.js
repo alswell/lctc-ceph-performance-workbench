@@ -24,10 +24,10 @@ class FioTest extends React.Component {
   }
 
   componentWillMount() {
-    let param = parse(window.location.search,{
-        ignoreQueryPrefix:true
-      })
-    this.props.host.jobid = param.jobid
+    // let param = parse(window.location.search,{
+    //     ignoreQueryPrefix:true
+    //   })
+    // this.props.host.jobid = param.jobid
   }
 
   handleMenuClick = (record, e) => {

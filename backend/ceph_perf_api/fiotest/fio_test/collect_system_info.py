@@ -57,6 +57,7 @@ class SysInfo(SysData):
             ))
         ssh.close()
 
+        time.sleep(1)
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
         for log in ceph_config_file_list:
@@ -74,7 +75,7 @@ class SysInfo(SysData):
             self.get_hwinfo_log(host_ip, log_dir)
             self.get_ceph_conf(host_ip, log_dir)
 
-    def deal_with_cephconfiglog(self, jobtime, path):
+    def deal_with_cephconfiglog(self, jobid, path):
         log_files = os.popen('ls {}/*ceph_config.json'.format(path)).readlines()
         for log_file in log_files:
             log_file = log_file.strip()
@@ -82,7 +83,7 @@ class SysInfo(SysData):
             log_file = log_file.split('/')[-1]
             host = log_file.split('_')[0]
             osd = log_file.split('_')[1]
-            self.db.insert_tb_cephconfigdata(jobtime, host, osd, **ceph_configs)
+            self.db.insert_tb_cephconfigdata(jobid, host, osd, **ceph_configs)
 
     def deal_with_smartctl(self, result):
         model = ''
@@ -96,7 +97,7 @@ class SysInfo(SysData):
                 speed = speed_match.group(1)
         return model, speed
 
-    def deal_with_lsblk_log(self, jobtime, path):
+    def deal_with_lsblk_log(self, jobid, path):
         disk_info = {}
         for host in self.host_list:
             ip = self.nodes[host]['public_ip']
@@ -125,7 +126,7 @@ class SysInfo(SysData):
                         disk_model, disk_speed = self.deal_with_smartctl(result)
                         if self.havedb:
                             self.db.insert_tb_diskinfo(
-                                jobtime,
+                                jobid,
                                 host,
                                 disk_name,
                                 disk_size,
@@ -194,7 +195,7 @@ class SysInfo(SysData):
             mem_info[host] = {'memtype': mem_M+':'+mem_S, 'totalsize': memsize, 'memnum': memnum}
         return mem_info 
 
-    def deal_with_hwinfo(self, jobtime, path):
+    def deal_with_hwinfo(self, jobid, path):
         cpu_info = self.deal_with_cpuinfo_log(path)
         mem_info = self.deal_with_meminfo_log(path)
         for host in self.host_list:
@@ -204,9 +205,9 @@ class SysInfo(SysData):
             hw_info.update(self.nodes[host]['hwinfo'])
             json.dump(hw_info, open('{}/{}_hw_info.json'.format(path, host), 'w'), indent=2)
             if self.havedb:
-                self.db.insert_tb_hwinfo(jobtime, host, **hw_info)
+                self.db.insert_tb_hwinfo(jobid, host, **hw_info)
 
-    def get_os_info(self, jobtime, path):
+    def get_os_info(self, jobid, path):
         for host in self.host_list:
             os_info = {}
             ip = self.nodes[host]['public_ip']
@@ -239,16 +240,16 @@ class SysInfo(SysData):
 
             json.dump(os_info, open('{}/{}_os_info.json'.format(path, host), 'w'), indent=2)
             if self.havedb:
-                self.db.insert_tb_osinfo(jobtime, host, **os_info)
+                self.db.insert_tb_osinfo(jobid, host, **os_info)
 
-    def deal_with_sysinfo_logfile(self, sysinfo_dir, jobtime):
+    def deal_with_sysinfo_logfile(self, sysinfo_dir, jobid):
         dir_list = sysinfo_dir.split('/')
 
         if self.havedb:
-            self.deal_with_cephconfiglog(jobtime, sysinfo_dir)
-        self.deal_with_lsblk_log(jobtime, sysinfo_dir)
-        self.deal_with_hwinfo(jobtime, sysinfo_dir)
-        self.get_os_info(jobtime, sysinfo_dir)
+            self.deal_with_cephconfiglog(jobid, sysinfo_dir)
+        self.deal_with_lsblk_log(jobid, sysinfo_dir)
+        self.deal_with_hwinfo(jobid, sysinfo_dir)
+        self.get_os_info(jobid, sysinfo_dir)
 
 
 def get_ceph_config_file_sds(log_dir, client):
