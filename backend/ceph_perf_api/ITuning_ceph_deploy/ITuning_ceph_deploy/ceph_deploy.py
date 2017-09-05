@@ -55,14 +55,6 @@ def init(ip, password, hostname):
         sys.exit(1)
     '''
 
-    dep_p = ['epel-release']
-    for p in dep_p:
-        cmd = "ssh -o StrictHostKeyChecking=no {} yum install -y {}".format(hostname, p)
-        print datetime.datetime.now(),
-        print cmd
-        subprocess.check_call(cmd, shell=True)
-
-
     find = False
     with open('/etc/hosts', 'r') as f:
         with open('/tmp/hosts', 'w') as output:
@@ -72,8 +64,7 @@ def init(ip, password, hostname):
                         output.write(line)
                         find = True
                     else:
-                        print "Error: Find Another hostname in /etc/hosts with {}".format(ip)
-                        sys.exit(1)
+                        raise Exception("Error: Find Another hostname in /etc/hosts with {}".format(ip))
                 else:
                     output.write(line)
             if not find:
@@ -83,6 +74,13 @@ def init(ip, password, hostname):
     print "Updated /etc/hosts."
     open('/etc/hosts', "wb").write(open('/tmp/hosts', "rb").read())
 
+    dep_p = ['epel-release']
+    for p in dep_p:
+        cmd = "ssh -o StrictHostKeyChecking=no {} yum install -y {}".format(hostname, p)
+        print datetime.datetime.now(),
+        print cmd
+        subprocess.check_call(cmd, shell=True)
+
 def deploy(name, mon_list, osd_list, disk_list, client_list, conf):
     #./ITuning_ceph-deploy.sh -n mycluster1 -m ceph-1 -o ceph-1,ceph-2,ceph-3 -d ceph-1:/dev/sda:/dev/sdc,ceph-2:/dev/sda:/dev/sdc,ceph-3:sda:/dev/sdb -c client-1 -f /root/lctc-ceph-performance-workbench/backend/ceph_perf_api/ITuning_ceph_deploy/ITuning_ceph_deploy/ITuning_ceph.conf
     osds = ','.join(osd_list)
@@ -90,7 +88,9 @@ def deploy(name, mon_list, osd_list, disk_list, client_list, conf):
     disks = ','.join(disk_list)
     clients = ','.join(client_list)
 
-    cmd = "./ITuning_ceph-deploy.sh -n {} -m {} -o {} -d {} -c {} -f {}".format(
+    file_path = os.path.dirname(os.path.realpath(__file__))
+    cmd = "{}/ITuning_ceph-deploy.sh -n {} -m {} -o {} -d {} -c {} -f {}".format(
+        file_path,
         name,
         mons,
         osds,
@@ -106,7 +106,9 @@ def purge(name, hostnames):
     hosts = ','.join(hostnames)
 
     print os.getcwd()
-    cmd = "./ITuning_ceph-deploy-purge.sh {} {}".format(name, hosts)
+    file_path = os.path.dirname(os.path.realpath(__file__))
+    print file_path
+    cmd = "{}/ITuning_ceph-deploy-purge.sh {} {}".format(file_path, name, hosts)
     print datetime.datetime.now(),
     print cmd
     subprocess.check_call(cmd, shell=True)

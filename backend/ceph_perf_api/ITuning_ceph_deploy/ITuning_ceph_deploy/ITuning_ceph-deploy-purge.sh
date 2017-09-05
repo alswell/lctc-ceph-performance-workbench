@@ -27,7 +27,6 @@ fi
 DIR_MYCLUSTER=/home/$1
 
 
-cd $DIR_MYCLUSTER
 
 host_list=`echo $2 | sed 's/,/ /g'`
 
@@ -44,5 +43,7 @@ done
 ceph-deploy forgetkeys
 error_check
 
-
-rm -rf ceph*
+if [ -d $DIR_MYCLUSTER ]; then
+  cd $DIR_MYCLUSTER
+  rm -rf ceph*
+fi

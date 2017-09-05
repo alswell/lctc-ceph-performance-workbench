@@ -144,6 +144,8 @@ class RunFIO(object):
             cephconfig = cephconfig + key + value + '_'
         if cephconfig == '':
             cephconfig = 'default_'
+        print datetime.datetime.now(),
+        print "modify_ceph_config"
         org_ceph_config = self.modify_ceph_config(ceph_config)
         print org_ceph_config
 
@@ -153,13 +155,18 @@ class RunFIO(object):
             db = ToDB()
             job_status = db.query_jobs(jobid)[0][3]
             if job_status == "Canceling":
+                job_info = {'status': "Canceled"}
+                db.update_jobs(jobid, **job_info)
                 self.reset_ceph_config(org_ceph_config)
                 raise Exception("Job Canceled!!!")
             else:
                 job_info = {'status': "Collecting sys info"}
                 db.update_jobs(jobid, **job_info)
-
+        print datetime.datetime.now(),
+        print "sysinfo.get_all_host_sysinfo_logfile"
         self.sysinfo.get_all_host_sysinfo_logfile('{}/sysinfo'.format(log_dir))
+        print datetime.datetime.now(),
+        print "sysinfo.deal_with_sysinfo_logfile"
         self.sysinfo.deal_with_sysinfo_logfile(
             '{}/sysinfo'.format(log_dir),
             jobid,
@@ -170,6 +177,8 @@ class RunFIO(object):
             db = ToDB()
             job_status = db.query_jobs(jobid)[0][3]
             if job_status == "Canceling":
+                job_info = {'status': "Canceled"}
+                db.update_jobs(jobid, **job_info)
                 self.reset_ceph_config(org_ceph_config)
                 raise Exception("Job Canceled!!!")
             else:
@@ -217,7 +226,6 @@ class RunFIO(object):
                         log_dir,
                         log_file_name
                     )
-                    print cmd
 
                     fio_runtime = subprocess.check_output(
                         'grep runtime= {}/config/{}_0.config'.format(path, match_config.group(1)),
@@ -227,11 +235,17 @@ class RunFIO(object):
                     time_start = time.time()
                     time_out_status = False
 
+                    print datetime.datetime.now(),
+                    print "cleanup_ceph_perf"
                     self.sysdata.cleanup_ceph_perf()
+                    print datetime.datetime.now(),
+                    print cmd
                     child = subprocess.Popen(
                         cmd,
                         stdin=subprocess.PIPE,
                         stdout=subprocess.PIPE)
+                    print datetime.datetime.now(),
+                    print "get_sys_data"
                     self.sysdata.get_sys_data()
                     with open(log_file, 'wt') as handle:
                         while True:
@@ -251,16 +265,26 @@ class RunFIO(object):
                         else:
                             handle.write('\nPass')
                     time.sleep(1)
+                    print datetime.datetime.now(),
+                    print "sysdata.get_all_host_sysdata_logfile"
                     self.sysdata.get_all_host_sysdata_logfile('{}/sysdata_{}'.format(log_dir, log_file_name))
-                    time.sleep(10)
+                    time.sleep(1)
+                    print datetime.datetime.now(),
+                    print "result.deal_with_fio_data"
                     self.result.deal_with_fio_data(log_dir, log_file_name, jobid)
+                    print datetime.datetime.now(),
+                    print "sysdata.deal_with_sysdata_logfile"
                     self.sysdata.deal_with_sysdata_logfile(
                         log_dir,
                         'sysdata_{}'.format(log_file_name),
                     )
                 else:
                     i = i + 1
+        print datetime.datetime.now(),
+        print "reset_ceph_config"
         self.reset_ceph_config(org_ceph_config)
+        print datetime.datetime.now(),
+        print "gen_result"
         self.gen_result(log_dir)
     
         if self.todb:

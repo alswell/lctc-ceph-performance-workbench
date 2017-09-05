@@ -43,7 +43,9 @@ class Manager(object):
             runfio = run_suite.RunFIO(body['suite_dir'], todb=True)
             job_status = runfio.db.query_jobs(body['jobid'])[0][3]
             if job_status != "Canceled":
-                jobinfo = {'status': "Failed"}
+                error_info = re.sub("'", '', e)
+                error_info = re.sub('"', '', error_info)
+                jobinfo = {'status': "Failed: {}".format(e)}
                 runfio.db.update_jobs(body['jobid'], **jobinfo)
             print e
         else:
@@ -52,22 +54,44 @@ class Manager(object):
 
     def deploy(self, ctxt, body):
         LOG.info("deploy ceph: %s", body)
+        name = body["clustername"]
 
-        ips = ['192.168.230.218', '192.168.230.201', '192.168.230.196', '192.168.230.199']
+        osdhost_list = []
+        client_list = []
+        for i in range(len(body['nodeipkeys'])):
+            osdhost_list.append('ceph-{}'.format(str(i+1)))
+
+        for i in range(len(body['clientipkeys'])):
+            client_list.append('client-{}'.format(str(i+1)))
+
+        ips = []
+        for key in body['nodeipkeys']:
+            ips.append(body['nodeip-{}'.format(key)])
+        for key in body['clientipkeys']:
+            ips.append(body['clientip-{}'.format(key)])
         password = 'passw0rd'
-        name = "mycluster1"
-        osdhost_list = ['ceph-3', 'ceph-1', 'ceph-2']
-        client_list = ['client-1']
-    
-        mon_list = [osdhost_list[1]]
-        disk_list = [osdhost_list[1]+':/dev/sda:/dev/sdc', osdhost_list[2]+':/dev/sda:/dev/sdc', osdhost_list[0]+':sda:/dev/sdb']
-    
+
+        mon_list = []
+        for mon in body['mon']:
+            i = ips.index(mon)
+            mon_list.append(osdhost_list[i]) 
+
+        disk_list = []
+        for key in body['nodekeys']:
+            print key
+            i = ips.index(body['node-{}'.format(key)])
+            print osdhost_list
+            print i
+            print body['node-{}'.format(key)]
+            print body['osddisk-{}'.format(key)], body['osdj-{}'.format(key)]
+            disk_list.append('{}:{}:{}'.format(osdhost_list[i], body['osddisk-{}'.format(key)], body['osdj-{}'.format(key)]))
+
         hostnames = osdhost_list + client_list
     
-        public_network = body['public_network']
-        cluster_network = body['cluster_network']
+        public_network = body['publicnetwork']
+        cluster_network = body['clusternetwork']
         objectstore = body['objectstore']
-        journal_size = body['journal_size']
+        journal_size = body['journalsize']
 
         with open('/tmp/ITuning_ceph.conf', 'w') as f:
             f.write('[global]\n')
@@ -78,11 +102,14 @@ class Manager(object):
             f.write('osd journal size = {}\n'.format(journal_size))
     
         conf = '/tmp/ITuning_ceph.conf'
-    
-        #for i in range(len(ips)):
-        #    init(ips[i], password, hostnames[i])
-    
+        print "init" 
+        for i in range(len(ips)):
+            ceph_deploy.init(ips[i], password, hostnames[i])
+        print "purge" 
         ceph_deploy.purge(name, hostnames)
+        print "deploy" 
         ceph_deploy.deploy(name, mon_list, osdhost_list, disk_list, client_list, conf)
+        print "create pool" 
         ceph_deploy.createrbdpool(len(disk_list), client_list[0])
+        print "finish"
 

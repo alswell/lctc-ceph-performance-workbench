@@ -14,6 +14,7 @@ class Cluster(models.Model):
     osdhosts = models.CharField(max_length=100, null=True)
     clients = models.CharField(max_length=100, null=True)
     mons = models.CharField(max_length=100, null=True)
+    status = models.CharField(max_length=20, null=True)
 
 class diskInfo(models.Model):
     id = models.AutoField(primary_key=True)

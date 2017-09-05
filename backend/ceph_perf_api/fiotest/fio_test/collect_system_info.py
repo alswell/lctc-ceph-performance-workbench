@@ -30,6 +30,43 @@ class SysInfo(SysData):
         self.get_logfile(host_ip, self.host_password, 'cpuinfo.txt', log_dir)
         self.get_logfile(host_ip, self.host_password, 'lsblk.txt', log_dir)
 
+    def get_one_ceph_conf(self, host, log_dir):
+        ssh = paramiko.SSHClient()
+        ssh.load_system_host_keys()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.connect(
+            hostname = host,
+            port = 22,
+            username = 'root',
+            password = self.host_password
+        )
+        cmd = 'find /var/run/ceph -name \'*osd*asok\''
+        stdin, stdout, stderr = ssh.exec_command(cmd)
+        osd_list = stdout.readlines()
+
+        osd = osd_list[0].strip()
+        cmd = 'ceph --admin-daemon {} config show > /tmp/{}_ceph_config.json'.format(
+            osd,
+            re.search('(osd\.\d+)', osd).group(1)
+        )
+        print cmd
+        ssh.exec_command(cmd)
+        log = '{}_ceph_config.json'.format(
+            re.search('(osd\.\d+)', osd).group(1)
+        )
+        ssh.close()
+
+        time.sleep(1)
+        if not os.path.exists(log_dir):
+            os.makedirs(log_dir)
+        remotepath = '/tmp/{}'.format(log)
+        localpath = '{}/{}_{}'.format(log_dir, host, log)
+        cmd = ['sshpass', '-p', self.host_password, 'scp',
+            '-o', 'StrictHostKeyChecking=no', '-r',
+            'root@{}:{}'.format(host, remotepath), localpath]
+        print cmd
+        subprocess.check_call(cmd)
+
     def get_ceph_conf(self, host, log_dir):
         ssh = paramiko.SSHClient()
         ssh.load_system_host_keys()
@@ -73,7 +110,8 @@ class SysInfo(SysData):
         for host in self.host_list:
             host_ip = self.nodes[host]['public_ip']
             self.get_hwinfo_log(host_ip, log_dir)
-            self.get_ceph_conf(host_ip, log_dir)
+            #self.get_ceph_conf(host_ip, log_dir)
+        self.get_one_ceph_conf(self.nodes[self.host_list[0]]['public_ip'], log_dir)
 
     def deal_with_cephconfiglog(self, jobid, path):
         log_files = os.popen('ls {}/*ceph_config.json'.format(path)).readlines()
@@ -289,9 +327,17 @@ class SysInfo(SysData):
         dir_list = sysinfo_dir.split('/')
 
         if self.havedb:
+            print datetime.datetime.now(),
+            print "deal_with_cephconfiglog"
             self.deal_with_cephconfiglog(jobid, sysinfo_dir)
+        print datetime.datetime.now(),
+        print "deal_with_lsblk_log"
         self.deal_with_lsblk_log(jobid, sysinfo_dir)
+        print datetime.datetime.now(),
+        print "deal_with_hwinfo"
         self.deal_with_hwinfo(jobid, sysinfo_dir)
+        print datetime.datetime.now(),
+        print "get_os_info"
         self.get_os_info(jobid, sysinfo_dir)
 
 

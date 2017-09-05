@@ -102,7 +102,7 @@ class FIOTest(object):
             config_para = 'case'+str(casenum)+'_pool'+pool+'_'+rw+'_'+bs+'_runtime'+runtime+'_iodepth'+iodepth+'_numjob'+numjobs+'_imagenum'+image_num+'_'+suitename+'_%'+rwmixread+'_'+str(i)
             for fioconfig in other_fio_config:
                  fioconfig = re.sub('=', '', fioconfig)
-                 config_para = config_para + '_' + fioconfig
+                 #config_para = config_para + '_' + fioconfig
             config_filename = config_para+'.config'
             with open('{}/config/{}'.format(path, config_filename), 'aw') as f:
                 f.write("[global]\n")
@@ -115,6 +115,7 @@ class FIOTest(object):
                 f.write("iodepth={}\n".format(iodepth))
                 f.write("numjobs={}\n".format(numjobs))
                 f.write("direct=1\n")
+                f.write("randrepeat=0\n")
                 f.write("rwmixread={}\n".format(rwmixread))
                 f.write("new_group\n")
                 f.write("group_reporting\n")

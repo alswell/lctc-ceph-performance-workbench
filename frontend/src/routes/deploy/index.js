@@ -92,41 +92,61 @@ class HostPage extends React.Component {
           // width: 64,
           sorter: true,
         }, {
-          title: 'Start Time',
-          dataIndex: 'time',
-          key: 'time',
-          sorter: true,
-          // width: 100,
-        }, {
           title: 'status',
           dataIndex: 'status',
           key: 'status',
           sorter: true,
           // width: 100,
-         }, {
-          title: 'test cases',
-          dataIndex: 'casenum',
-          key: 'casenum',
-          render: (text, record) => <Link to={`fiotest?jobid=${record.id}`}>{text} test cases</Link>,
-          // width: 100,
-        }, {
-          title: 'ceph config',
-          dataIndex: 'ceph_config',
-          key: 'ceph_config',
-          render: (text, record) => <Link to={`cephconfig/${record.id}`}>{text}</Link>,
         }, 
         {
-          title: 'sys info',
-          //dataIndex: 'ceph_config',
-          //key: 'ceph_config',
-          render: (text, record) => <Link to={`sysinfo?jobid=${record.id}`}>sys info</Link>,
+          title: 'objectstore',
+          dataIndex: 'objectstore',
+          key: 'objectstore',
+          sorter: true,
+          // width: 100,
+        },
+        {
+          title: 'Public Network',
+          dataIndex: 'public_network',
+          key: 'public_network',
+          // width: 100,
+        }, 
+        {
+          title: 'Cluster Network',
+          dataIndex: 'cluster_network',
+          key: 'cluster_network',
+          // width: 100,
+        }, 
+        {
+          title: 'journal_size',
+          dataIndex: 'journal_size',
+          key: 'journal_size',
+        }, 
+        {
+          title: 'osdhosts',
+          dataIndex: 'osdhosts',
+          key: 'osdhosts',
+        },
+        {
+          title: 'clients',
+          dataIndex: 'clients',
+          key: 'clients',
+        },
+        {
+          title: 'mons',
+          dataIndex: 'mons',
+          key: 'mons',
+        },
+        {
+          title: 'Disk Info',
+          render: (text, record) => <Link to={`diskinfo?clusterid=${record.id}`}>disk info</Link>,
         },
       ],
       fetchData: {
         url: `cluster`,
         params: null,
       },
-      errorMsg: 'get job table error',
+      errorMsg: 'get cluster table error',
       refresh: this.props.host.refresh,
       handleSelectItems: (selectedRowKeys, selectedRows) => {
         this.props.dispatch({

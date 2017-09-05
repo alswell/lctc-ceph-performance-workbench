@@ -13,10 +13,14 @@ function hasErrors (fieldsError) {
   return Object.keys(fieldsError).some(field => fieldsError[field])
 }
 
-let nodeipid = 1;
-let nodepwid = 1;
-let osddiskid = 1;
-let osdjid = 1;
+let nodeipid = 0;
+let nodepwid = 0;
+let osddiskid = 0;
+let osdjid = 0;
+let nodeid = 0;
+let clientipid = 0;
+let clientpwid = 0;
+
 class TestTestForm extends React.Component {
 
   componentDidMount () {
@@ -62,6 +66,7 @@ class TestTestForm extends React.Component {
 
     const osddiskkeys = form.getFieldValue('osddiskkeys');
     const osdjkeys = form.getFieldValue('osdjkeys');
+    const nodekeys = form.getFieldValue('nodekeys');
 
     if (osddiskkeys.length === 0) {
       return;
@@ -71,22 +76,60 @@ class TestTestForm extends React.Component {
     form.setFieldsValue({
       osddiskkeys: osddiskkeys.filter(key => key !== k),
       osdjkeys: osdjkeys.filter(key => key !== k),
+      nodekeys: nodekeys.filter(key => key !== k),
     });
   }
 
   osdadd = () => {
     osddiskid++;
     osdjid++;
+    nodeid++;
     const { form } = this.props;
 
     const osddiskkeys = form.getFieldValue('osddiskkeys');
     const osdjkeys = form.getFieldValue('osdjkeys');
+    const nodekeys = form.getFieldValue('nodekeys');
     const nextosddiskKeys = osddiskkeys.concat(osddiskid);
     const nextosdjKeys = osdjkeys.concat(osdjid);
+    const nextnodeKeys = osdjkeys.concat(nodeid);
 
     form.setFieldsValue({
       osddiskkeys: nextosddiskKeys,
       osdjkeys: nextosdjKeys,
+      nodekeys: nextnodeKeys,
+    });
+  }
+
+  clientremove = (k) => {
+    const { form } = this.props;
+
+    const clientipkeys = form.getFieldValue('clientipkeys');
+    const clientpwkeys = form.getFieldValue('clientpwkeys');
+
+    if (clientipkeys.length === 0) {
+      return;
+    }
+
+
+    form.setFieldsValue({
+      clientipkeys: clientipkeys.filter(key => key !== k),
+      clientpwkeys: clientpwkeys.filter(key => key !== k),
+    });
+  }
+
+  clientadd = () => {
+    clientipid++;
+    clientpwid++;
+    const { form } = this.props;
+
+    const clientipkeys = form.getFieldValue('clientipkeys');
+    const clientpwkeys = form.getFieldValue('clientpwkeys');
+    const nextclientipKeys = clientipkeys.concat(clientipid);
+    const nextclientpwKeys = clientpwkeys.concat(clientpwid);
+
+    form.setFieldsValue({
+      clientipkeys: nextclientipKeys,
+      clientpwkeys: nextclientpwKeys,
     });
   }
 
@@ -103,8 +146,8 @@ class TestTestForm extends React.Component {
           params: values,
           notifications: {
             title: 'deploy Action',
-            success: `创建${values.jobname} 操作成功！`,
-            error: `创建${values.jobname} 操作失败！`,
+            success: `创建${values.clustername} 操作成功！`,
+            error: `创建${values.clustername} 操作失败！`,
           },
         }).then((result)=>{
           //when the fetch successfully ,refresh the table
@@ -143,21 +186,111 @@ class TestTestForm extends React.Component {
       },
     };
 
+    
+    getFieldDecorator('nodeipkeys', { initialValue: [] });
+    getFieldDecorator('nodepwkeys', { initialValue: [] });
+    const nodeipkeys = getFieldValue('nodeipkeys');
+    const nodepwkeys = getFieldValue('nodepwkeys');
+   
+    const nodeformItems = nodeipkeys.map((k, index) => {
+      return (
+        <FormItem
+          {...formItemLayout}
+          required={false}
+          label='Node'
+          nodeipkey={k}
+          nodepwkey={k}
+        >
+          <Row gutter={8}>
+            <Col span={5}>
+              <p>External IP:</p>
+            </Col>          
+            <Col span={14}>
+              {getFieldDecorator(`nodeip-${k}`, {
+                rules: [{ required: true, message: 'Please input the node ip!' }],
+              })(
+                <Input size="large" placeholder="10.240.217.101"/>
+              )}
+            </Col>
+          </Row>
+          <Row gutter={8}>
+            <Col span={5}>
+              <p>Root Password:</p>
+            </Col>
+            <Col span={14}>
+              {getFieldDecorator(`nodepw-${k}`, {
+                rules: [{ required: true, message: 'Please input the root password!' }],
+              })(
+                <Input prefix={<Icon type="lock" style={{ fontSize: 13 }} />} type="password" placeholder="Password"/>
+              )}
+            </Col>
+            <Col span={2}>
+              {nodeipkeys.length > 0 ? (
+                <Icon
+                  className="dynamic-delete-button"
+                  type="minus-circle-o"
+                  disabled={nodeipkeys.length === 0}
+                  onClick={() => this.noderemove(k)}
+                />
+              ) : null}
+          </Col>
+          </Row>
+        </FormItem>
+      );
+    });
+
+    const nodeselectItems = nodeipkeys.map((k, index) => {
+      const node = getFieldValue(`nodeip-${k}`)
+      if ( node != undefined ) {
+        //console.log('Node:',node)
+        return (
+          <Option key={node}>{node}</Option>
+        );
+      }
+      else {
+        return (
+          <Option key={1}></Option>
+        );
+      }
+    });
+
     getFieldDecorator('osddiskkeys', { initialValue: [] });
     getFieldDecorator('osdjkeys', { initialValue: [] });
+    getFieldDecorator('nodekeys', { initialValue: [] });
     const osddiskkeys = getFieldValue('osddiskkeys');
     const osdjkeys = getFieldValue('osdjkeys');
+    const nodekeys = getFieldValue('nodekeys');
     const osdformItems = osddiskkeys.map((k, index) => {
       return (
-        <Row gutter={8}>
-            <Col span={3}>
-              <p>osd{k-1}</p>
+        <FormItem
+          {...formItemLayout}
+          required={false}
+          label='osd'
+          osddiskkeys={k}
+          osdjkeys={k}
+          nodekeys={k}
+        >
+        <Row gutter={12}>
+            <Col span={2}>
+              <p>node:</p>
+            </Col>
+            <Col span={6}>
+              {getFieldDecorator(`node-${k}`, {
+                rules: [{ required: true, message: 'Please input the client!' }],
+              })(
+                <Select
+                  style={{ width: '100%' }}
+                  onChange={this.handleChange}
+                >
+                  {nodeselectItems}
+                </Select>
+              )}
             </Col>
             <Col span={2}>
               <p>disk:</p>
             </Col>
-            <Col span={6}>
-              {getFieldDecorator('osddisk-${k}', {
+            <Col span={4}>
+              {getFieldDecorator(`osddisk-${k}`, {
                 rules: [{ required: true, message: 'Please input the client!' }],
               })(
                 <Input size="large" placeholder="/dev/sdb"/>
@@ -166,8 +299,8 @@ class TestTestForm extends React.Component {
             <Col span={2}>
               <p>journal:</p>
             </Col>
-            <Col span={6}>
-              {getFieldDecorator('osdj-${k}', {
+            <Col span={4}>
+              {getFieldDecorator(`osdj-${k}`, {
                 rules: [{ required: true, message: 'Please input the client!' }],
               })(
                 <Input size="large" placeholder="/dev/sdc"/>
@@ -184,31 +317,33 @@ class TestTestForm extends React.Component {
           ) : null}
           </Col>
         </Row>
+         </FormItem>
       );
     });
 
-    getFieldDecorator('nodeipkeys', { initialValue: [] });
-    getFieldDecorator('nodepwkeys', { initialValue: [] });
-    const nodeipkeys = getFieldValue('nodeipkeys');
-    const nodepwkeys = getFieldValue('nodepwkeys');
-    const nodeformItems = nodeipkeys.map((k, index) => {
+    getFieldDecorator('clientipkeys', { initialValue: [] });
+    getFieldDecorator('clientpwkeys', { initialValue: [] });
+    const clientipkeys = getFieldValue('clientipkeys');
+    const clientpwkeys = getFieldValue('clientpwkeys');
+   
+    const clientformItems = clientipkeys.map((k, index) => {
       return (
         <FormItem
           {...formItemLayout}
           required={false}
-          label={k}
-          nodeipkey={k}
-          nodepwkey={k}
+          label='Client'
+          clientipkey={k}
+          clientpwkey={k}
         >
           <Row gutter={8}>
             <Col span={5}>
               <p>External IP:</p>
             </Col>          
             <Col span={14}>
-              {getFieldDecorator('nodeip-${k}', {
-                rules: [{ required: true, message: 'Please input the client!' }],
+              {getFieldDecorator(`clientip-${k}`, {
+                rules: [{ required: true, message: 'Please input the client ip!' }],
               })(
-                <Input size="large" placeholder="10.240.217.101"/>
+                <Input size="large" placeholder="10.240.217.131"/>
               )}
             </Col>
           </Row>
@@ -217,38 +352,27 @@ class TestTestForm extends React.Component {
               <p>Root Password:</p>
             </Col>
             <Col span={14}>
-              {getFieldDecorator('nodepw-${k}', {
-                rules: [{ required: true, message: 'Please input the client!' }],
+              {getFieldDecorator(`clientpw-${k}`, {
+                rules: [{ required: true, message: 'Please input the root password!' }],
               })(
-                <Input size="large" placeholder="passw0rd"/>
+                <Input prefix={<Icon type="lock" style={{ fontSize: 13 }} />} type="password" placeholder="Password"/>
               )}
             </Col>
-          </Row>
-          <Row gutter={8}>
-            <Col span={8}>
-              {nodeipkeys.length > 0 ? (
-                <Button type="dashed" onClick={() => this.noderemove(k)} style={{ width: '100%' }} disabled={nodeipkeys.length === 0}>
-                  <Icon
-                    className="dynamic-delete-button"
-                    type="minus-circle-o"
-                  />Remove this Node
-                </Button>    
+            <Col span={2}>
+              {clientipkeys.length > 0 ? (
+                <Icon
+                  className="dynamic-delete-button"
+                  type="minus-circle-o"
+                  disabled={clientipkeys.length === 0}
+                  onClick={() => this.clientremove(k)}
+                />
               ) : null}
-            </Col>
+          </Col>
           </Row>
         </FormItem>
       );
     });
 
-  console.log(nodeipkeys)
-    const nodeselectItems = nodeipkeys.map((k, index) => {
-      console.log(getFieldValue('nodeip-1'))
-      const node = getFieldValue('nodeip-${k}')
-      return (
-        <Option key={node}>{node}</Option>
-      );
-    });
-    
     return (
       <Modal
         visible={this.props.visible}
@@ -257,10 +381,8 @@ class TestTestForm extends React.Component {
         footer={null}
         onCancel={this.props.onCancel}
         width={1000}
-        // onOk={this.onCreate}
       >
         <Form onSubmit={this.handleSubmit}>
-          
           <FormItem
             {...formItemLayout}
             label="Cluster Name"
@@ -277,104 +399,103 @@ class TestTestForm extends React.Component {
           </FormItem>
           <FormItem
             {...formItemLayout}
-            label="Node1"
+            label="Public Network"
             validateStatus={userNameError ? 'error' : ''}
             help={userNameError || ''}
           >
-            <Row gutter={8}>
-              <Col span={5}>
-                <p>External IP:</p>
-              </Col>          
-              <Col span={14}>
-                {getFieldDecorator('nodeip-1', {
-                  rules: [{ required: true, message: 'Please input the client!' }],
-                })(
-                  <Input size="large" placeholder="10.240.217.101"/>
-                )}
-              </Col>
-            </Row>
-            <Row gutter={8}>
-              <Col span={5}>
-                <p>Root Password:</p>
-              </Col>
-              <Col span={14}>
-                {getFieldDecorator('nodepw-1', {
-                  rules: [{ required: true, message: 'Please input the client!' }],
-                })(
-                  <Input size="large" placeholder="passw0rd"/>
-                )}
-              </Col>
-            </Row>
+            {getFieldDecorator('publicnetwork', {
+              rules: [
+                { required: true, message: 'Please input the public network!' },
+              ],
+            })(
+              <Input placeholder="192.168.1.0/24" />
+            )}
+          </FormItem>
+          <FormItem
+            {...formItemLayout}
+            label="Cluster Network"
+            validateStatus={userNameError ? 'error' : ''}
+            help={userNameError || ''}
+          >
+            {getFieldDecorator('clusternetwork', {
+              rules: [
+                { required: true, message: 'Please input the Cluster network!' },
+              ],
+            })(
+              <Input placeholder="192.168.2.0/24" />
+            )}
+          </FormItem>
+          <FormItem
+            {...formItemLayout}
+            label="Type"
+            validateStatus={userNameError ? 'error' : ''}
+            help={userNameError || ''}
+          >
+            {getFieldDecorator('objectstore', {
+              rules: [
+                { required: true, message: 'Please input the object store!' },
+              ],
+            })(
+              <Input placeholder="bluestore" />
+            )}
+          </FormItem>
+          <FormItem
+            {...formItemLayout}
+            label="Journal Size"
+            validateStatus={userNameError ? 'error' : ''}
+            help={userNameError || ''}
+          >
+            {getFieldDecorator('journalsize', {
+              rules: [
+                { required: true, message: 'Please input the Journal Size!' },
+              ],
+            })(
+              <Input placeholder="10240" />
+            )}
           </FormItem>
           {nodeformItems}
           <FormItem
             {...formItemLayoutWithOutLabel}
           >
-            <Row gutter={8}>
-              <Col span={12}>
-                <Button type="dashed" onClick={this.nodeadd} style={{ width: '100%' }}>
-                  <Icon type="plus" /> Add Node
-                </Button>
-              </Col>
-            </Row>
+            <Button type="dashed" onClick={this.nodeadd} style={{ width: '100%' }}>
+              <Icon type="plus" /> Add Node
+            </Button>
+          </FormItem>
+          {osdformItems}
+          <FormItem
+            {...formItemLayoutWithOutLabel}
+          >
+            <Button type="dashed" onClick={this.osdadd} style={{ width: '100%' }}>
+              <Icon type="plus" /> Add osd
+            </Button>
+          </FormItem>
+          {clientformItems}
+          <FormItem
+            {...formItemLayoutWithOutLabel}
+          >
+            <Button type="dashed" onClick={this.clientadd} style={{ width: '100%' }}>
+              <Icon type="plus" /> Add Client
+            </Button>
           </FormItem>
           <FormItem
-            {...formItemLayout}
-            label="OSD"
-            validateStatus={userNameError ? 'error' : ''}
-            help={userNameError || ''}
-          >
-            <Row gutter={8}>
-              <Col span={2}>
-                <p>node:</p>
-              </Col>
-              <Col span={6}>
-              {getFieldDecorator('bs', {
-                rules: [
-                  { required: true, message: 'Please select Block Size!' },
-                ],
-                })(
-                  <Select
-                    mode="multiple"
-                    style={{ width: '100%' }}
-                    placeholder="Please select"
-                    onChange={this.handleChange}
-                  >
-                  {nodeselectItems}
-                  </Select>
-              )}
-              </Col>
-              <Col span={2}>
-                <p>disk:</p>
-              </Col>
-              <Col span={6}>
-                {getFieldDecorator('osddisk-1', {
-                  rules: [{ required: true, message: 'Please input the client!' }],
-                })(
-                  <Input size="large" placeholder="/dev/sdb"/>
-                )}
-              </Col>
-              <Col span={2}>
-                <p>journal:</p>
-              </Col>
-              <Col span={6}>
-                {getFieldDecorator('osdj-1', {
-                  rules: [{ required: true, message: 'Please input the client!' }],
-                })(
-                  <Input size="large" placeholder="/dev/sdc"/>
-                )}
-              </Col>
-            </Row>
-            {osdformItems}
-            <Row gutter={8}>
-              <Col span={5}>
-                <Button type="dashed" onClick={this.osdadd} style={{ width: '100%' }}>
-                  <Icon type="plus" /> Add osd
-                </Button>
-              </Col>
-            </Row>
-          </FormItem>
-          
+          {...formItemLayout}
+          required={false}
+          label='Monitor'
+          validateStatus={userNameError ? 'error' : ''}
+          help={userNameError || ''}
+        >
+          {getFieldDecorator(`mon`, {
+             rules: [{ required: true, message: 'Please select the Monitor!' }],
+          })(
+            <Select
+              mode="multiple"
+              style={{ width: '100%' }}
+              onChange={this.handleChange}
+            >
+              {nodeselectItems}
+            </Select>
+          )}
+         </FormItem>
           <FormItem>
             <Button
               type="primary"
