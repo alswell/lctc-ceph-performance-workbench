@@ -99,7 +99,7 @@ class CephConfig(generic.View):
 
     @utils.json_response
     def get(self, request, jobid):
-        result = models.CephConfig.objects.filter(jobid=jobid, osd='osd.0').all()
+        result = models.CephConfig.objects.filter(jobid=jobid).all()
         d = utils.query_to_dict(result)
         #return {"total": len(d), "data": d}
         if len(d) > 0:

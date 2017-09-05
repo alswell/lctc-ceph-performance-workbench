@@ -14,7 +14,7 @@ class HostDetail extends React.Component {
     super(props);
     this.state = {
       spinning: true,
-      data: {},
+      data: null,
       id: window.location.pathname ? window.location.pathname.substr(window.location.pathname.lastIndexOf("/") + 1)
         : ""
     }
@@ -26,7 +26,7 @@ class HostDetail extends React.Component {
 
   fetchDetail = () => {
     fetchAndNotification({
-      url: `cephconfig/${this.state.id}/`,
+      url: `cluster/${this.state.id}/`,
       method: 'get',
       notifications:{
         error: `获取数据失败！`,
@@ -40,15 +40,15 @@ class HostDetail extends React.Component {
   }
 
   render() {
-    const Detail = ({cephConfig}) => {
+      const Detail = ({data}) => {
       const content = []
-      for (let key in cephConfig) {
-        if ( key != 'key' & key != 'id' & key != 'jobid' ){
+      for (let key in data) {
+          if ( key != 'key' & key != 'id' & key != 'name' ){
           content.push(<div key={key} className={styles.item}>
             <div>{key}</div>
-            <div>{String(cephConfig[key])}</div>
+            <div>{String(data[key])}</div>
             </div>)
-        }
+          }
       }
       //console.log('content: ', content)
       return (<div className="content-inner">
@@ -57,11 +57,11 @@ class HostDetail extends React.Component {
         </div>
       </div>)
     }
-
     return (
       <Spin spinning={this.state.spinning}>
         <div className="content-inner">
-           <Detail cephConfig={this.state.data}/>
+          <h2>{this.state.data ? this.state.data.name :null}</h2>
+          <Detail data={this.state.data}/>
         </div>
       </Spin>
     )

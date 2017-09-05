@@ -63,3 +63,17 @@ class CLUSTERS(generic.View):
         d = utils.query_to_dict(result)
         return {"total": len(d), "data": d}
 
+@urls.register
+class CLUSTER(generic.View):
+    url_regex = r'^cluster/(?P<id>\d+)/$'
+
+    @utils.json_response
+    def get(self, request, id):
+        result = models.Cluster.objects.filter(id=id).all()
+        d = utils.query_to_dict(result)
+        if len(d) > 0:
+            return d[0]
+        else:
+            return []
+
+

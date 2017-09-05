@@ -138,6 +138,10 @@ class HostPage extends React.Component {
           key: 'mons',
         },
         {
+          title: 'Detail',
+          render: (text, record) => <Link to={`cluster/${record.id}`}>Detail</Link>,
+        },
+        {
           title: 'Disk Info',
           render: (text, record) => <Link to={`diskinfo?clusterid=${record.id}`}>disk info</Link>,
         },

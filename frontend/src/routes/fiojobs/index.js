@@ -108,7 +108,7 @@ class HostPage extends React.Component {
           dataIndex: 'status',
           key: 'status',
           sorter: true,
-          // width: 100,
+          width: 100,
          }, {
           title: 'test cases',
           dataIndex: 'casenum',

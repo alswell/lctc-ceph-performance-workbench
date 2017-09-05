@@ -158,13 +158,6 @@ module.exports = [
   //   router: '/host',
   //   icon: 'setting',
   // },
-  // {
-  //   id: 627,
-  //   // bpid: 1,
-  //   name: 'Ceph cluster',
-  //   router: '/deploy',
-  //   icon: 'laptop',
-  // },
   {
     id: 625,
     // bpid: 1,
@@ -206,5 +199,12 @@ module.exports = [
     bpid: 624,
     name: "Performace Dump",
     router: "/perfdump/:id"
+  },
+  {
+    id: 630,
+    // bpid: 1,
+    name: 'Ceph cluster',
+    router: '/cluster',
+    icon: 'laptop',
   },
 ];

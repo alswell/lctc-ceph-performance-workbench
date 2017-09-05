@@ -119,5 +119,8 @@ class FIOJOBS(generic.View):
         elif result.status == "Canceled":
             result.delete()
             return "delete Canceled job {}".format(jobid)
+        elif result.status == "Canceling":
+            result.delete()
+            return "delete Canceled job {}".format(jobid)
         else:
             raise Exception("Error: The job with status {} can't be deleted!".format(result.status))

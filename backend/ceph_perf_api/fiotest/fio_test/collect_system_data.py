@@ -177,7 +177,7 @@ class SysData(object):
             ))
         ssh.close()
 
-        time.sleep(2)
+        time.sleep(1)
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
         for log in ceph_perfdump_file_list:
@@ -380,14 +380,20 @@ class SysData(object):
     def deal_with_sarlog(self, casename, path):
         all_result = {}
         for host in self.host_list:
+            print datetime.datetime.now(),
+            print "deal_with_sarlog_cpu"
             all_result[host] = self.deal_with_sarlog_cpu(host, casename, path)
         json.dump(all_result, open('{}/sar_cpu.json'.format(path), 'w'), indent=2)
 
         for host in self.host_list:
+            print datetime.datetime.now(),
+            print "deal_with_sarlog_memory"
             all_result[host] = self.deal_with_sarlog_memory(host, casename, path)
         json.dump(all_result, open('{}/sar_memory.json'.format(path), 'w'), indent=2)
 
         for host in self.host_list:
+            print datetime.datetime.now(),
+            print "deal_with_sarlog_nic"
             all_result[host] = self.deal_with_sarlog_nic(host, casename, path)
         json.dump(all_result, open('{}/sar_nic.json'.format(path), 'w'), indent=2)
 
@@ -422,6 +428,8 @@ class SysData(object):
 
         all_result = {}
         for host in self.host_list:
+            print datetime.datetime.now(),
+            print "deal_with_iostatlog: {}".format(host)
             osd_result = {}
 
             with open('{}/{}_iostat.txt'.format(path, self.nodes[host]['public_ip'])) as f:
@@ -429,8 +437,12 @@ class SysData(object):
             osd_result['start_time'] = re.search(' (\S*:.*:\S*) ', time).group(1)
 
             for osd_num,osd in self.nodes[host]['osd'].items():
+                print datetime.datetime.now(),
+                print "deal_with_iostatlog: {}".format(osd_num)
                 oj_result = {}
                 for disk_name,disk in osd.items():
+                    print datetime.datetime.now(),
+                    print "deal_with_iostatlog: {}".format(disk)
                     osd_disk = disk.split('/')[-1]
                     #osd_disk = re.match('/dev/(.*)', disk).group(1)
                     disk_result = []
@@ -439,6 +451,8 @@ class SysData(object):
                     del disk_data_list[0]
                     del disk_data_list[-1]
                     n = 0
+                    print datetime.datetime.now(),
+                    print len(disk_data_list)
                     for disk_data in disk_data_list:
                         result = {}
                         disk_data = re.sub(r'\s+', ",", disk_data)
@@ -567,11 +581,21 @@ class SysData(object):
         dir_list = path.split('/')
         casename = re.match('sysdata_(.*)', dir_list[-1]).group(1)
 
+        print datetime.datetime.now(),
+        print "deal_with_sarlog"
         self.deal_with_sarlog(casename, path)
+        print datetime.datetime.now(),
+        print "deal_with_iostatlog"
         self.deal_with_iostatlog(casename, path)
         if self.havedb:
+            print datetime.datetime.now(),
+            print "deal_with_perfdumplog"
             self.deal_with_perfdumplog(casename, path)
+            print datetime.datetime.now(),
+            print "deal_with_cephstatuslog"
             self.deal_with_cephstatuslog(casename, path)
+            print datetime.datetime.now(),
+            print "deal_with_cephinfo"
             self.deal_with_cephinfo(casename, path)
 
     def format_subnet(self, subnet_input):

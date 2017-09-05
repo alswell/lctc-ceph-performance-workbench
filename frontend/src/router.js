@@ -181,13 +181,26 @@ const Routers = function ({ history, app }) {
           },
         },
         {
-          path: 'deploy',
+          path: 'cluster',
           getComponent (nextState, cb) {
             require.ensure([], require => {
               registerModel(app, require('./models/deploy.model'))
               cb(null, require('./routes/deploy/'))
             }, 'deploy')
           },
+        },
+        {
+          path: "cluster/:id",
+          getComponent(nextState, cb) {
+            require.ensure(
+              [],
+              require => {
+                registerModel(app, require("./models/deploy.model"));
+                cb(null, require("./routes/deploy/detail.js"));
+              },
+              "cluster-detail"
+            );
+          }
         },
         {
           path: 'sysdata/:caseid',
