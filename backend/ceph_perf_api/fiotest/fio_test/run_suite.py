@@ -134,6 +134,14 @@ class RunFIO(object):
         return log_dir
 
     def run(self, path, jobname, jobid, ceph_config={}):
+        if self.todb:
+            db = ToDB()
+            job_status = db.query_jobs(jobid)[0][3]
+            if (job_status == "Canceling" or job_status == "Canceled"):
+                job_info = {'status': "Canceled"}
+                db.update_jobs(jobid, **job_info)
+                raise Exception("Job Canceled!!!")
+
         jobname = re.sub('_', '', jobname)
         casenum = len(search('{}/config/'.format(path), '_0.config'))
         jobtime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
@@ -154,7 +162,7 @@ class RunFIO(object):
         if self.todb:
             db = ToDB()
             job_status = db.query_jobs(jobid)[0][3]
-            if job_status == "Canceling":
+            if job_status == "Canceling" or job_status == "Canceled":
                 job_info = {'status': "Canceled"}
                 db.update_jobs(jobid, **job_info)
                 self.reset_ceph_config(org_ceph_config)

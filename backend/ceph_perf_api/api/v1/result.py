@@ -102,6 +102,10 @@ class FIOJOBS(generic.View):
                 body[key] = value
         
         result = models.Jobs.objects.filter(id=jobid).all()[0]
+        if result.status == "New":
+            body = {'status': 'Canceled'}
+            models.Jobs.objects.filter(id=jobid).update(**body)
+            return "pass"
         if result.status != "Finished":
             models.Jobs.objects.filter(id=jobid).update(**body)
             return "pass"
@@ -119,7 +123,7 @@ class FIOJOBS(generic.View):
         elif result.status == "Canceled":
             result.delete()
             return "delete Canceled job {}".format(jobid)
-        elif result.status == "Canceling":
+        elif result.status == "Finished":
             result.delete()
             return "delete Canceled job {}".format(jobid)
         else:

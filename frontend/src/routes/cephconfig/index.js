@@ -43,7 +43,7 @@ class HostDetail extends React.Component {
     const Detail = ({cephConfig}) => {
       const content = []
       for (let key in cephConfig) {
-        if ( key != 'key' & key != 'id' & key != 'jobid' ){
+        if ( key != 'key' & key != 'id' & key != 'jobid' & key != 'osd' & key != 'node'){
           content.push(<div key={key} className={styles.item}>
             <div>{key}</div>
             <div>{String(cephConfig[key])}</div>
@@ -61,6 +61,7 @@ class HostDetail extends React.Component {
     return (
       <Spin spinning={this.state.spinning}>
         <div className="content-inner">
+           <h2>{this.state.data ? this.state.data.osd :null}</h2>
            <Detail cephConfig={this.state.data}/>
         </div>
       </Spin>
