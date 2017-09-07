@@ -36,88 +36,29 @@ class RunFIO(object):
         self.result = Result(havedb=self.todb)
 
     def checkandstart_fioser(self, path, suitename):
-        fionoserver = False
         with open('{}/fioserver_list.conf'.format(path, suitename), 'r') as f:
             for client in f:
                 client = client.strip()
-                try:
-                    subprocess.check_output('sshpass -p {} ssh -o StrictHostKeyChecking=no {} ps -ef | grep fio | grep server | grep -v grep'.format(self.client_password, client), shell=True)
-                except subprocess.CalledProcessError, result:
-                    output = result.output
-                    if result.output == '' and result.returncode == 1:
-                        print "===={} without fio server".format(client)
-                        fionoserver = True
-            if fionoserver:
-                raise Exception("====Please run \"nohup fio --server &\" in {}".format(client))
-
-    def __checkandstart_fioser(self, path, suitename):
-        with open('{}/fioserver_list.conf'.format(path, suitename), 'r') as f:
-            for client in f:
-                client = client.strip()
-                output =''
+                output = ''
                 while output == '':
                     try:
-                        output = subprocess.check_output('sshpass -p {} ssh -o StrictHostKeyChecking=no {} ps -ef | grep fio | grep server | grep -v grep | grep -v ssh'.format(self.client_password, client), shell=True)
+                        output = subprocess.check_output('sshpass -p {} ssh -o StrictHostKeyChecking=no {} ps -ef | grep fio | grep server | grep -v grep'.format(self.client_password, client), shell=True)
                     except subprocess.CalledProcessError, result:
                         output = result.output
                         if result.output == '' and result.returncode == 1:
-                            print "================={} without fio server".format(client)
-                            os.system(
-                                "sshpass -p {} ssh -o StrictHostKeyChecking=no {} fio --server &".format(self.client_password, client)
-                            )
+                            print "===={} without fio server".format(client)
+                            cmd = "ssh client-1 'fio --server >/dev/null 2>&1 &'".format(hostname)
+                            print cmd
+                            subprocess.call(cmd, shell=True)
+                            time.sleep(1)
                             continue
                         else:
-                            print result
-                            sys.exit(1)
+                            raise Exception(result)
                     else:
                         match = re.match('\S+\s+(\d+)', output)
-                        platform_type = platform.platform()
-                        if re.search('ubuntu', platform_type, re.I):
-                            process_id = match.group(1)
-                        elif re.search('centos', platform_type, re.I):
-                            process_id = match.group(1)
-                        else:
-                            print "unsupport system os {}".format(platform_type)
-                            sys.exit(0)
-    
+                        process_id = match.group(1)
                         print "process_id: {}".format(process_id)
 
-    def _checkandstart_fioser(self, path, suitename):
-        with open('{}/fioserver_list.conf'.format(path, suitename), 'r') as f:
-            for client in f:
-                client = client.strip()
-                output =''
-                while output == '':
-                    ssh = paramiko.SSHClient()
-                    ssh.load_system_host_keys()
-                    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                    
-                    ssh.connect(hostname=client, port=22, username='root', password=self.client_password)
-                    cmd = 'ps -ef | grep fio | grep server | grep -v grep'
-                    stdin, stdout, stderr = ssh.exec_command(cmd)
-                    output = stdout.readlines()
-                    if output == []:
-                        print "================={} without fio server".format(client)
-                        cmd = 'nohup fio --server &'
-                        ssh.exec_command(cmd)
-                        output = ''
-                    elif len(output) > 1:
-                        print "Error: Found more than one fio server in {}: {}".format(client, output)
-                        sys.exit(1)
-                    else:
-                        match = re.match('\S+\s+(\d+)', output[0])
-                        platform_type = platform.platform()
-                        if re.search('ubuntu', platform_type, re.I):
-                            process_id = match.group(1)
-                        elif re.search('centos', platform_type, re.I):
-                            process_id = match.group(1)
-                        else:
-                            print "unsupport system os {}".format(platform_type)
-                            sys.exit(0)
-         
-                        print "process_id: {}".format(process_id)
-                    ssh.close()
-    
     def create_log_dir(self, path, jobname, config, jobtime):
         jobtime = re.sub('-', '_', jobtime)
         jobtime = re.sub(':', '_', jobtime)
@@ -270,22 +211,25 @@ class RunFIO(object):
                         if time_out_status:
                             handle.write('\nTimeout')
                             print "Error: Run fio test {} time out in {} s!".format(log_dir, timeout)
-                        else:
+                        if child.returncode == 0:
                             handle.write('\nPass')
-                    time.sleep(1)
-                    print datetime.datetime.now(),
-                    print "sysdata.get_all_host_sysdata_logfile"
-                    self.sysdata.get_all_host_sysdata_logfile('{}/sysdata_{}'.format(log_dir, log_file_name))
-                    time.sleep(1)
+                            print datetime.datetime.now(),
+                            print "sysdata.get_all_host_sysdata_logfile"
+                            self.sysdata.get_all_host_sysdata_logfile('{}/sysdata_{}'.format(log_dir, log_file_name))
+                            time.sleep(1)
+                            print datetime.datetime.now(),
+                            print "sysdata.deal_with_sysdata_logfile"
+                            self.sysdata.deal_with_sysdata_logfile(
+                                log_dir,
+                                'sysdata_{}'.format(log_file_name),
+                            )
+                        else:
+                            handle.write('\nFail')
+                            print "Error: Run fio test {} Fail!".format(log_dir)
+
                     print datetime.datetime.now(),
                     print "result.deal_with_fio_data"
                     self.result.deal_with_fio_data(log_dir, log_file_name, jobid)
-                    print datetime.datetime.now(),
-                    print "sysdata.deal_with_sysdata_logfile"
-                    self.sysdata.deal_with_sysdata_logfile(
-                        log_dir,
-                        'sysdata_{}'.format(log_file_name),
-                    )
                 else:
                     i = i + 1
         print datetime.datetime.now(),
@@ -344,7 +288,7 @@ class RunFIO(object):
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     
             ssh.connect(
-                hostname = self.nodes[host]['public_ip'],
+                hostname = self.nodes[host]['ip'],
                 port = 22,
                 username = 'root',
                 password = self.host_password
@@ -372,7 +316,7 @@ class RunFIO(object):
                 org_host_config[osd] = org_osd_config
             org_all_config[host] = org_host_config
             ssh.close()
-        #update_ceph_conffile(self.nodes[host][public_ip], ceph_config)
+        #update_ceph_conffile(self.nodes[host]['ip'], ceph_config)
         return org_all_config
  
     def reset_ceph_config(self, org_all_config):
@@ -382,7 +326,7 @@ class RunFIO(object):
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     
             ssh.connect(
-                hostname = self.nodes[host]['public_ip'],
+                hostname = self.nodes[host]['ip'],
                 port = 22,
                 username = 'root',
                 password = self.host_password

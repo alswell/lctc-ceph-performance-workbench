@@ -42,27 +42,14 @@ class HostDetail extends React.Component {
   }
 
   render() {
-    const Detail = ({cephConfig}) => {
-      const content = []
-      for (let key in cephConfig) {
-          content.push(<div key={key} className={styles.item}>
-            <div>{key}</div>
-            <div>{String(cephConfig[key])}</div>
-          </div>)
-      }
-      return (<div className="content-inner">
-        <div className={styles.content}>
-          {content}
-        </div>
-      </div>)
-    }
-
     const OsdCard = ({perfdump}) => {
       const content = []
       for (let i=0; i<perfdump.length; i++) {
         content.push(
           <TabPane key={i} tab={perfdump[i].osd}>
-            <Detail cephConfig={perfdump[i]}/>
+            <pre style={{'overflow-y':'scroll','max-height':'700px'}}>
+              {JSON.stringify(perfdump[i].data, null, 2) }
+            </pre>
           </TabPane>)
       }
       return (

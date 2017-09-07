@@ -43,9 +43,9 @@ class Manager(object):
             runfio = run_suite.RunFIO(body['suite_dir'], todb=True)
             job_status = runfio.db.query_jobs(body['jobid'])[0][3]
             if job_status != "Canceled":
-                error_info = re.sub("'", '', e)
-                error_info = re.sub('"', '', error_info)
-                jobinfo = {'status': "Failed: {}".format(e)}
+                error_info = re.sub("u'", '', str(e))
+                error_info = re.sub("'", '', str(e))
+                jobinfo = {'status': "Failed: {}".format(error_info)}
                 runfio.db.update_jobs(body['jobid'], **jobinfo)
             print e
         else:
@@ -54,23 +54,35 @@ class Manager(object):
 
     def deploy(self, ctxt, body):
         LOG.info("deploy ceph: %s", body)
+
+        deploy = ceph_deploy.Deploy()
         name = body["clustername"]
 
         osdhost_list = []
         client_list = []
-        for i in range(len(body['nodeipkeys'])):
-            osdhost_list.append('ceph-{}'.format(str(i+1)))
+        for key in body['nodenamekeys']:
+            osdhost_list.append(body['nodename-{}'.format(key)])
+        for key in body['clientnamekeys']:
+            client_list.append(body['clientname-{}'.format(key)])
 
-        for i in range(len(body['clientipkeys'])):
-            client_list.append('client-{}'.format(str(i+1)))
+        nodepw_list = []
+        clientpw_list = []
+        for key in body['nodepwkeys']:
+            nodepw_list.append(body['nodepw-{}'.format(key)])
+        for key in body['clientpwkeys']:
+            clientpw_list.append(body['clientpw-{}'.format(key)])
 
-        ips = []
+        nodeips = []
+        clientips = []
         for key in body['nodeipkeys']:
-            ips.append(body['nodeip-{}'.format(key)])
+            nodeips.append(body['nodeip-{}'.format(key)])
         for key in body['clientipkeys']:
-            ips.append(body['clientip-{}'.format(key)])
-        password = 'passw0rd'
+            clientips.append(body['clientip-{}'.format(key)])
 
+        ips = nodeips + clientips
+        hostnames = osdhost_list + client_list
+        password = nodepw_list + clientpw_list
+    
         mon_list = []
         for mon in body['mon']:
             i = ips.index(mon)
@@ -78,20 +90,18 @@ class Manager(object):
 
         disk_list = []
         for key in body['nodekeys']:
-            print key
             i = ips.index(body['node-{}'.format(key)])
-            print osdhost_list
-            print i
-            print body['node-{}'.format(key)]
-            print body['osddisk-{}'.format(key)], body['osdj-{}'.format(key)]
-            disk_list.append('{}:{}:{}'.format(osdhost_list[i], body['osddisk-{}'.format(key)], body['osdj-{}'.format(key)]))
+            disk_list.append('{}:{}:{}'.format(
+                osdhost_list[i],
+                body['osddisk-{}'.format(key)],
+                body['osdj-{}'.format(key)])
+            )
 
-        hostnames = osdhost_list + client_list
-    
         public_network = body['publicnetwork']
         cluster_network = body['clusternetwork']
         objectstore = body['objectstore']
         journal_size = body['journalsize']
+
 
         with open('/tmp/ITuning_ceph.conf', 'w') as f:
             f.write('[global]\n')
@@ -104,12 +114,35 @@ class Manager(object):
         conf = '/tmp/ITuning_ceph.conf'
         print "init" 
         for i in range(len(ips)):
-            ceph_deploy.init(ips[i], password, hostnames[i])
+            deploy.initenv(body['clusterid'], ips[i], password[i], hostnames[i])
         print "purge" 
-        ceph_deploy.purge(name, hostnames)
+        deploy.purge(body['clusterid'], name, hostnames)
         print "deploy" 
-        ceph_deploy.deploy(name, mon_list, osdhost_list, disk_list, client_list, conf)
+        deploy.deploy(body['clusterid'], name, mon_list, osdhost_list, disk_list, client_list, conf)
         print "create pool" 
-        ceph_deploy.createrbdpool(len(disk_list), client_list[0])
+        deploy.createrbdpool(len(disk_list), client_list[0])
+        print "gen yaml file "
+        deploy.gen_yaml_file(
+            body['clusterid'],
+            disk_list,
+            osdhost_list,
+            nodeips,
+            nodepw_list,
+            client_list,
+            clientips,
+            clientpw_list,
+            public_network,
+            cluster_network,
+        )
+        for client in client_list:
+            print "install fio in {}".format(client)
+            deploy.install_fio(client)
+        for host in hostnames:
+            print "reboot {}".format(host)
+            deploy.reboot(host)
+        for client in client_list:
+            print "check and start fio server in {}".format(host)
+            deploy.checkandstart_fioser(client)
+
         print "finish"
 

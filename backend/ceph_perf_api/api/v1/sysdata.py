@@ -1,5 +1,7 @@
 # -*- coding: UTF-8 -*-
 import urls
+import json
+
 from django.views import generic
 from ceph_perf_api import utils
 from fiotest import models
@@ -202,5 +204,8 @@ class PerfDump(generic.View):
     def get(self, request, caseid):
         result = models.PerfDump.objects.filter(caseid=caseid).all()
         d = utils.query_to_dict(result)
+        output = []
+        for data in d:
+            output.append({'osd': data['osd'], 'data': json.loads(data['total'])})
         #return {"total": len(d), "data": d}
-        return d
+        return output

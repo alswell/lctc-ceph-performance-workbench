@@ -13,11 +13,13 @@ function hasErrors (fieldsError) {
   return Object.keys(fieldsError).some(field => fieldsError[field])
 }
 
+let nodenameid = 0;
 let nodeipid = 0;
 let nodepwid = 0;
 let osddiskid = 0;
 let osdjid = 0;
 let nodeid = 0;
+let clientnameid = 0;
 let clientipid = 0;
 let clientpwid = 0;
 
@@ -31,6 +33,7 @@ class TestTestForm extends React.Component {
   noderemove = (k) => {
     const { form } = this.props;
 
+    const nodenamekeys = form.getFieldValue('nodenamekeys');
     const nodeipkeys = form.getFieldValue('nodeipkeys');
     const nodepwkeys = form.getFieldValue('nodepwkeys');
 
@@ -40,6 +43,7 @@ class TestTestForm extends React.Component {
 
 
     form.setFieldsValue({
+      nodenamekeys: nodenamekeys.filter(key => key !== k),
       nodeipkeys: nodeipkeys.filter(key => key !== k),
       nodepwkeys: nodepwkeys.filter(key => key !== k),
     });
@@ -48,14 +52,18 @@ class TestTestForm extends React.Component {
   nodeadd = () => {
     nodeipid++;
     nodepwid++;
+    nodenameid++;
     const { form } = this.props;
 
+    const nodenamekeys = form.getFieldValue('nodenamekeys');
     const nodeipkeys = form.getFieldValue('nodeipkeys');
     const nodepwkeys = form.getFieldValue('nodepwkeys');
+    const nextnodenameKeys = nodenamekeys.concat(nodenameid);
     const nextnodeipKeys = nodeipkeys.concat(nodeipid);
     const nextnodepwKeys = nodepwkeys.concat(nodepwid);
 
     form.setFieldsValue({
+      nodenamekeys: nextnodenameKeys,
       nodeipkeys: nextnodeipKeys,
       nodepwkeys: nextnodepwKeys,
     });
@@ -103,6 +111,7 @@ class TestTestForm extends React.Component {
   clientremove = (k) => {
     const { form } = this.props;
 
+     const clientnamekeys = form.getFieldValue('clientnamekeys');
     const clientipkeys = form.getFieldValue('clientipkeys');
     const clientpwkeys = form.getFieldValue('clientpwkeys');
 
@@ -112,6 +121,7 @@ class TestTestForm extends React.Component {
 
 
     form.setFieldsValue({
+      clientnamekeys: clientnamekeys.filter(key => key !== k),
       clientipkeys: clientipkeys.filter(key => key !== k),
       clientpwkeys: clientpwkeys.filter(key => key !== k),
     });
@@ -120,14 +130,18 @@ class TestTestForm extends React.Component {
   clientadd = () => {
     clientipid++;
     clientpwid++;
+    clientnameid++;
     const { form } = this.props;
 
+    const clientnamekeys = form.getFieldValue('clientnamekeys');
     const clientipkeys = form.getFieldValue('clientipkeys');
     const clientpwkeys = form.getFieldValue('clientpwkeys');
+    const nextclientnameKeys = clientipkeys.concat(clientnameid);
     const nextclientipKeys = clientipkeys.concat(clientipid);
     const nextclientpwKeys = clientpwkeys.concat(clientpwid);
 
     form.setFieldsValue({
+      clientnamekeys: nextclientnameKeys,
       clientipkeys: nextclientipKeys,
       clientpwkeys: nextclientpwKeys,
     });
@@ -186,9 +200,10 @@ class TestTestForm extends React.Component {
       },
     };
 
-    
+    getFieldDecorator('nodenamekeys', { initialValue: [] });
     getFieldDecorator('nodeipkeys', { initialValue: [] });
     getFieldDecorator('nodepwkeys', { initialValue: [] });
+    const nodenamekeys = getFieldValue('nodenamekeys');
     const nodeipkeys = getFieldValue('nodeipkeys');
     const nodepwkeys = getFieldValue('nodepwkeys');
    
@@ -198,9 +213,22 @@ class TestTestForm extends React.Component {
           {...formItemLayout}
           required={false}
           label='Node'
+          nodenamekey={k}
           nodeipkey={k}
           nodepwkey={k}
         >
+          <Row gutter={8}>
+            <Col span={5}>
+              <p>Name:</p>
+            </Col>          
+            <Col span={14}>
+              {getFieldDecorator(`nodename-${k}`, {
+                rules: [{ required: true, message: 'Please input the node name!' }],
+              })(
+                <Input size="large" placeholder="ceph-1"/>
+              )}
+            </Col>
+          </Row>
           <Row gutter={8}>
             <Col span={5}>
               <p>External IP:</p>
@@ -321,8 +349,10 @@ class TestTestForm extends React.Component {
       );
     });
 
+    getFieldDecorator('clientnamekeys', { initialValue: [] });
     getFieldDecorator('clientipkeys', { initialValue: [] });
     getFieldDecorator('clientpwkeys', { initialValue: [] });
+    const clientnamekeys = getFieldValue('clientnamekeys');
     const clientipkeys = getFieldValue('clientipkeys');
     const clientpwkeys = getFieldValue('clientpwkeys');
    
@@ -332,9 +362,22 @@ class TestTestForm extends React.Component {
           {...formItemLayout}
           required={false}
           label='Client'
+          clientnamekey={k}
           clientipkey={k}
           clientpwkey={k}
         >
+          <Row gutter={8}>
+            <Col span={5}>
+              <p>Name:</p>
+            </Col>          
+            <Col span={14}>
+              {getFieldDecorator(`clientname-${k}`, {
+                rules: [{ required: true, message: 'Please input the client name!' }],
+              })(
+                <Input size="large" placeholder="client-1"/>
+              )}
+            </Col>
+          </Row>
           <Row gutter={8}>
             <Col span={5}>
               <p>External IP:</p>
@@ -436,7 +479,10 @@ class TestTestForm extends React.Component {
                 { required: true, message: 'Please input the object store!' },
               ],
             })(
-              <Input placeholder="bluestore" />
+              <Select defaultValue="filestore" style={{ width: 120 }} onChange={this.handleChange}>
+                <Option value="bluestore">bluestore</Option>
+                <Option value="filestore">filestore</Option>
+              </Select>
             )}
           </FormItem>
           <FormItem

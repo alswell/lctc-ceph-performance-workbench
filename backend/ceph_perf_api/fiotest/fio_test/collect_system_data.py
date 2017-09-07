@@ -108,7 +108,7 @@ class SysData(object):
 
     def get_sys_data(self):
         for host in self.host_list:
-            host_ip = self.nodes[host]['public_ip']
+            host_ip = self.nodes[host]['ip']
             print 'get sysdata {}'.format(host)
             p = Process(target=self.sys_data, args=(host_ip,))
             p.start()
@@ -123,7 +123,7 @@ class SysData(object):
 
     def cleanup_all(self):
         for host in self.host_list:
-            host_ip = self.nodes[host]['public_ip']
+            host_ip = self.nodes[host]['ip']
             print 'cleanup sysdata collect process in {}'.format(host)
             p = Process(target=self.cleanup_sys_data,args=(host_ip,))
             p.start()
@@ -140,7 +140,7 @@ class SysData(object):
     def get_all_host_sysdata_logfile(self, log_dir):
         self.cleanup_all()
         for host in self.host_list:
-            host_ip = self.nodes[host]['public_ip']
+            host_ip = self.nodes[host]['ip']
             self.get_all_logfile(host_ip, log_dir)
             self.get_ceph_perfdump(host_ip, log_dir)
 
@@ -196,7 +196,7 @@ class SysData(object):
                 'find /var/run/ceph -name \'*osd*asok\' | while read path; do ceph --admin-daemon $path perf reset all; done',
                 'lsblk | grep -Eo "ceph-.*" | sed "s/ceph-/osd./g" | while read osd; do ceph daemon $osd flush_store_cache; done; sync; echo 3 > /proc/sys/vm/drop_caches',
             ]
-            self.run_sshcmds(self.nodes[host]['public_ip'], cmds, self.host_password)
+            self.run_sshcmds(self.nodes[host]['ip'], cmds, self.host_password)
 
     def get_datetime_fordb_sarlog(self, time, t_type, casename):
         if t_type == 'PM':
@@ -224,7 +224,7 @@ class SysData(object):
     def deal_with_sarlog_cpu(self, host, casename, path):
         #%usr     %nice      %sys   %iowait    %steal      %irq     %soft    %guest    %gnice     %idle
         cpu_result = []
-        cmd = 'grep "CPU      %usr" -A 1 {}/{}_sar.txt | grep all'.format(path, self.nodes[host]['public_ip'])
+        cmd = 'grep "CPU      %usr" -A 1 {}/{}_sar.txt | grep all'.format(path, self.nodes[host]['ip'])
         cpu_data_list = subprocess.check_output(cmd, shell=True).split('\n')
         del cpu_data_list[-1]
         for cpu_data in cpu_data_list:
@@ -251,7 +251,7 @@ class SysData(object):
     def deal_with_sarlog_memory(self, host, casename, path):
         #kbmemfree kbmemused  %memused kbbuffers  kbcached  kbcommit   %commit  kbactive   kbinact   kbdirty
         mem_result = []
-        with open('{}/{}_sar.txt'.format(path, self.nodes[host]['public_ip']), 'r') as f:
+        with open('{}/{}_sar.txt'.format(path, self.nodes[host]['ip']), 'r') as f:
             lines = f.readlines()
             mem_data_list = []
             for n in range(len(lines)):
@@ -283,7 +283,7 @@ class SysData(object):
         ssh.load_system_host_keys()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-        ssh.connect(hostname=self.nodes[host]['public_ip'], port=22, username='root', password=self.host_password)
+        ssh.connect(hostname=self.nodes[host]['ip'], port=22, username='root', password=self.host_password)
         stdin, stdout, stderr = ssh.exec_command(
             'ifconfig | grep "inet " -B 1')
         result = stdout.read()
@@ -304,7 +304,7 @@ class SysData(object):
     def deal_with_sarlog_nic(self, host, casename, path):
         #rxpck/s   txpck/s    rxkB/s    txkB/s   rxcmp/s   txcmp/s  rxmcst/s
         cluster_n, public_n = self.get_network_device(host)
-        with open('{}/{}_sar.txt'.format(path, self.nodes[host]['public_ip']), 'r') as f:
+        with open('{}/{}_sar.txt'.format(path, self.nodes[host]['ip']), 'r') as f:
             lines = f.readlines()
             nic_data_list = []
             for n in range(len(lines)):
@@ -432,7 +432,7 @@ class SysData(object):
             print "deal_with_iostatlog: {}".format(host)
             osd_result = {}
 
-            with open('{}/{}_iostat.txt'.format(path, self.nodes[host]['public_ip'])) as f:
+            with open('{}/{}_iostat.txt'.format(path, self.nodes[host]['ip'])) as f:
                 time = f.readline()
             osd_result['start_time'] = re.search(' (\S*:.*:\S*) ', time).group(1)
 
@@ -446,7 +446,7 @@ class SysData(object):
                     osd_disk = disk.split('/')[-1]
                     #osd_disk = re.match('/dev/(.*)', disk).group(1)
                     disk_result = []
-                    cmd = 'grep "{}" {}/{}_iostat.txt'.format(osd_disk, path, self.nodes[host]['public_ip'])
+                    cmd = 'grep "{}" {}/{}_iostat.txt'.format(osd_disk, path, self.nodes[host]['ip'])
                     disk_data_list = subprocess.check_output(cmd, shell=True).split('\n')
                     del disk_data_list[0]
                     del disk_data_list[-1]
@@ -489,7 +489,9 @@ class SysData(object):
             log_file = log_file.split('/')[-1]
             host = log_file.split('_')[0]
             log_osd = log_file.split('_')[1]
-            self.db.insert_tb_perfdumpdata(casename, host, log_osd, **perfdump)
+            #self.db.insert_tb_perfdumpdata(casename, host, log_osd, **perfdump)
+            dumpdata = json.dumps(perfdump)
+            self.db.insert_tb_perfdumpdata(casename, host, log_osd, dumpdata)
 
     def deal_with_cephstatuslog(self, casename, path):
         log_file = '{}/{}_cephstatus.txt'.format(path, self.client)
@@ -586,7 +588,7 @@ class SysData(object):
         self.deal_with_sarlog(casename, path)
         print datetime.datetime.now(),
         print "deal_with_iostatlog"
-        self.deal_with_iostatlog(casename, path)
+        #self.deal_with_iostatlog(casename, path)
         if self.havedb:
             print datetime.datetime.now(),
             print "deal_with_perfdumplog"

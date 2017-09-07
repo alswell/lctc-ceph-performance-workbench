@@ -31,12 +31,12 @@ class DeployCeph(generic.View):
 
         osdhosts = []
         for key in body['nodeipkeys']:
-            osdhosts.append(body['nodeip-{}'.format(key)])
+            osdhosts.append('{}:{}'.format(body['nodename-{}'.format(key)], body['nodeip-{}'.format(key)]))
         cluster_info['osdhosts'] = '\n'.join(osdhosts)
 
         clients = []
         for key in body['clientipkeys']:
-            clients.append(body['clientip-{}'.format(key)])
+            clients.append('{}:{}'.format(body['clientname-{}'.format(key)], body['clientip-{}'.format(key)]))
         cluster_info['clients'] = '\n'.join(clients)
 
         result = models.Cluster.objects.create(**cluster_info)

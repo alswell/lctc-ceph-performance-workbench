@@ -108,10 +108,10 @@ class SysInfo(SysData):
 
     def get_all_host_sysinfo_logfile(self, log_dir):
         for host in self.host_list:
-            host_ip = self.nodes[host]['public_ip']
+            host_ip = self.nodes[host]['ip']
             self.get_hwinfo_log(host_ip, log_dir)
             #self.get_ceph_conf(host_ip, log_dir)
-        self.get_one_ceph_conf(self.nodes[self.host_list[0]]['public_ip'], log_dir)
+        self.get_one_ceph_conf(self.nodes[self.host_list[0]]['ip'], log_dir)
 
     def deal_with_cephconfiglog(self, jobid, path):
         log_files = os.popen('ls {}/*ceph_config.json'.format(path)).readlines()
@@ -138,7 +138,7 @@ class SysInfo(SysData):
     def deal_with_lsblk_log(self, jobid, path):
         disk_info = {}
         for host in self.host_list:
-            ip = self.nodes[host]['public_ip']
+            ip = self.nodes[host]['ip']
             ssh = paramiko.SSHClient()
             ssh.load_system_host_keys()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -193,7 +193,7 @@ class SysInfo(SysData):
     def deal_with_cpuinfo_log(self, path):
         cpu_info = {}
         for host in self.host_list:
-            with open('{}/{}_cpuinfo.txt'.format(path, self.nodes[host]['public_ip']), 'r') as f:
+            with open('{}/{}_cpuinfo.txt'.format(path, self.nodes[host]['ip']), 'r') as f:
                 cpunum = 0
                 cputype = ''
                 cpuspeed = ''
@@ -220,7 +220,7 @@ class SysInfo(SysData):
     def deal_with_meminfo_log(self, path):
         mem_info = {}
         for host in self.host_list:
-            with open('{}/{}_dmidecode.txt'.format(path, self.nodes[host]['public_ip']), 'r') as f:
+            with open('{}/{}_dmidecode.txt'.format(path, self.nodes[host]['ip']), 'r') as f:
                 n = 0
                 memnum = 0
                 mem_match = False
@@ -241,7 +241,7 @@ class SysInfo(SysData):
                         if re.match('$', lines[n]):
                             mem_match = False
                     n = n+1
-            with open('{}/{}_meminfo.txt'.format(path, self.nodes[host]['public_ip']), 'r') as f:
+            with open('{}/{}_meminfo.txt'.format(path, self.nodes[host]['ip']), 'r') as f:
                 for line in f:
                     maxsize_match = re.match('MemTotal:\s+(.*)$', line)
                     if maxsize_match:
@@ -266,7 +266,7 @@ class SysInfo(SysData):
         ssh.load_system_host_keys()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-        ssh.connect(hostname=self.nodes[host]['public_ip'], port=22, username='root', password=self.host_password)
+        ssh.connect(hostname=self.nodes[host]['ip'], port=22, username='root', password=self.host_password)
         stdin, stdout, stderr = ssh.exec_command(
             'ifconfig | grep "inet " -B 1')
         result = stdout.read()
@@ -287,7 +287,7 @@ class SysInfo(SysData):
     def get_os_info(self, jobid, path):
         for host in self.host_list:
             os_info = {}
-            ip = self.nodes[host]['public_ip']
+            ip = self.nodes[host]['ip']
             ssh = paramiko.SSHClient()
             ssh.load_system_host_keys()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())

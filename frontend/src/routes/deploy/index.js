@@ -106,38 +106,6 @@ class HostPage extends React.Component {
           // width: 100,
         },
         {
-          title: 'Public Network',
-          dataIndex: 'public_network',
-          key: 'public_network',
-          // width: 100,
-        }, 
-        {
-          title: 'Cluster Network',
-          dataIndex: 'cluster_network',
-          key: 'cluster_network',
-          // width: 100,
-        }, 
-        {
-          title: 'journal_size',
-          dataIndex: 'journal_size',
-          key: 'journal_size',
-        }, 
-        {
-          title: 'osdhosts',
-          dataIndex: 'osdhosts',
-          key: 'osdhosts',
-        },
-        {
-          title: 'clients',
-          dataIndex: 'clients',
-          key: 'clients',
-        },
-        {
-          title: 'mons',
-          dataIndex: 'mons',
-          key: 'mons',
-        },
-        {
           title: 'Detail',
           render: (text, record) => <Link to={`cluster/${record.id}`}>Detail</Link>,
         },

@@ -309,7 +309,34 @@ class ToDB(object):
             print sql
             self.db.rollback()
 
-    def insert_tb_perfdumpdata(self, casename, node, log_osd, **kwargs):
+    def insert_tb_perfdumpdata(self, casename, node, log_osd, perfdump):
+        sql = "SELECT * FROM fiotest_result \
+            WHERE case_name = '{}'".format(casename)
+        try:
+            self.cursor.execute(sql)
+            results = self.cursor.fetchall()
+            for row in results:
+                caseid = row[0]
+        except:
+            print sql
+            self.db.rollback()
+     
+        sql = "INSERT INTO fiotest_perfdump(caseid_id, node, osd, total) \
+            VALUES ('{}', '{}', '{}', \
+            '{}')".format(
+                caseid,
+                node,
+                log_osd,
+                perfdump,
+            )
+        try:
+            self.cursor.execute(sql)
+            self.db.commit()
+        except:
+            print sql
+            self.db.rollback()
+
+    def _insert_tb_perfdumpdata(self, casename, node, log_osd, **kwargs):
         sql = "SELECT * FROM fiotest_result \
             WHERE case_name = '{}'".format(casename)
         try:

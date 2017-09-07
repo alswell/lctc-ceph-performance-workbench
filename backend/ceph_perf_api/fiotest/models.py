@@ -162,6 +162,7 @@ class PerfDump(models.Model):
     caseid = models.ForeignKey("Result",to_field='id')
     node = models.CharField(max_length=20)
     osd  = models.CharField(max_length=20, null=True)
+    total = models.TextField(null=True)
     filestore_queue_transaction_latency_avg_avgcount = models.IntegerField(null=True)
     filestore_queue_transaction_latency_avg_sum = models.FloatField(null=True)
     filestore_bytes = models.BigIntegerField(null=True)

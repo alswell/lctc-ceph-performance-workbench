@@ -89,9 +89,14 @@ class Result(object):
             result = '{}k'.format(int(match_nuit.group(1)) / 1024)
         elif match_nuit.group(2) == 'KiB':
             result = '{}k'.format(int(float(match_nuit.group(1))))
+        elif match_nuit.group(2) == 'MiB':
+            result = '{}k'.format(int(float(match_nuit.group(1))) * 1024)
         else:
-            raise Exception("Error: Unrecognized block size unit {} in log file.")
-    
+            raise Exception("Error: Unrecognized block size unit {} in log file.".format(match_nuit.group(2)))
+        match_log = re.search('(\d+)M', bs_log)
+        if match_log:
+            bs_log = '{}k'.format(int(match_log.group(1)) * 1024)
+
         if result == bs_log:
             return result
         else:
@@ -445,14 +450,16 @@ class Result(object):
             imagenum = re.sub('imagenum', '', imagenum_log)
             iodepth = re.sub('iodepth', '', iodepth_log)
             numjob = re.sub('numjob', '', numjob_log)
-            clientnum = ''
-            r_iops = ''
-            w_iops = ''
-            iops = ''
-            lat = ''
-            r_bw =''
-            w_bw = ''
-            bw = ''
+            r_iops = 0
+            w_iops = 0
+            iops = 0
+            lat = 0
+            r_bw = 0
+            w_bw = 0
+            bw = 0
+            with open('{}/../fioserver_list.conf'.format(log_dir), 'r') as f:
+                clients = f.readlines()
+                clientnum = len(clients)
 
         if self.havedb:
             result_to_db = {
