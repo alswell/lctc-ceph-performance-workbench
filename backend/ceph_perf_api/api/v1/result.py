@@ -117,7 +117,7 @@ class FIOJOBS(generic.View):
     def delete(self, request):
         jobid = dict(request.DATA)['id']
         result = models.Jobs.objects.filter(id=jobid).all()[0]
-        if result.status == "Failed":
+        if re.match("Failed", result.status):
             result.delete()
             return "delete Failed job {}".format(jobid)
         elif result.status == "Canceled":

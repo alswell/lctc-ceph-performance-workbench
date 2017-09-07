@@ -307,7 +307,23 @@ class Result(object):
                     iodepth_log = configs
                 elif re.match('numjob', configs):
                     numjob_log = configs
-            
+
+            bs = bs_log
+            readwrite = '{}{}'.format(rw_log, rpercent_log)
+            imagenum = re.sub('imagenum', '', imagenum_log)
+            iodepth = re.sub('iodepth', '', iodepth_log)
+            numjob = re.sub('numjob', '', numjob_log)
+            r_iops = 0
+            w_iops = 0
+            iops = 0
+            lat = 0
+            r_bw = 0
+            w_bw = 0
+            bw = 0
+            with open('{}/../fioserver_list.conf'.format(log_dir), 'r') as f:
+                clients = f.readlines()
+                clientnum = len(clients)
+           
             if case_status == "Pass":
                 config_type = '{}_{}{}'.format(bs_log, rpercent_log, rw_log)
                 ws = wb.get_sheet_by_name(config_type)
@@ -315,30 +331,36 @@ class Result(object):
                 row_dic[config_type] = row_dic[config_type] +1
         
                 #fill imagenum, readwrite, bs, iodepth
-                results = subprocess.check_output('grep iodepth {}/{}.txt'.format(log_dir, log), shell=True).split('\n')
-                del results[-1]
-                result_match = re.search(r'rbd_image\d+:.*rw=(.*), bs=\(R\) (.*)-.*-.*-.*, ioengine=(.*), iodepth=(.*)', results[0])
-        
-                imagenum, clientnum = self.get_imagenum(log_dir, results, imagenum_log)
-                self.fill_imagenum(imagenum, clientnum, ws, row, 6)
+                try:
+                    results = subprocess.check_output('grep iodepth {}/{}.txt'.format(log_dir, log), shell=True).split('\n')
+                    del results[-1]
+                    result_match = re.search(r'rbd_image\d+:.*rw=(.*), bs=\(R\) (.*)-.*-.*-.*, ioengine=(.*), iodepth=(.*)', results[0])
+                except Exception, e:
+                    pass
+                else:
+                    imagenum, clientnum = self.get_imagenum(log_dir, results, imagenum_log)
+                    self.fill_imagenum(imagenum, clientnum, ws, row, 6)
 
-                rw, rpercent = self.get_readwrite(result_match.group(1), rw_log, rpercent_log)
-                self.fill_readwrite(rw, rpercent, ws, row, 10)
+                    rw, rpercent = self.get_readwrite(result_match.group(1), rw_log, rpercent_log)
+                    self.fill_readwrite(rw, rpercent, ws, row, 10)
 
-                bs = self.get_bs(result_match.group(2), bs_log)
-                self.fill_bs(bs, ws, row, 3)
+                    bs = self.get_bs(result_match.group(2), bs_log)
+                    self.fill_bs(bs, ws, row, 3)
 
-                if result_match.group(3) != 'rbd':
-                    raise Exception("Error: The ioengine in log is not 'rbd'!")
-                iodepth = self.get_iodepth(result_match.group(4), iodepth_log)
-                self.fill_iodepth(iodepth, ws, row, 4)
+                    if result_match.group(3) != 'rbd':
+                        raise Exception("Error: The ioengine in log is not 'rbd'!")
+                    iodepth = self.get_iodepth(result_match.group(4), iodepth_log)
+                    self.fill_iodepth(iodepth, ws, row, 4)
         
-                #fill numberjob    
-                results = subprocess.check_output('grep jobs= {}/{}.txt'.format(log_dir, log), shell=True).split('\n')
-                result_match = re.search(r'jobs=(\d+)\)', results[0])
-        
-                numjob = self.get_numjob(result_match.group(1), numjob_log)
-                self.fill_numjob(numjob, ws, row, 5)
+                #fill numberjob
+                try:
+                    results = subprocess.check_output('grep jobs= {}/{}.txt'.format(log_dir, log), shell=True).split('\n')
+                    result_match = re.search(r'jobs=(\d+)\)', results[0])
+                except Exception, e:
+                    pass
+                else:
+                    numjob = self.get_numjob(result_match.group(1), numjob_log)
+                    self.fill_numjob(numjob, ws, row, 5)
         
                 ws.cell(row = row, column = 2).value = '{}_{}_{}_{}'.format(bs, iodepth, numjob, imagenum)
                 ws.cell(row = row, column = 2).border = self.border
@@ -418,23 +440,45 @@ class Result(object):
 
         print configs_log
 
+        bs = bs_log
+        readwrite = '{}{}'.format(rw_log, rpercent_log)
+        imagenum = re.sub('imagenum', '', imagenum_log)
+        iodepth = re.sub('iodepth', '', iodepth_log)
+        numjob = re.sub('numjob', '', numjob_log)
+        r_iops = 0
+        w_iops = 0
+        iops = 0
+        lat = 0
+        r_bw = 0
+        w_bw = 0
+        bw = 0
+        with open('{}/../fioserver_list.conf'.format(log_dir), 'r') as f:
+            clients = f.readlines()
+            clientnum = len(clients)
+
         if case_status == "Pass":
-            results = subprocess.check_output('grep iodepth {}/{}.txt'.format(log_dir, log), shell=True).split('\n')
-            del results[-1]
-            result_match = re.search(r'rbd_image\d+:.*rw=(.*), bs=\(R\) (.*)-.*-.*-.*, ioengine=(.*), iodepth=(.*)', results[0])
+            try:
+                results = subprocess.check_output('grep iodepth {}/{}.txt'.format(log_dir, log), shell=True).split('\n')
+                del results[-1]
+                result_match = re.search(r'rbd_image\d+:.*rw=(.*), bs=\(R\) (.*)-.*-.*-.*, ioengine=(.*), iodepth=(.*)', results[0])
+            except Exception, e:
+                case_status = "Fail"
+            else:
+                imagenum, clientnum = self.get_imagenum(log_dir, results, imagenum_log)
+                rw, rpercent = self.get_readwrite(result_match.group(1), rw_log, rpercent_log)
+                readwrite = rw+rpercent
+                bs = self.get_bs(result_match.group(2), bs_log)
+                if result_match.group(3) != 'rbd':
+                    raise Exception("Error: The ioengine in log is not 'rbd'!")
+                iodepth = self.get_iodepth(result_match.group(4), iodepth_log)
     
-            imagenum, clientnum = self.get_imagenum(log_dir, results, imagenum_log)
-            rw, rpercent = self.get_readwrite(result_match.group(1), rw_log, rpercent_log)
-            readwrite = rw+rpercent
-            bs = self.get_bs(result_match.group(2), bs_log)
-            if result_match.group(3) != 'rbd':
-                raise Exception("Error: The ioengine in log is not 'rbd'!")
-            iodepth = self.get_iodepth(result_match.group(4), iodepth_log)
-    
-            results = subprocess.check_output('grep jobs= {}/{}.txt'.format(log_dir, log), shell=True).split('\n')
-            result_match = re.search(r'jobs=(\d+)\)', results[0])
-    
-            numjob = self.get_numjob(result_match.group(1), numjob_log)
+            try:
+                results = subprocess.check_output('grep jobs= {}/{}.txt'.format(log_dir, log), shell=True).split('\n')
+                result_match = re.search(r'jobs=(\d+)\)', results[0])
+            except Exception, e:
+                case_status = "Fail"
+            else:
+                numjob = self.get_numjob(result_match.group(1), numjob_log)
     
             if len(log_list) == 0:
                 with open('{}/{}.txt'.format(log_dir, log), 'r') as f:
@@ -444,22 +488,6 @@ class Result(object):
             lat = self.get_lat(log_list)
             r_bw, w_bw = self.get_bw(log_list)
             bw = r_bw + w_bw
-        else:
-            bs = bs_log
-            readwrite = '{}{}'.format(rw_log, rpercent_log)
-            imagenum = re.sub('imagenum', '', imagenum_log)
-            iodepth = re.sub('iodepth', '', iodepth_log)
-            numjob = re.sub('numjob', '', numjob_log)
-            r_iops = 0
-            w_iops = 0
-            iops = 0
-            lat = 0
-            r_bw = 0
-            w_bw = 0
-            bw = 0
-            with open('{}/../fioserver_list.conf'.format(log_dir), 'r') as f:
-                clients = f.readlines()
-                clientnum = len(clients)
 
         if self.havedb:
             result_to_db = {
@@ -482,6 +510,7 @@ class Result(object):
                 'bw': bw,
             }
             self.db.insert_tb_result(**result_to_db)
+        return case_status
 
     def deal_with_fio_data_toexcel(self, file_name, log_dir):
         logs = self.get_log_list(log_dir)

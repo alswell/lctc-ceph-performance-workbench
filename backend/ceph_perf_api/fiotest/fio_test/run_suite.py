@@ -211,25 +211,22 @@ class RunFIO(object):
                         if time_out_status:
                             handle.write('\nTimeout')
                             print "Error: Run fio test {} time out in {} s!".format(log_dir, timeout)
-                        if child.returncode == 0:
-                            handle.write('\nPass')
-                            print datetime.datetime.now(),
-                            print "sysdata.get_all_host_sysdata_logfile"
-                            self.sysdata.get_all_host_sysdata_logfile('{}/sysdata_{}'.format(log_dir, log_file_name))
-                            time.sleep(1)
-                            print datetime.datetime.now(),
-                            print "sysdata.deal_with_sysdata_logfile"
-                            self.sysdata.deal_with_sysdata_logfile(
-                                log_dir,
-                                'sysdata_{}'.format(log_file_name),
-                            )
                         else:
-                            handle.write('\nFail')
-                            print "Error: Run fio test {} Fail!".format(log_dir)
-
+                            handle.write('\nPass')
                     print datetime.datetime.now(),
                     print "result.deal_with_fio_data"
-                    self.result.deal_with_fio_data(log_dir, log_file_name, jobid)
+                    case_status = self.result.deal_with_fio_data(log_dir, log_file_name, jobid)
+                    if case_status == "Pass":
+                        print datetime.datetime.now(),
+                        print "sysdata.get_all_host_sysdata_logfile"
+                        self.sysdata.get_all_host_sysdata_logfile('{}/sysdata_{}'.format(log_dir, log_file_name))
+                        time.sleep(1)
+                        print datetime.datetime.now(),
+                        print "sysdata.deal_with_sysdata_logfile"
+                        self.sysdata.deal_with_sysdata_logfile(
+                            log_dir,
+                            'sysdata_{}'.format(log_file_name),
+                        )
                 else:
                     i = i + 1
         print datetime.datetime.now(),
