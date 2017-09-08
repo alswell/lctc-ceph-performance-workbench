@@ -99,8 +99,8 @@ class HostPage extends React.Component {
           sorter: true,
         }, {
           title: 'Start Time',
-          dataIndex: 'time',
-          key: 'time',
+          dataIndex: 'starttime',
+          key: 'starttime',
           sorter: true,
           // width: 100,
         }, {

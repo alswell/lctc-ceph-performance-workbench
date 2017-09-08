@@ -4,9 +4,10 @@
 
 import React from "react";
 import {connect} from 'dva';
-import {Spin} from 'antd';
+import {Spin, Button } from 'antd';
 import {fetchAndNotification} from "../../services/restfulService";
 import styles from './index.less'
+import { InitImagePage } from '../../components/deploy/InitImage'
 
 class HostDetail extends React.Component {
 
@@ -39,15 +40,22 @@ class HostDetail extends React.Component {
     })
   }
 
+  refresh = () => {
+    this.props.dispatch({ type: 'deploy/refresh' })
+  };
+
   render() {
       const Detail = ({data}) => {
       const content = []
       for (let key in data) {
           if ( key != 'key' & key != 'id' & key != 'name' ){
-          content.push(<div key={key} className={styles.item}>
+          content.push(
+            <pre style={{'overflow-y':'scroll','max-height':'700px'}}>
+            <div key={key} className={styles.item}>
             <div>{key}</div>
             <div>{String(data[key])}</div>
-            </div>)
+            </div>
+            </pre>)
           }
       }
       //console.log('content: ', content)
@@ -59,10 +67,11 @@ class HostDetail extends React.Component {
     }
     return (
       <Spin spinning={this.state.spinning}>
-        <div className="content-inner">
-          <h2>{this.state.data ? this.state.data.name :null}</h2>
-          <Detail data={this.state.data}/>
+        <div className="action-btn-container">
+          <InitImagePage {...this.modalProps}/>
         </div>
+            <h1>{this.state.data ? this.state.data.name :null}</h1>
+            <Detail data={this.state.data}/>
       </Spin>
     )
   }

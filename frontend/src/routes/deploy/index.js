@@ -5,38 +5,64 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'dva'
 import DataTable from '../../components/BasicTable/DataTable'
-import { Modal, Row, Col, Card, Button } from 'antd'
+import { Modal, Row, Col, Card, Button, Form } from 'antd'
 import { Link } from 'dva/router'
 import DropOption from '../../components/DropOption/DropOption'
 import { fetchAndNotification } from '../../services/restfulService'
 import { CollectionsPage } from '../../components/deploy/CreateModal'
-
+import { InitImagePage } from '../../components/deploy/InitImage'
+const FormItem = Form.Item
 const confirm = Modal.confirm
+
+
 
 class HostPage extends React.Component {
   // constructor (props) {
   //   super(props)
   // }
-
   componentDidMount () {
 
   }
 
   handleMenuClick = (record, e) => {
     if (e.key === '1') {
-      let { dispatch } = this.props
-      dispatch({
-        type: 'deploy/showModal',
-        payload: {
-          key: 'modalVisible',
+      confirm({
+        title: 'Are you sure deploy this Cluster?',
+        onOk :()=> {
+          console.log(record)
+          fetchAndNotification({
+            url: 'deploy',
+            method: 'post',
+            params: record,
+            notifications: {
+              title: 'deploy Action',
+              success: `${record.name} 操作成功！`,
+              error: `${record.name} 操作失败！`,
+            },
+          }).then((result)=>{
+          //when the fetch successfully ,refresh the table
+          this.refresh()
+        })
         },
-
       })
     } else if (e.key === '2') {
       confirm({
-        title: 'Are you sure delete this record?',
-        onOk () {
+        title: 'Are you sure delete this Cluster?',
+        onOk :()=> {
           console.log(record)
+          fetchAndNotification({
+            url: 'cluster',
+            method: 'delete',
+            params: { id: record.id },
+            notifications: {
+              title: 'Delete Action',
+              success: `${record.name} 操作成功！`,
+              error: `${record.name} 操作失败！`,
+            },
+          }).then((result)=>{
+          //when the fetch successfully ,refresh the table
+          this.refresh()
+        })
         },
       })
     }
@@ -63,6 +89,7 @@ class HostPage extends React.Component {
       title: 'test',
       wrapClassName: 'vertical-center-modal',
       onOk: (data) => {
+        console.log(clusterinfo)
         console.log(data)
       },
       onCancel: () => {
@@ -110,9 +137,15 @@ class HostPage extends React.Component {
           render: (text, record) => <Link to={`cluster/${record.id}`}>Detail</Link>,
         },
         {
-          title: 'Disk Info',
-          render: (text, record) => <Link to={`diskinfo?clusterid=${record.id}`}>disk info</Link>,
-        },
+          title: 'Operation',
+          key: 'operation',
+          width: 100,
+          render: (text, record) => {
+            return (<DropOption onMenuClick={e => this.handleMenuClick(record, e)}
+              menuOptions={[{ key: '1', name: 'Deploy' }, { key: '2', name: 'Delete' }]}
+            />)
+          },
+        }
       ],
       fetchData: {
         url: `cluster`,
@@ -143,8 +176,6 @@ class HostPage extends React.Component {
             <Card>
               <div className="action-btn-container">
                 <CollectionsPage {...this.actionCollectionsProps}/>
-              </div>
-              <div className="action-btn-container">
                 <Button type="primary" onClick={this.refresh} icon="reload" />
               </div>
               <DataTable
@@ -153,6 +184,7 @@ class HostPage extends React.Component {
             </Card>
           </Col>
         </Row>
+        {this.props.host.modalVisible && <InitImagePage {...this.modalProps}/>}
       </div>
     )
   }

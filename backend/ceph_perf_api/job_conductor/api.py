@@ -18,3 +18,7 @@ class API(object):
     def deploy(self, dict_args):
         LOG.info("from api: %s", dict_args)
         self.rpcapi.deploy(dict_args)
+
+    def initimage(self, dict_args):
+        LOG.info("from api: %s", dict_args)
+        self.rpcapi.initimage(dict_args)

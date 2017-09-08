@@ -3,12 +3,16 @@ import os
 import sys
 import re
 import json
+import yaml
+import datetime
 
 
 file_path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(file_path, ".."))
 from fiotest.fio_test import run_suite
+from fiotest.fio_test import init_image
 from ITuning_ceph_deploy.ITuning_ceph_deploy import ceph_deploy
+from ITuning_ceph_deploy.ITuning_ceph_deploy import todb as clusterdb
 from oslo_log import log as logging
 LOG = logging.getLogger(__name__)
 
@@ -56,51 +60,49 @@ class Manager(object):
         LOG.info("deploy ceph: %s", body)
 
         deploy = ceph_deploy.Deploy()
-        name = body["clustername"]
+        hwinfo_file = '{}/../{}_ceph_hw_info.yml'.format(
+            os.path.dirname(os.path.realpath(__file__)),
+            body['id'])
+        with open(hwinfo_file, 'r') as f:
+            ceph_info = yaml.load(f)
 
         osdhost_list = []
-        client_list = []
-        for key in body['nodenamekeys']:
-            osdhost_list.append(body['nodename-{}'.format(key)])
-        for key in body['clientnamekeys']:
-            client_list.append(body['clientname-{}'.format(key)])
-
         nodepw_list = []
-        clientpw_list = []
-        for key in body['nodepwkeys']:
-            nodepw_list.append(body['nodepw-{}'.format(key)])
-        for key in body['clientpwkeys']:
-            clientpw_list.append(body['clientpw-{}'.format(key)])
-
         nodeips = []
+        disk_list = []
+        for node, data in ceph_info['ceph-node'].items():
+            osdhost_list.append(node)
+            nodepw_list.append(data['password'])
+            nodeips.append(data['ip'])
+            for osd, osddata in data['osd'].items():
+                disk_list.append('{}:{}:{}'.format(
+                    node,
+                    osddata['osd-disk'],
+                    osddata['journal-disk'],
+                ))
+
+        client_list = []
+        clientpw_list = []
         clientips = []
-        for key in body['nodeipkeys']:
-            nodeips.append(body['nodeip-{}'.format(key)])
-        for key in body['clientipkeys']:
-            clientips.append(body['clientip-{}'.format(key)])
+        for key, value in ceph_info['ceph-client'].items():
+            client_list.append(key)
+            clientpw_list.append(value['password'])
+            clientips.append(value['ip'])
 
         ips = nodeips + clientips
         hostnames = osdhost_list + client_list
         password = nodepw_list + clientpw_list
-    
+
         mon_list = []
-        for mon in body['mon']:
-            i = ips.index(mon)
-            mon_list.append(osdhost_list[i]) 
+        mons = body['mons'].split("\n")
+        for mon in mons:
+            mon_list.append(mon.split(':')[0]) 
 
-        disk_list = []
-        for key in body['nodekeys']:
-            i = ips.index(body['node-{}'.format(key)])
-            disk_list.append('{}:{}:{}'.format(
-                osdhost_list[i],
-                body['osddisk-{}'.format(key)],
-                body['osdj-{}'.format(key)])
-            )
-
-        public_network = body['publicnetwork']
-        cluster_network = body['clusternetwork']
+        name = body["name"]
+        public_network = body['public_network']
+        cluster_network = body['cluster_network']
         objectstore = body['objectstore']
-        journal_size = body['journalsize']
+        journal_size = body['journal_size']
 
 
         with open('/tmp/ITuning_ceph.conf', 'w') as f:
@@ -110,39 +112,55 @@ class Manager(object):
             f.write('osd objectstore = {}\n'.format(objectstore))
             f.write('[osd]\n')
             f.write('osd journal size = {}\n'.format(journal_size))
-    
-        conf = '/tmp/ITuning_ceph.conf'
-        print "init" 
-        for i in range(len(ips)):
-            deploy.initenv(body['clusterid'], ips[i], password[i], hostnames[i])
-        print "purge" 
-        deploy.purge(body['clusterid'], name, hostnames)
-        print "deploy" 
-        deploy.deploy(body['clusterid'], name, mon_list, osdhost_list, disk_list, client_list, conf)
-        print "create pool" 
-        deploy.createrbdpool(len(disk_list), client_list[0])
-        print "gen yaml file "
-        deploy.gen_yaml_file(
-            body['clusterid'],
-            disk_list,
-            osdhost_list,
-            nodeips,
-            nodepw_list,
-            client_list,
-            clientips,
-            clientpw_list,
-            public_network,
-            cluster_network,
-        )
-        for client in client_list:
-            print "install fio in {}".format(client)
-            deploy.install_fio(client)
-        for host in hostnames:
-            print "reboot {}".format(host)
-            deploy.reboot(host)
-        for client in client_list:
-            print "check and start fio server in {}".format(host)
-            deploy.checkandstart_fioser(client)
 
+        conf = '/tmp/ITuning_ceph.conf'
+        try:
+            print datetime.datetime.now(), "init" 
+            for i in range(len(ips)):
+                deploy.initenv(body['id'], ips[i], password[i], hostnames[i])
+            print datetime.datetime.now(), "purge" 
+            deploy.purge(body['id'], name, hostnames)
+            print datetime.datetime.now(), "deploy" 
+            deploy.deploy(body['id'], name, mon_list, osdhost_list, disk_list, client_list, conf)
+            print datetime.datetime.now(), "create pool" 
+            deploy.createrbdpool(len(disk_list), client_list[0])
+            for client in client_list:
+                print datetime.datetime.now(), "install fio in {}".format(client)
+                deploy.install_fio(client)
+            for host in hostnames:
+                print datetime.datetime.now(), "reboot {}".format(host)
+                deploy.reboot(host)
+            for client in client_list:
+                print datetime.datetime.now(), "check and start fio server in {}".format(host)
+                deploy.checkandstart_fioser(client)
+        except Exception, e:
+            db = clusterdb.ToDB()
+            error_info = re.sub("u'", '', str(e))
+            error_info = re.sub("'", '', str(e))
+            cinfo = {'status': "Failed: {}".format(error_info)}
+            db.update_cluster(body['id'], **cinfo)
+            print e
+        else:
+            print "finish"
+
+    def initimage(self, ctxt, body):
+        LOG.info("deploy ceph: %s", body)
+        print body
+        hwinfo_file = '{}/../{}_ceph_hw_info.yml'.format(
+            os.path.dirname(os.path.realpath(__file__)),
+            body['clusterid'])
+        with open(hwinfo_file, 'r') as f:
+            ceph_info = yaml.load(f)
+        client = ceph_info['ceph-client'].popitem()
+        client_ip = client[1]['ip']
+        client_password = client[1]['password']
+
+        print datetime.datetime.now(), "gen fullfill file"
+        file_dir = init_image.fullfill_file(body['imagename'], body['imagesize'], body['imagenum'], body['pool'])
+
+        print datetime.datetime.now(), "create image"
+        init_image.create_image(body['imagename'], body['imagesize'], body['imagenum'], body['pool'], client_ip, client_password)
+        print datetime.datetime.now(),"full fill"
+        init_image.fullfill(file_dir, body['imagename'], body['imagesize'], client_ip, client_password)
         print "finish"
 

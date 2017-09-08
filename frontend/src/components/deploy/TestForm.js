@@ -155,7 +155,7 @@ class TestTestForm extends React.Component {
 
         this.props.onCancel()
         fetchAndNotification({
-          url: 'deploy',
+          url: 'cluster',
           method: 'post',
           params: values,
           notifications: {
@@ -548,7 +548,7 @@ class TestTestForm extends React.Component {
               htmlType="submit"
               disabled={hasErrors(getFieldsError())}
             >
-              Create
+              Add
             </Button>
           </FormItem>
         </Form>

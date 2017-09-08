@@ -73,7 +73,7 @@ class Deploy(object):
         print "Updated /etc/hosts."
         open('/etc/hosts', "wb").write(open('/tmp/hosts', "rb").read())
     
-        dep_p = ['epel-release', 'net-tools']
+        dep_p = ['epel-release', 'net-tools', 'sysstat']
         for p in dep_p:
             cmd = "ssh -o StrictHostKeyChecking=no {} yum install -y {}".format(hostname, p)
             print datetime.datetime.now(),
@@ -106,7 +106,7 @@ class Deploy(object):
     
         cmd = "ceph health"
         status = self.ssh_cmd('root', client_list[0], cmd)
-        cluster_info = {'status': status}
+        cluster_info = {'health': status, 'status': 'Deploy Finished'}
         db.update_cluster(clusterid, **cluster_info)
     
     def purge(self, clusterid, name, hostnames):
@@ -137,7 +137,8 @@ class Deploy(object):
         else:
             raise Exception("boot up {} time out!".format(hostname))
 
-    def checkandstart_fioser(self, hostname):
+    def checkandstart_fioser(self, clusterid, hostname):
+        db = ToDB()
         output = ''
         while output == '':
             try:
@@ -176,6 +177,7 @@ class Deploy(object):
             'cd fio-fio-2.21; ./configure',
             'cd fio-fio-2.21; make',
             'cd fio-fio-2.21; make install',
+            'rm -f /usr/bin/fio',
             'ln -s /usr/local/bin/fio /usr/bin/fio' 
         ]
         for cmd in cmds:
@@ -216,7 +218,7 @@ class Deploy(object):
                     if disk_info[0] == osdhost_list[i]:
                         f.write("      osd.{}:\n".format(osdnum))
                         f.write("        osd-disk: {}\n".format(disk_info[1]))
-                        f.write("        journal-disk: \n".format(disk_info[2]))
+                        f.write("        journal-disk: {}\n".format(disk_info[2]))
                         osdnum = osdnum + 1
                 f.write("    hwinfo:\n")
                 f.write("      HyperThreading:\n")

@@ -19,3 +19,7 @@ class JobAPI(object):
     def deploy(self, dict_args):
         print dict_args
         self.client.cast({}, 'deploy', body=dict_args)
+
+    def initimage(self, dict_args):
+        print dict_args
+        self.client.cast({}, 'initimage', body=dict_args)

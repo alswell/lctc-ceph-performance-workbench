@@ -31,7 +31,8 @@ class ToDB(object):
 
     def update_cluster(self, clusterid, **kwargs):
         for key, value in kwargs.items():
-            sql = "UPDATE ITuning_ceph_deploy_cluster SET {} = '{}' WHERE id = '{}'".format(key, value, clusterid)
+            sql = "UPDATE ITuning_ceph_deploy_cluster \
+                SET {} = '{}' WHERE id = '{}'".format(key, value, clusterid)
             try:
                 self.cursor.execute(sql)
                 self.db.commit()

@@ -8,11 +8,11 @@ import re
 import yaml
 
 
-def create_image(image_size, image_count, image_pool, client, client_password):
+def create_image(image_name, image_size, image_count, image_pool, client, client_password):
     exist_rbd_list = get_rbd_list(client, client_password)
     need_rbd_list = []
     for i in range(int(image_count)):
-        rbd_name = 'testimage_{}_{}'.format(image_size, i)
+        rbd_name = '{}_{}'.format(image_name, i)
         need_rbd_list.append(rbd_name)
         if exist_rbd_list.count(rbd_name) == 1:
             cmd = ['sshpass', '-p', client_password, 'ssh', '-o', 'StrictHostKeyChecking=no', client, 'rbd', 'rm', rbd_name]
@@ -24,7 +24,7 @@ def create_image(image_size, image_count, image_pool, client, client_password):
         cmd = ['sshpass', '-p', client_password, 'ssh', '-o', 'StrictHostKeyChecking=no', client, 'rbd', 'info', '-p', image_pool, '--image', rbd]
         print subprocess.check_output(cmd)
 
-def fullfill_file(image_size, image_count, image_pool):
+def fullfill_file(image_name, image_size, image_count, image_pool):
     dir_path = '{}/full_fill/'.format(os.getcwd())
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
@@ -43,13 +43,13 @@ def fullfill_file(image_size, image_count, image_pool):
             config_f.write("iodepth=1024\n")
             config_f.write("numjobs=1\n")
             config_f.write("direct=1\n")
-            config_f.write("size={}M\n".format(image_size))
+            config_f.write("size={}\n".format(image_size))
             config_f.write("group_reporting\n")
             config_f.write("[rbd_image{}]\n".format(i))
-            config_f.write("rbdname=testimage_{}_{}\n".format(image_size, i))
+            config_f.write("rbdname={}_{}\n".format(image_name, i))
     return dir_path
 
-def fullfill(path, size, client, client_password):
+def fullfill(path, image_name, size, client, client_password):
     cmd = ['sshpass', '-p', client_password, 'ssh', '-o', 'StrictHostKeyChecking=no', client, 'ps', '-ef']
     child1 = subprocess.Popen(cmd, stdout=subprocess.PIPE)
     child2 = subprocess.Popen(["grep", "fio"],stdin=child1.stdout, stdout=subprocess.PIPE)
@@ -57,16 +57,8 @@ def fullfill(path, size, client, client_password):
     output = child3.communicate()[0].replace('\n', '')
     if output == '':
         print "===={} without fio server".format(client)
-        raise Exception("====Please run \"nohup fio --server &\" in {}".format(client))
-
-        '''
-        try:
-            os.system("ssh -o StrictHostKeyChecking=no {} nohup fio --server &".format(client))
-            time.sleep(5)
-        except Exception, e:
-            print e
-            sys.exit(1)
-        '''
+        os.system("sshpass -p {} ssh -o StrictHostKeyChecking=no {} 'fio --server >/dev/null 2>&1 &'".format(client_password, client))
+        time.sleep(1)
 
     for config in os.listdir(path):
         cmd = ['fio', '--client', client, '{}/{}'.format(path, config)]
@@ -77,6 +69,7 @@ def fullfill(path, size, client, client_password):
             if not line:
                 break
             print line
+            sys.stdout.flush()
 
     cmd = ['sshpass', '-p', client_password, 'ssh', '-o', 'StrictHostKeyChecking=no', client, 'rbd', 'du']
     status = subprocess.check_output(cmd).split('\n')
@@ -85,10 +78,10 @@ def fullfill(path, size, client, client_password):
     del status[-1]
     for _status in status:
         match = re.match(r'([^\s]*)\s+([^\s]*)\s+([^\s]*)', _status)
-        if re.match('testimage_{}'.format(size), match.group(1)):
-           if match.group(2) != '{}M'.format(size):
+        if re.match('{}'.format(image_name), match.group(1)):
+           if match.group(2) != '{}'.format(size):
                 raise Exception("Error: image error, please check the image name.")
-           if match.group(3) != '{}M'.format(size):
+           if match.group(3) != '{}'.format(size):
                 raise Exception("full fill {} fail! The use size is {} which should be {}.".format(match.group(1), match.group(3), size))
 
 

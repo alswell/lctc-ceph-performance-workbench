@@ -134,7 +134,7 @@ class RunFIO(object):
                 jobinfo = {
                     'status': 'Running',
                     'casenum': casenum,
-                    'time': jobtime,
+                    'starttime': jobtime,
                     'ceph_config': re.sub('_', '', cephconfig)
                 }
                 db.update_jobs(jobid, **jobinfo)
@@ -206,6 +206,7 @@ class RunFIO(object):
                             if not line:
                                 break
                             print line
+                            sys.stdout.flush()
                             handle.write(line)
                         time.sleep(1)
                         if time_out_status:

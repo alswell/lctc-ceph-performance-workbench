@@ -2,10 +2,14 @@
  * Created by chenkang1 on 2017/7/4.
  */
 import React from 'react'
-import { Button } from 'antd'
-import TestForm from './TestForm'
+import { Form, Icon, Input, Button, Modal, Row, Col, Select } from 'antd'
+import PropTypes from 'prop-types'
+import './TestForm.less'
+import TestForm from './InitImageForm'
 
-export class CollectionsPage extends React.Component {
+const FormItem = Form.Item
+
+export class InitImagePage extends React.Component {
   state = {
     visible: false,
   };
@@ -34,7 +38,7 @@ export class CollectionsPage extends React.Component {
   render () {
     return (
       <span>
-        <Button type="primary" onClick={this.showModal}>Add</Button>
+        <Button type="primary" onClick={this.showModal}>Init Image</Button>
         <TestForm
           ref={this.saveFormRef}
           visible={this.state.visible}

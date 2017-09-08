@@ -94,7 +94,7 @@ class CreateFioJob(generic.View):
             ceph_configs = json.load(open(ceph_config_file))
             for ceph_config in ceph_configs:
                 body['ceph_config'] = ceph_config
-                jobinfo = {'name': body['jobname'], 'status': "New"}
+                jobinfo = {'name': body['jobname'], 'status': "New", 'createtime': suite_dir.split('_')[1]}
                 result = models.Jobs.objects.create(**jobinfo)
                 body['jobid'] = result.id
                 self.job_conductor.run_fio(body)

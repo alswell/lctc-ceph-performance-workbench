@@ -279,10 +279,11 @@ class CephStatus(models.Model):
 class Jobs(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=20)
-    time = models.DateTimeField(null=True)
+    starttime = models.DateTimeField(null=True)
+    createtime = models.DateTimeField(null=True)
     status = models.CharField(max_length=200, null=True)
     casenum = models.IntegerField(null=True)
-    ceph_config = models.CharField(max_length=100, default='default')
+    ceph_config = models.CharField(max_length=200, default='default')
 
 class CephInfo(models.Model):
     id = models.AutoField(primary_key=True)
