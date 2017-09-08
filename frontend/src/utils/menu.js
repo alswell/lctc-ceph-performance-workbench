@@ -207,4 +207,11 @@ module.exports = [
     router: '/cluster',
     icon: 'laptop',
   },
+  {
+    id: 631,
+    mpid: -1,
+    bpid: 630,
+    name: "Cluster Detail",
+    router: "/Cluster/:id"
+  },
 ];

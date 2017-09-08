@@ -121,11 +121,15 @@ class Deploy(object):
         print cmd
         subprocess.check_call(cmd, shell=True)
     
-    def createrbdpool(self, osdnum, client):
+    def createrbdpool(self, osdnum, host):
         pgsize = osdnum*100/3
-        cmd = "ceph osd pool create rbd {}".format(pgsize)
-        print datetime.datetime.now(),
-        self.ssh_cmd('root', client, cmd)
+        cmds = [
+            "ceph osd pool create rbd {}".format(pgsize),
+            "ceph osd pool application enable rbd rbd",
+        ]
+        for cmd in cmds:
+            print datetime.datetime.now(),
+            self.ssh_cmd('root', host, cmd)
 
     def reboot(self, hostname):
         cmd = "ssh -o StrictHostKeyChecking=no {} reboot".format(hostname)
@@ -137,8 +141,7 @@ class Deploy(object):
         else:
             raise Exception("boot up {} time out!".format(hostname))
 
-    def checkandstart_fioser(self, clusterid, hostname):
-        db = ToDB()
+    def checkandstart_fioser(self, hostname):
         output = ''
         while output == '':
             try:
@@ -178,7 +181,8 @@ class Deploy(object):
             'cd fio-fio-2.21; make',
             'cd fio-fio-2.21; make install',
             'rm -f /usr/bin/fio',
-            'ln -s /usr/local/bin/fio /usr/bin/fio' 
+            'ln -s /usr/local/bin/fio /usr/bin/fio',
+            'fio --version',
         ]
         for cmd in cmds:
             print datetime.datetime.now(),
@@ -206,7 +210,6 @@ class Deploy(object):
                 f.write("    user: root\n")
                 f.write("    password: {}\n".format(clientpw_list[i]))
             f.write("ceph-node:\n")
-            print nodepw_list
             for i in range(len(osdhost_list)):
                 f.write("  {}:\n".format(osdhost_list[i]))
                 f.write("    ip: {}\n".format(nodeips[i]))

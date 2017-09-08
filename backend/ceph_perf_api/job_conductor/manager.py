@@ -123,7 +123,7 @@ class Manager(object):
             print datetime.datetime.now(), "deploy" 
             deploy.deploy(body['id'], name, mon_list, osdhost_list, disk_list, client_list, conf)
             print datetime.datetime.now(), "create pool" 
-            deploy.createrbdpool(len(disk_list), client_list[0])
+            deploy.createrbdpool(len(disk_list), mon_list[0])
             for client in client_list:
                 print datetime.datetime.now(), "install fio in {}".format(client)
                 deploy.install_fio(client)

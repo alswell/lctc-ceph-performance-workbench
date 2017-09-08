@@ -73,12 +73,12 @@ ceph_deploy_prepare
 
 
 # ceph deploy tool install
-if [ ! -d /usr/bin/ceph-deploy ]; then
+if [ ! -f "/usr/bin/ceph-deploy" ]; then
   yum install -y ceph-deploy
   error_check
   version=`ceph-deploy --version 2>&1`
   if [ "$version" == "1.5.38" ]; then
-    if [ ! -d /usr/bin/patch ]; then
+    if [ ! -f "/usr/bin/patch" ]; then
       yum install -y patch
     fi
     cp osd.py.diff /usr/lib/python2.7/site-packages/ceph_deploy
