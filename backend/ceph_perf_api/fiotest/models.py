@@ -100,6 +100,7 @@ class CephConfig(models.Model):
     jobid = models.ForeignKey("Jobs",to_field='id')
     node = models.CharField(max_length=20)
     osd  = models.CharField(max_length=20)
+    total = models.TextField(null=True)
     max_open_files = models.CharField(max_length=20, null=True)
     filestore_expected_throughput_bytes = models.BigIntegerField(null=True)
     filestore_expected_throughput_ops = models.CharField(max_length=20, null=True)

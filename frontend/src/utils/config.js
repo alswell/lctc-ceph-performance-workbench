@@ -6,7 +6,7 @@ module.exports = {
   pageSize: 4,
   name: 'AntD Admin',
   prefix: 'antdAdmin',
-  footerText: 'Lenovo LCTC  © 2017 zelin',
+  footerText: 'Lenovo © 2017 LCTC',
   logo: '/logo.png',
   iconFontCSS: '/iconfont.css',
   iconFontJS: '/iconfont.js',

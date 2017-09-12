@@ -10,51 +10,11 @@ import copy
 
 
 class FIOTest(object):
-    def __init__(self):
-        self.rw = [
-            'rw',
-            'randrw'
-        ]
-        self.bs = [
-            '4k',
-            '8k',
-            '16k',
-            '32k',
-            '64k',
-            '128k',
-            '256k',
-            '512k',
-            '1024k',
-            '2048k',
-            '4M',
-            '8M',
-            '16M',
-            '32M',
-            '64M',
-            '128M'
-        ]
-        self.iodepth = [
-            1,
-            4,
-            8,
-            16,
-            32,
-            64,
-            128,
-            256,
-            512,
-            1024,
-        ]
-        self.numjob = [
-            1,
-            4,
-            8,
-            16,
-            32
-        ]
 
     def create_suite_dir(self, suitename):
-        current_date = re.sub('\s', '', str(datetime.datetime.now()))
+        time = str(datetime.datetime.now())
+        create_time = re.sub('\.\d+', '', time)
+        current_date = re.sub('\s', '', time)
         suitename = re.sub('_', '', suitename)
         suitename = suitename + '_' + current_date
         path = "{}/test-suites/{}/config".format(os.getcwd(), suitename)
@@ -65,21 +25,8 @@ class FIOTest(object):
         if os.path.exists(suite_dir):
             shutil.rmtree(suite_dir)
         os.makedirs(path)
-        return suite_dir
+        return suite_dir, create_time
     
-    def getlist(self, data):
-        result = data.split(',')
-        if result[-1] == '':
-            del result[-1]
-        return result
-     
-    def generate_run_config(self, path):
-        with open('{}/run_config'.format(path), 'aw') as f:
-            configs = os.listdir('{}/config/'.format(path))
-            for config in configs:
-                f.write(config)
-                f.write('\n')
-
     def case(
         self,
         path,
@@ -169,128 +116,3 @@ class FIOTest(object):
             json.dump(result_ceph_configs, open('{}/setup_ceph_config.json'.format(path), 'w'), indent=2)
     
             return result_ceph_configs
-
-
-def CheckIPAddr(IP):
-    if not re.match(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', IP):
-      return 1
-    nums = IP.split('.')
-    for num in nums:
-        if ( int(num) > 255 or int(num) < 0 ):
-            return 1
-    return 0
-
- 
-def main():
-    parser = argparse.ArgumentParser(
-        prog="build_suite",
-        version='v0.1',
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        description="Run fio")
-    parser.add_argument('-C', '--clientslist', dest="clientslist",
-                metavar="ceph client list ip address", action="store",
-                    help='''ceph client list ip address''')
-    parser.add_argument('--readwritetype', dest="readwritetype",
-                metavar="fio read and write type", action="store",
-                    help='''fio read and write type''')
-    parser.add_argument('--blocksize', dest="blocksize",
-                metavar="fio block size", action="store",
-                    help='''fio block size''')
-    parser.add_argument('--runtime', dest="runtime",
-                metavar="fio run time", action="store",
-                    help='''fio run time''')
-    parser.add_argument('--iodepth', dest="iodepth",
-                metavar="fio io depth", action="store",
-                    help='''fio io depth''')
-    parser.add_argument('--numjob', dest="numjob",
-                metavar="fio num job", action="store",
-                    help='''fio numjob''')
-    parser.add_argument('--imagecount', dest="imagecount",
-                metavar="ceph image count", action="store",
-                    help='''ceph image count''')
-    parser.add_argument('--imagename', dest="imagename",
-                metavar="ceph image name", action="store",
-                    help='''ceph image count''')
-    parser.add_argument('--rwmixread', dest="rwmixread",
-                metavar="fio rwmixread", action="store",
-                    help='''fio rwmixread''')
-    parser.add_argument('--pool', dest="pool",
-                metavar="ceph pool name", action="store",
-                    help='''ceph pool name''')
-    parser.add_argument('--cephconfig', dest="cephconfig",
-                metavar="setup ceph config", action="store",
-                    help='''setup ceph config''')
-    parser.add_argument('--otherfioconfig', dest="fioconfig",
-                metavar="addon fio config", action="store",
-                    help='''addon fio config''')
-    parser.add_argument('-N', '--suitename', dest="suitename",
-                metavar="test suite name", action="store",
-                    help='''test suite name''')
-    args = parser.parse_args()
-    fio_test = FIOTest()
-
-    blocksizes = fio_test.getlist(args.blocksize)
-    iodepths = fio_test.getlist(args.iodepth)
-    numjobs = fio_test.getlist(args.numjob)
-    readwritetypes = fio_test.getlist(args.readwritetype)
-    rwmixreads = fio_test.getlist(args.rwmixread)
-    imagecounts = fio_test.getlist(args.imagecount)
-    cephconfigs = fio_test.getlist(args.cephconfig)
-
-    path = fio_test.create_suite_dir(args.suitename)
-
-    if args.clientslist:
-        clientslist = fio_test.getlist(args.clientslist)
-        with open('{}/fioserver_list.conf'.format(path), 'w') as f:
-            for client in clientslist:
-                f.write(client)
-                f.write('\n')
-
-    ceph_config = fio_test.gen_setup_ceph_config(path, cephconfigs)
-
-    if args.fioconfig == "No":
-        other_fio_config = []
-    else:
-        other_fio_config = fio_test.getlist(args.fioconfig)
-    
-    print "readwritetypes are {}".format(readwritetypes)
-    print "blocksizes are {}".format(blocksizes)
-    print "iodepths are {}".format(iodepths)
-    print "numjobs are {}".format(numjobs)
-    print "imagecounts are {}".format(imagecounts)
-    print "rwmixreads are {}".format(rwmixreads)
-    print "clients are {}".format(clientslist)
-    print "pool is {}".format(args.pool)
-    print "runtime is {}".format(args.runtime)
-    print "imagename is {}".format(args.imagename)
-    print "ceph config will be modified as: {}".format(ceph_config)
-
-    casenum = 1
-    for readwritetype in readwritetypes:
-        for blocksize in blocksizes:
-            for iodepth in iodepths:
-                for numjob in numjobs:
-                    for imagecount in imagecounts:
-                        for rwmixread in rwmixreads:
-                            fio_test.case(
-                                path,
-                                casenum,
-                                args.pool,
-                                fio_test.rw[int(readwritetype)-1],
-                                fio_test.bs[int(blocksize)-1],
-                                args.runtime,
-                                str(fio_test.iodepth[int(iodepth)-1]),
-                                str(fio_test.numjob[int(numjob)-1]),
-                                imagecount,
-                                args.suitename,
-                                rwmixread,
-                                args.imagename,
-                                clientslist,
-                                other_fio_config,
-                            )
-                            casenum = casenum + 1
-    #fio_test.generate_run_config(path)
-
-
-if __name__ == '__main__':
-    main()

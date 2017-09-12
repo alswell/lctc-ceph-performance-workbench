@@ -1,23 +1,18 @@
 import subprocess
 import re
 import sys
-import argparse
-import pexpect
 import datetime
 import time
 import os
-from todb import ToDB
+import json
+from lib.utils import Utils
 
 
-class Deploy(object):
+class Deploy(Utils):
     def __init__(self):
+        super(Deploy, self).__init__()
         self.file_path = os.path.dirname(os.path.realpath(__file__))
 
-    def ssh_cmd(self, user, ip, cmd):
-        cmd_ssh = "ssh -o StrictHostKeyChecking=no {}@{} \"{}\"".format(user, ip, cmd)
-        print(cmd_ssh)
-        return subprocess.check_output(cmd_ssh, shell=True)
-    
     def check_vm_status(self, ip):
         ping_vm = ['ping', '-c', '3', ip]
         timeout = 600
@@ -33,16 +28,14 @@ class Deploy(object):
                 return True
     
     def initenv(self, clusterid, ip, password, hostname):
-        db = ToDB()
         cluster_info = {'status': "initenv"}
-        db.update_cluster(clusterid, **cluster_info)
+        self.deploydb.update_cluster(clusterid, **cluster_info)
         cmd = "sshpass -p {} ssh-copy-id -o StrictHostKeyChecking=no {}".format(password, ip)
         print datetime.datetime.now(),
         print cmd
         subprocess.check_call(cmd, shell=True)
     
         cmds = [
-            #'setenforce 0',
             '/bin/cp -f /etc/sysconfig/selinux .',
             'sed -i \"s/SELINUX=enforcing/SELINUX=disabled/g\" selinux',
             '/bin/cp -f selinux /etc/sysconfig/selinux',
@@ -81,7 +74,6 @@ class Deploy(object):
             subprocess.check_call(cmd, shell=True)
     
     def deploy(self, clusterid, name, mon_list, osd_list, disk_list, client_list, conf):
-        db = ToDB()
         osds = ','.join(osd_list)
         mons = ','.join(mon_list)
         disks = ','.join(disk_list)
@@ -89,7 +81,7 @@ class Deploy(object):
     
         create_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
         cluster_info = {'status': "Deploying", 'create_time': create_time}
-        db.update_cluster(clusterid, **cluster_info)
+        self.deploydb.update_cluster(clusterid, **cluster_info)
     
         cmd = "{}/ITuning_ceph-deploy.sh -n {} -m {} -o {} -d {} -c {} -f {}".format(
             self.file_path,
@@ -107,12 +99,11 @@ class Deploy(object):
         cmd = "ceph health"
         status = self.ssh_cmd('root', client_list[0], cmd)
         cluster_info = {'health': status, 'status': 'Deploy Finished'}
-        db.update_cluster(clusterid, **cluster_info)
+        self.deploydb.update_cluster(clusterid, **cluster_info)
     
     def purge(self, clusterid, name, hostnames):
-        db = ToDB()
         cluster_info = {'status': "purge"}
-        db.update_cluster(clusterid, **cluster_info)
+        self.deploydb.update_cluster(clusterid, **cluster_info)
         hosts = ','.join(hostnames)
     
         print os.getcwd()
@@ -140,28 +131,6 @@ class Deploy(object):
             time.sleep(2)
         else:
             raise Exception("boot up {} time out!".format(hostname))
-
-    def checkandstart_fioser(self, hostname):
-        output = ''
-        while output == '':
-            try:
-                cmd = 'ssh -o StrictHostKeyChecking=no {} ps -ef | grep fio | grep server | grep -v grep'.format(hostname)
-                print cmd
-                output = subprocess.check_output(cmd, shell=True)
-            except subprocess.CalledProcessError, result:
-                output = result.output
-                if result.output == '' and result.returncode == 1:
-                    cmd = "ssh client-1 'fio --server >/dev/null 2>&1 &'".format(hostname)
-                    print cmd
-                    subprocess.call(cmd, shell=True)
-                    time.sleep(1)
-                    continue
-                else:
-                    raise Exception(result)
-            else:
-                match = re.match('\S+\s+(\d+)', output)
-                process_id = match.group(1)
-                print "process_id: {}".format(process_id)
 
     def install_fio(self, hostname):
         dep_p = ['librbd1-devel', 'gcc', 'unzip']
@@ -233,45 +202,28 @@ class Deploy(object):
             f.write("  public_network: {}\n".format(public_network))
             f.write("  cluster_network: {}\n".format(cluster_network))
 
-def main():
-    deploy = Deploy()
+    def get_default_cephconfig(self, clusterid, host, password):
+        cmd = 'sshpass -p {} ssh {} find /var/run/ceph -name \'*osd*asok\''.format(password, host)
+        print cmd
+        output = subprocess.check_output(cmd, shell=True).split('\n')
+        osd = re.search('(osd\.\d+)', output[0]).group(1)
+        cmd = "sshpass -p {} ssh {} 'ceph --admin-daemon {} config show > /tmp/{}_ceph_config.json'".format(password, host, output[0], clusterid)
+        print cmd
+        output = subprocess.check_output(cmd, shell=True)
+        cmd = 'sshpass -p {} scp {}:/tmp/{}_ceph_config.json {}/../../'.format(
+            password, host, clusterid, self.file_path)
+        print cmd
+        subprocess.check_call(cmd, shell=True)
+        ceph_configs = json.load(
+            open('{}/../../{}_ceph_config.json'.format(self.file_path, clusterid))
+        )
+        dumpdata = json.dumps(ceph_configs)
+        dumpdata = re.sub('\\\\', '\\\\\\\\', dumpdata)
 
-    ips = ['192.168.230.218', '192.168.230.201', '192.168.230.196', '192.168.230.199']
-    password = 'passw0rd'
-    name = "mycluster1"
-    osdhost_list = ['ceph-3', 'ceph-1', 'ceph-2']
-    client_list = ['client-1']
+        self.deploydb.insert_cephconfig(clusterid, host, osd, dumpdata)
 
-    mon_list = [osdhost_list[1]]
-    disk_list = [osdhost_list[1]+':/dev/sda:/dev/sdc', osdhost_list[2]+':/dev/sda:/dev/sdc', osdhost_list[0]+':sda:/dev/sdb']   
-
-    hostnames = osdhost_list + client_list
-
-    public_network = '192.168.230.0/24'
-    cluster_network = '192.168.220.0/24'
-    objectstore = 'filestore'
-    journal_size = 10240
-
-    with open('/tmp/ITuning_ceph.conf', 'w') as f:
-        f.write('[global]\n')
-        f.write('public_network = {}\n'.format(public_network))
-        f.write('cluster_network = {}\n'.format(cluster_network))
-        f.write('osd objectstore = {}\n'.format(objectstore))
-        f.write('[osd]\n')
-        f.write('osd journal size = {}\n'.format(journal_size))
-
-    conf = '/tmp/ITuning_ceph.conf'
-
-    #for i in range(len(ips)):
-    #    deploy.init(ips[i], password, hostnames[i])
-
-    #deploy.purge(name, hostnames)
-    #deploy.deploy(name, mon_list, osdhost_list, disk_list, client_list, conf)
-    #deploy.createrbdpool(len(disk_list), client_list[0])
-    #deploy.reboot('ceph-1')
-    deploy.checkandstart_fioser('client-1')
-    
-
-if __name__ == '__main__':
-    main()
+        cmd = 'sshpass -p {} scp {}:/etc/ceph/ceph.conf {}/../../{}_ceph.conf'.format(
+            password, host, self.file_path, clusterid)
+        print cmd
+        subprocess.check_call(cmd, shell=True)
 

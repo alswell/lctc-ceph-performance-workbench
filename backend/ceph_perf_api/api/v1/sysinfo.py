@@ -1,4 +1,5 @@
 # -*- coding: UTF-8 -*-
+import json
 import urls
 from django.views import generic
 from ceph_perf_api import utils
@@ -101,9 +102,9 @@ class CephConfig(generic.View):
     def get(self, request, jobid):
         result = models.CephConfig.objects.filter(jobid=jobid).all()
         d = utils.query_to_dict(result)
-        #return {"total": len(d), "data": d}
+        print d[0]['total']
         if len(d) > 0:
-            return d[0]
+            return json.loads(d[0]['total'])
         else:
             return []
 

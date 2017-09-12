@@ -7,9 +7,10 @@ import {connect} from 'dva';
 import {Spin, Button } from 'antd';
 import {fetchAndNotification} from "../../services/restfulService";
 import styles from './index.less'
+import PropTypes from 'prop-types'
 import { InitImagePage } from '../../components/deploy/InitImage'
 
-class HostDetail extends React.Component {
+class DeployDetail extends React.Component {
 
   constructor(props) {
     super(props);
@@ -78,7 +79,18 @@ class HostDetail extends React.Component {
 }
 
 
-HostDetail.propTypes = {};
+function mapStateToProps ({ deploy }) {
+  return {
+    host:deploy,
+  }
+}
 
+DeployDetail.propTypes = {
+  cluster: PropTypes.object,
+  location: PropTypes.object,
+  dispatch: PropTypes.func,
+  loading: PropTypes.object,
+  host: PropTypes.object,
+}
 
-export default connect(host => host)(HostDetail);
+export default connect(mapStateToProps)(DeployDetail)

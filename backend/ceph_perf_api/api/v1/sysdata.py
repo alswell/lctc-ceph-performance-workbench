@@ -205,6 +205,9 @@ class PerfDump(generic.View):
         result = models.PerfDump.objects.filter(caseid=caseid).all()
         d = utils.query_to_dict(result)
         output = []
+        print type(d[0]['total'])
+        print d[0]['total']
+        #print json.loads(data['total'])
         for data in d:
             output.append({'osd': data['osd'], 'data': json.loads(data['total'])})
         #return {"total": len(d), "data": d}

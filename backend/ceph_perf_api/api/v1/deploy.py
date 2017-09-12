@@ -4,6 +4,7 @@ import sys
 import urls
 import yaml
 import subprocess
+import json
 
 from django.views import generic
 from ceph_perf_api import utils
@@ -127,9 +128,16 @@ class CLUSTERS(generic.View):
             body['clusternetwork'],
         )
 
+        cmd = "sshpass -p {} ssh {} 'ls /etc/ceph/ceph.conf /usr/bin/ceph'".format(nodepw_list[0], nodeips[0])
+        try:
+            subprocess.check_call(cmd, shell=True)
+        except Exception:
+            pass
+        else: 
+            deploy.get_default_cephconfig(
+                clusterid, nodeips[0], password=nodepw_list[0])
+
         return "pass"
-
-
 
 @urls.register
 class CLUSTER(generic.View):
@@ -145,11 +153,14 @@ class CLUSTER(generic.View):
         client = ceph_info['ceph-client'].popitem()
         client_ip = client[1]['ip']
         client_password = client[1]['password']
-
-        cmd = "sshpass -p {} ssh -o StrictHostKeyChecking=no {} ceph health".format(client_password, client_ip)
-        status = subprocess.check_output(cmd, shell=True)
-        body = {'health': status}
-        models.Cluster.objects.filter(id=id).update(**body)
+        try:
+            cmd = "sshpass -p {} ssh -o StrictHostKeyChecking=no {} ceph health".format(client_password, client_ip)
+            status = subprocess.check_output(cmd, shell=True)
+        except Exception, e:
+            body = {'health': ''}
+        else:
+            body = {'health': status}
+            models.Cluster.objects.filter(id=id).update(**body)
 
         result = models.Cluster.objects.filter(id=id).all()
         d = utils.query_to_dict(result)
@@ -166,4 +177,42 @@ class CLUSTER(generic.View):
         else:
             return []
 
+@urls.register
+class DEFAULTCEPHCONFIG(generic.View):
+    url_regex = r'^defaultcephconfig/(?P<clusterid>\d+)/$'
+
+    @utils.json_response
+    def get(self, request, clusterid):
+        result = models.DefaultCephConfig.objects.filter(clusterid=clusterid).all()
+        d = utils.query_to_dict(result)
+        if len(d) > 0:
+            return json.loads(d[-1]['total'])
+            #return d[0]
+        else:
+            return []
+
+@urls.register
+class DEFAULTCEPHCONFIG(generic.View):
+    url_regex = r'^defaultcephconfig$'
+
+    @utils.json_response
+
+    def post(self, request):
+        body = dict(request.DATA)
+
+        deploy = ceph_deploy.Deploy()
+        hwinfo_file = '{}/../../{}_ceph_hw_info.yml'.format(
+            os.path.dirname(os.path.realpath(__file__)),
+            body['id'])
+        with open(hwinfo_file, 'r') as f:
+            ceph_info = yaml.load(f)
+
+        node, data = ceph_info['ceph-node'].popitem()
+        deploy.get_default_cephconfig(body['id'], data['ip'], data['password'])
+
+        return 'pass'
+
+    @utils.json_response
+    def options(self, request):
+        return "option"
 

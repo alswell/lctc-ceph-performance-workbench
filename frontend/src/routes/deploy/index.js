@@ -65,6 +65,23 @@ class HostPage extends React.Component {
         })
         },
       })
+    } else if (e.key === '3') {
+      confirm({
+        title: 'Are you sure to get the current ceph config as default config?',
+        onOk :()=> {
+          console.log(record)
+          fetchAndNotification({
+            url: 'defaultcephconfig',
+            method: 'post',
+            params: { id: record.id },
+            notifications: {
+              title: 'get ceph config Action',
+              success: `${record.name} 操作成功！`,
+              error: `${record.name} 操作失败！`,
+            },
+          })
+        },
+      })
     }
   };
 
@@ -123,7 +140,7 @@ class HostPage extends React.Component {
           dataIndex: 'status',
           key: 'status',
           sorter: true,
-          // width: 100,
+          width: 600,
         }, 
         {
           title: 'objectstore',
@@ -137,12 +154,16 @@ class HostPage extends React.Component {
           render: (text, record) => <Link to={`cluster/${record.id}`}>Detail</Link>,
         },
         {
+          title: 'ceph config',
+          render: (text, record) => <Link to={`defaultcephconfig/${record.id}`}>Ceph Config</Link>,
+        },
+        {
           title: 'Operation',
           key: 'operation',
           width: 100,
           render: (text, record) => {
             return (<DropOption onMenuClick={e => this.handleMenuClick(record, e)}
-              menuOptions={[{ key: '1', name: 'Deploy' }, { key: '2', name: 'Delete' }]}
+              menuOptions={[{ key: '1', name: 'Deploy' }, { key: '2', name: 'Delete' }, { key: '3', name: 'Get ceph config' }]}
             />)
           },
         }

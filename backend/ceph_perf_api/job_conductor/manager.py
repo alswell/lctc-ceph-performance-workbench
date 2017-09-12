@@ -29,28 +29,28 @@ class Manager(object):
     def run_fio(self, ctxt, body):
         LOG.info("run fio: %s", body)
         try:
-            runfio = run_suite.RunFIO(body['suite_dir'], todb=True)
+            runfio = run_suite.RunFIO(body['suite_dir'], body['cluster'])
             if body.has_key('ceph_config'):
                 log_dir = runfio.run(
-                    body['suite_dir'],
                     body['jobname'],
                     body['jobid'],
                     ceph_config=body['ceph_config']
                 )
             else:
                 log_dir = runfio.run(
-                    body['suite_dir'],
                     body['jobname'],
-                    body['jobid']
+                    body['jobid'],
                 ) 
         except Exception, e:
-            runfio = run_suite.RunFIO(body['suite_dir'], todb=True)
-            job_status = runfio.db.query_jobs(body['jobid'])[0][3]
+            runfio = run_suite.RunFIO(body['suite_dir'], body['cluster'])
+            if body.has_key('ceph_config'):
+                runfio.set_default_ceph_config(body['ceph_config'])
+            job_status = runfio.fiodb.query_jobs(body['jobid'])[0][3]
             if job_status != "Canceled":
                 error_info = re.sub("u'", '', str(e))
                 error_info = re.sub("'", '', str(e))
                 jobinfo = {'status': "Failed: {}".format(error_info)}
-                runfio.db.update_jobs(body['jobid'], **jobinfo)
+                runfio.fiodb.update_jobs(body['jobid'], **jobinfo)
             print e
         else:
             runfio.store_logfile_FS(log_dir)
@@ -124,6 +124,8 @@ class Manager(object):
             deploy.deploy(body['id'], name, mon_list, osdhost_list, disk_list, client_list, conf)
             print datetime.datetime.now(), "create pool" 
             deploy.createrbdpool(len(disk_list), mon_list[0])
+            print datetime.datetime.now(), "get default ceph config" 
+            deploy.get_default_cephconfig(body['id'], mon_list[0], password=None)
             for client in client_list:
                 print datetime.datetime.now(), "install fio in {}".format(client)
                 deploy.install_fio(client)
@@ -151,9 +153,9 @@ class Manager(object):
             body['clusterid'])
         with open(hwinfo_file, 'r') as f:
             ceph_info = yaml.load(f)
-        client = ceph_info['ceph-client'].popitem()
-        client_ip = client[1]['ip']
-        client_password = client[1]['password']
+        client_name, client_data = ceph_info['ceph-client'].popitem()
+        client_ip = client_data['ip']
+        client_password = client_data['password']
 
         print datetime.datetime.now(), "gen fullfill file"
         file_dir = init_image.fullfill_file(body['imagename'], body['imagesize'], body['imagenum'], body['pool'])

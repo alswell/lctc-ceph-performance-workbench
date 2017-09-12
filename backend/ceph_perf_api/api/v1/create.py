@@ -33,7 +33,7 @@ class CreateFioJob(generic.View):
 
         fiotest = build_suite.FIOTest()
 
-        dir_path = fiotest.create_suite_dir(body['jobname'])
+        dir_path, create_time = fiotest.create_suite_dir(body['jobname'])
 
         with open('{}/fioserver_list.conf'.format(dir_path), 'w') as f:
             for client in clientslist:
@@ -75,7 +75,7 @@ class CreateFioJob(generic.View):
                                 other_fio_config,
                             )
                             casenum = casenum + 1
-        return dir_path
+        return dir_path, create_time
 
 
     @utils.json_response
@@ -83,9 +83,9 @@ class CreateFioJob(generic.View):
         body = request.DATA
         print body
 
-        suite_dir = self.create_suite(body)
-        runfio = run_suite.RunFIO(suite_dir, todb=True)
-        runfio.checkandstart_fioser(suite_dir, body['jobname'])
+        suite_dir, create_time = self.create_suite(body)
+        runfio = run_suite.RunFIO(suite_dir,  body['cluster'])
+        runfio.checkandstart_fioser_allclient()
 
         body['suite_dir'] = suite_dir
 
@@ -94,12 +94,12 @@ class CreateFioJob(generic.View):
             ceph_configs = json.load(open(ceph_config_file))
             for ceph_config in ceph_configs:
                 body['ceph_config'] = ceph_config
-                jobinfo = {'name': body['jobname'], 'status': "New", 'createtime': suite_dir.split('_')[1]}
+                jobinfo = {'name': body['jobname'], 'status': "New", 'createtime': create_time}
                 result = models.Jobs.objects.create(**jobinfo)
                 body['jobid'] = result.id
                 self.job_conductor.run_fio(body)
         else:
-            jobinfo = {'name': body['jobname'], 'status': "New"}
+            jobinfo = {'name': body['jobname'], 'status': "New", 'createtime': create_time}
             result = models.Jobs.objects.create(**jobinfo)
             body['jobid'] = result.id
             self.job_conductor.run_fio(body)

@@ -321,7 +321,6 @@ class TestTestForm extends React.Component {
         // onOk={this.onCreate}
       >
         <Form onSubmit={this.handleSubmit}>
-          
           <FormItem
             {...formItemLayout}
             label="JobName"
@@ -334,6 +333,20 @@ class TestTestForm extends React.Component {
               ],
             })(
               <Input placeholder="Jobname" />
+            )}
+          </FormItem>
+          <FormItem
+            {...formItemLayout}
+            label="Cluster"
+            validateStatus={userNameError ? 'error' : ''}
+            help={userNameError || ''}
+          >
+            {getFieldDecorator('cluster', {
+              rules: [
+                { required: true, message: 'Please input the cluster!' },
+              ],
+            })(
+              <Input placeholder="cluster id" />
             )}
           </FormItem>
           <FormItem

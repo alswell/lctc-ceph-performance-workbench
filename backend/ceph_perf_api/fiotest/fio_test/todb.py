@@ -1,4 +1,5 @@
 import MySQLdb
+import json
 
 
 
@@ -203,8 +204,24 @@ class ToDB(object):
             print sql
             self.db.rollback()
 
-    def insert_tb_cephconfigdata(self, jobid, node, osd, **kwargs):
-        sql = "INSERT INTO fiotest_cephconfig(jobid_id, node, osd, \
+    def insert_tb_cephconfigdata(self, jobid, node, osd, configs):
+        sql = "INSERT INTO fiotest_cephconfig(jobid_id, node, osd, total ) \
+            VALUES ('{}', '{}', \
+            '{}', '{}')".format(
+                jobid,
+                node,
+                osd,
+                configs,
+            )
+        try:
+            self.cursor.execute(sql)
+            self.db.commit()
+        except:
+            print sql
+            self.db.rollback()
+
+    def _insert_tb_cephconfigdata(self, jobid, node, osd, **kwargs):
+        sql = "INSERT INTO fiotest_cephconfig(jobid_id, node, osd, total, \
             filestore_expected_throughput_bytes, \
             filestore_expected_throughput_ops, filestore_max_sync_interval, \
             filestore_min_sync_interval, filestore_queue_max_bytes, \
@@ -230,7 +247,7 @@ class ToDB(object):
             journal_max_write_entries, journal_throttle_high_multiple, \
             journal_throttle_max_multiple, \
             objecter_inflight_ops, objecter_inflight_op_bytes ) \
-            VALUES ('{}', '{}', '{}', \
+            VALUES ('{}', '{}', '{}', '{}', \
             '{}', '{}','{}', '{}', \
             '{}', '{}', '{}','{}', '{}', \
             '{}', '{}', '{}','{}', '{}', '{}', '{}', '{}', \
@@ -245,6 +262,7 @@ class ToDB(object):
                 jobid,
                 node,
                 osd,
+                json.dumps(kwargs),
                 #kwargs['max_open_files'],
                 kwargs['filestore_expected_throughput_bytes'],
                 kwargs['filestore_expected_throughput_ops'],

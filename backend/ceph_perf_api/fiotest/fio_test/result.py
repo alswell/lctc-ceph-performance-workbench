@@ -8,20 +8,19 @@ import re
 import time
 from openpyxl import Workbook
 from openpyxl.styles import Font, Border, Side
+from base import FioBase
 
 
-class Result(object):
+class Result(FioBase):
 
-    def __init__(self, havedb=False):
-        self.havedb = havedb
+    def __init__(self, test_path, clusterid):
+        super(Result, self).__init__(test_path, clusterid)
+
         self.border = Border(
             left=Side(border_style='thin', color='000000'),
             right=Side(border_style='thin', color='000000'),
             top=Side(border_style='thin', color='000000'),
             bottom=Side(border_style='thin', color='000000'))
-        if self.havedb:
-            from todb import ToDB
-            self.db = ToDB()
 
     def get_log_list(self, path):
         result = []
@@ -509,7 +508,7 @@ class Result(object):
                 'w_bw': w_bw,
                 'bw': bw,
             }
-            self.db.insert_tb_result(**result_to_db)
+            self.fiodb.insert_tb_result(**result_to_db)
         return case_status
 
     def deal_with_fio_data_toexcel(self, file_name, log_dir):

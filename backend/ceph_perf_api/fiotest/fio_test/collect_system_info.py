@@ -15,22 +15,21 @@ from collect_system_data import SysData
 
 
 class SysInfo(SysData):
-
-    def get_hwinfo_log(self, host_ip, log_dir):
+    def get_hwinfo_log(self, host_ip, password, log_dir):
         cmds = [
             'dmidecode >/tmp/dmidecode.txt',
             'cat /proc/meminfo >/tmp/meminfo.txt',
             'cat /proc/cpuinfo >/tmp/cpuinfo.txt',
             'lsblk >/tmp/lsblk.txt',
         ]
-        self.run_sshcmds(host_ip, cmds, self.host_password)
+        self.run_sshcmds(host_ip, cmds, password)
 
-        self.get_logfile(host_ip, self.host_password, 'dmidecode.txt', log_dir)
-        self.get_logfile(host_ip, self.host_password, 'meminfo.txt', log_dir)
-        self.get_logfile(host_ip, self.host_password, 'cpuinfo.txt', log_dir)
-        self.get_logfile(host_ip, self.host_password, 'lsblk.txt', log_dir)
+        self.get_logfile(host_ip, password, 'dmidecode.txt', log_dir)
+        self.get_logfile(host_ip, password, 'meminfo.txt', log_dir)
+        self.get_logfile(host_ip, password, 'cpuinfo.txt', log_dir)
+        self.get_logfile(host_ip, password, 'lsblk.txt', log_dir)
 
-    def get_one_ceph_conf(self, host, log_dir):
+    def get_one_ceph_conf(self, host, password, log_dir):
         ssh = paramiko.SSHClient()
         ssh.load_system_host_keys()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -38,19 +37,21 @@ class SysInfo(SysData):
             hostname = host,
             port = 22,
             username = 'root',
-            password = self.host_password
+            password = password
         )
         cmd = 'find /var/run/ceph -name \'*osd*asok\''
         stdin, stdout, stderr = ssh.exec_command(cmd)
         osd_list = stdout.readlines()
 
         osd = osd_list[0].strip()
-        cmd = 'ceph --admin-daemon {} config show > /tmp/{}_ceph_config.json'.format(
+        cmd = "sshpass -p {} ssh {} 'ceph --admin-daemon {} config show > /tmp/{}_ceph_config.json'".format(
+            password,
+            host,
             osd,
             re.search('(osd\.\d+)', osd).group(1)
         )
         print cmd
-        ssh.exec_command(cmd)
+        subprocess.check_call(cmd, shell=True)
         log = '{}_ceph_config.json'.format(
             re.search('(osd\.\d+)', osd).group(1)
         )
@@ -61,13 +62,13 @@ class SysInfo(SysData):
             os.makedirs(log_dir)
         remotepath = '/tmp/{}'.format(log)
         localpath = '{}/{}_{}'.format(log_dir, host, log)
-        cmd = ['sshpass', '-p', self.host_password, 'scp',
+        cmd = ['sshpass', '-p', password, 'scp',
             '-o', 'StrictHostKeyChecking=no', '-r',
             'root@{}:{}'.format(host, remotepath), localpath]
         print cmd
         subprocess.check_call(cmd)
 
-    def get_ceph_conf(self, host, log_dir):
+    def get_ceph_conf(self, host, password, log_dir):
         ssh = paramiko.SSHClient()
         ssh.load_system_host_keys()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -75,7 +76,7 @@ class SysInfo(SysData):
             hostname = host,
             port = 22,
             username = 'root',
-            password = self.host_password
+            password = password
         )
         cmd = 'find /var/run/ceph -name \'*osd*asok\''
         stdin, stdout, stderr = ssh.exec_command(cmd)
@@ -100,7 +101,7 @@ class SysInfo(SysData):
         for log in ceph_config_file_list:
             remotepath = '/tmp/{}'.format(log)
             localpath = '{}/{}_{}'.format(log_dir, host, log)
-            cmd = ['sshpass', '-p', self.host_password, 'scp',
+            cmd = ['sshpass', '-p', password, 'scp',
                 '-o', 'StrictHostKeyChecking=no', '-r',
                 'root@{}:{}'.format(host, remotepath), localpath]
             print cmd
@@ -109,9 +110,14 @@ class SysInfo(SysData):
     def get_all_host_sysinfo_logfile(self, log_dir):
         for host in self.host_list:
             host_ip = self.nodes[host]['ip']
-            self.get_hwinfo_log(host_ip, log_dir)
-            #self.get_ceph_conf(host_ip, log_dir)
-        self.get_one_ceph_conf(self.nodes[self.host_list[0]]['ip'], log_dir)
+            password = self.nodes[host]['password']
+            self.get_hwinfo_log(host_ip, password, log_dir)
+            #self.get_ceph_conf(host_ip, password, log_dir)
+        self.get_one_ceph_conf(
+            self.nodes[self.host_list[0]]['ip'],
+            self.nodes[self.host_list[0]]['password'],
+            log_dir
+        )
 
     def deal_with_cephconfiglog(self, jobid, path):
         log_files = os.popen('ls {}/*ceph_config.json'.format(path)).readlines()
@@ -121,7 +127,9 @@ class SysInfo(SysData):
             log_file = log_file.split('/')[-1]
             host = log_file.split('_')[0]
             osd = log_file.split('_')[1]
-            self.db.insert_tb_cephconfigdata(jobid, host, osd, **ceph_configs)
+            dumpdata = json.dumps(ceph_configs)
+            dumpdata = re.sub('\\\\', '\\\\\\\\', dumpdata)
+            self.fiodb.insert_tb_cephconfigdata(jobid, host, osd, dumpdata)
 
     def deal_with_smartctl(self, result):
         model = ''
@@ -139,6 +147,7 @@ class SysInfo(SysData):
         disk_info = {}
         for host in self.host_list:
             ip = self.nodes[host]['ip']
+            password = self.nodes[host]['password']
             ssh = paramiko.SSHClient()
             ssh.load_system_host_keys()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -146,7 +155,7 @@ class SysInfo(SysData):
                 hostname = ip,
                 port = 22,
                 username = 'root',
-                password = self.host_password
+                password = password
             )
  
             with open('{}/{}_lsblk.txt'.format(path, ip), 'r') as f:
@@ -177,7 +186,7 @@ class SysInfo(SysData):
                             diskinfo_f.write(scheduler)
 
                         if self.havedb:
-                            self.db.insert_tb_diskinfo(
+                            self.fiodb.insert_tb_diskinfo(
                                 jobid,
                                 host,
                                 disk_name,
@@ -188,7 +197,6 @@ class SysInfo(SysData):
                                 scheduler,
                             )
             ssh.close()
-
 
     def deal_with_cpuinfo_log(self, path):
         cpu_info = {}
@@ -223,6 +231,7 @@ class SysInfo(SysData):
             with open('{}/{}_dmidecode.txt'.format(path, self.nodes[host]['ip']), 'r') as f:
                 n = 0
                 memnum = 0
+                memsize = 0
                 mem_match = False
                 mem_M = ''
                 mem_S = ''
@@ -259,14 +268,18 @@ class SysInfo(SysData):
             hw_info.update(self.nodes[host]['hwinfo'])
             json.dump(hw_info, open('{}/{}_hw_info.json'.format(path, host), 'w'), indent=2)
             if self.havedb:
-                self.db.insert_tb_hwinfo(jobid, host, **hw_info)
+                self.fiodb.insert_tb_hwinfo(jobid, host, **hw_info)
 
     def get_network_mtu(self, host):
         ssh = paramiko.SSHClient()
         ssh.load_system_host_keys()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-        ssh.connect(hostname=self.nodes[host]['ip'], port=22, username='root', password=self.host_password)
+        ssh.connect(
+            hostname=self.nodes[host]['ip'],
+            port=22,
+            username='root',
+            password=self.nodes[host]['password'])
         stdin, stdout, stderr = ssh.exec_command(
             'ifconfig | grep "inet " -B 1')
         result = stdout.read()
@@ -287,15 +300,14 @@ class SysInfo(SysData):
     def get_os_info(self, jobid, path):
         for host in self.host_list:
             os_info = {}
-            ip = self.nodes[host]['ip']
             ssh = paramiko.SSHClient()
             ssh.load_system_host_keys()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             ssh.connect(
-                hostname = ip,
+                hostname = self.nodes[host]['ip'],
                 port = 22,
                 username = 'root',
-                password = self.host_password
+                password = self.nodes[host]['password']
             )
 
             cmd = 'cat /proc/sys/vm/dirty_background_ratio'
@@ -321,7 +333,7 @@ class SysInfo(SysData):
 
             json.dump(os_info, open('{}/{}_os_info.json'.format(path, host), 'w'), indent=2)
             if self.havedb:
-                self.db.insert_tb_osinfo(jobid, host, **os_info)
+                self.fiodb.insert_tb_osinfo(jobid, host, **os_info)
 
     def deal_with_sysinfo_logfile(self, sysinfo_dir, jobid):
         dir_list = sysinfo_dir.split('/')
@@ -401,29 +413,3 @@ def get_ceph_config_file(client):
         print "++++++++++++++++++++++++++"
         print output
         print "++++++++++++++++++++++++++"
-
-def main():
-    parser = argparse.ArgumentParser(
-        prog="sysinfo",
-        version='v0.1',
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        description="collect systen info")
-    parser.add_argument('-D', '--logdir', dest="logdir",
-                metavar="sysinfo log dir", action="store",
-                    help='''sysinfo log dir''')
-    args = parser.parse_args()
-
-    client = '10.240.217.101'
-    #sysinfo = SysInfo(client)
-    '''
-    #sysinfo.get_sys_info()
-    #sysinfo.cleanup_all()
-    sysinfo.deal_with_sysinfo_logfile(
-        sysinfo_dir,
-    )
-    '''
-    #sysinfo.deal_with_perfdumplog('/root/fio-zelin/test-suites/test2/log_2017_07_28_15_00_39/sysinfo_rbd_rw_4k_runtime30_iodepth1_numjob1_imagenum2_test2_%70_2017_07_28_15_00_39')
-    get_ceph_config_file(client)
-
-if __name__ == '__main__':
-    main()

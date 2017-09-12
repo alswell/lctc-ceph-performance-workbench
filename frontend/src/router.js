@@ -248,7 +248,20 @@ const Routers = function ({ history, app }) {
               "cephconfig"
             );
           }
-        }, 
+        },
+        {
+          path: "defaultcephconfig/:id",
+          getComponent(nextState, cb) {
+            require.ensure(
+              [],
+              require => {
+                registerModel(app, require("./models/defaultcephconfig.model"));
+                cb(null, require("./routes/defaultcephconfig/"));
+              },
+              "cephconfig"
+            );
+          }
+        },
         {
           path: "cephconfig",
           getComponent(nextState, cb) {

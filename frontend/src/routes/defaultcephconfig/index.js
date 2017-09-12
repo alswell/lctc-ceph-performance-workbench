@@ -26,7 +26,7 @@ class HostDetail extends React.Component {
 
   fetchDetail = () => {
     fetchAndNotification({
-      url: `cephconfig/${this.state.id}/`,
+      url: `defaultcephconfig/${this.state.id}/`,
       method: 'get',
       notifications:{
         error: `获取数据失败！`,
