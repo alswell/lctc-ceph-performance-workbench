@@ -72,14 +72,3 @@ ln -s /usr/local/bin/fio /usr/bin/fio
 # check fio verion
 fio -v
 fio-2.21
-
-
-
-#
-./run-fio [init-image|build-suite|list-suites|run $suitename $jobname [--nodb]]
-
-For the new ceph env, please run "init-image" to create new rbds for testing.
-Or use "build-suite" to create new test config file for FIO.
-Or use "list-suites" to show the previous created test.
-Or use "run $suitename $jobname" to run test.
-

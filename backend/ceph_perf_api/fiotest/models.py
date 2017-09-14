@@ -284,7 +284,10 @@ class Jobs(models.Model):
     createtime = models.DateTimeField(null=True)
     status = models.CharField(max_length=200, null=True)
     casenum = models.IntegerField(null=True)
-    ceph_config = models.CharField(max_length=200, default='default')
+    ceph_config = models.TextField(default='default')
+    fiopara = models.TextField(null=True)
+    testdir = models.TextField(null=True)
+    cluster = models.CharField(max_length=200, null=True)
 
 class CephInfo(models.Model):
     id = models.AutoField(primary_key=True)

@@ -17,11 +17,12 @@ class FIOTest(object):
         current_date = re.sub('\s', '', time)
         suitename = re.sub('_', '', suitename)
         suitename = suitename + '_' + current_date
-        path = "{}/test-suites/{}/config".format(os.getcwd(), suitename)
+        file_path = os.path.dirname(os.path.realpath(__file__))
+        suite_dir = "{}/../../test-suites/{}".format(file_path, suitename)
+        path = "{}/config".format(suite_dir)
         print "=================================="
-        print "test suite dir is: {}/test-suites/{}".format(os.getcwd(), suitename)
+        print "test suite dir is: {}".format(suite_dir)
         print "=================================="
-        suite_dir = "{}/test-suites/{}".format(os.getcwd(), suitename)
         if os.path.exists(suite_dir):
             shutil.rmtree(suite_dir)
         os.makedirs(path)

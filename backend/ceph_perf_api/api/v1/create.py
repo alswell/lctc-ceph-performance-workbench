@@ -8,7 +8,8 @@ import sys
 import urls
 from django.views import generic
 from ceph_perf_api import utils
-from fiotest import models
+from fiotest import models as fiomodels
+from ITuning_ceph_deploy import models as deploymodels
 from job_conductor import api as job_api
 from fiotest.fio_test import build_suite
 from fiotest.fio_test import run_suite
@@ -27,9 +28,11 @@ class CreateFioJob(generic.View):
         for clientkey in body['clientkeys']:
             clientslist.append(body['client-{}'.format(clientkey)])
 
-        other_fio_config = []
-        for fiokey in body['fioparakeys']:
-            other_fio_config.append(body['fiopara-{}'.format(fiokey)])
+        if body.has_key('fiopara'):
+            other_fio_config = body['fiopara'].split('\n')
+            print other_fio_config
+        else:
+             other_fio_config = []
 
         fiotest = build_suite.FIOTest()
 
@@ -40,37 +43,33 @@ class CreateFioJob(generic.View):
                 f.write(client)
                 f.write('\n')
 
-        cephconfig = []
-        if len(body['cephconfigkeys']) == 0:
-            cephconfig.append('default')
-        for key in body['cephconfigkeys']:
-            config = re.sub('\n', ';', body['cephconfig-{}'.format(key)])
-            cephconfig.append(config)
+        if not body.has_key('fiopara'):
+            cephconfig = ['default']
+        else:
+            config = re.sub('\n', ';', body['cephconfig'])
+            cephconfig = [config]
 
         fiotest.gen_setup_ceph_config(dir_path, cephconfig)
-
-
-        body['rwmixreadkeys'].append(1)
 
         casenum = 1
         for rw in body['fiotype']:
             for bs in body['bs']:
                 for iodepth in body['iodepth']:
                     for numjob in body['numjob']:
-                        for rwmixreadkey in body['rwmixreadkeys']:
+                        for rwmixread in body['rwmixread']:
                             fiotest.case(
                                 dir_path,
                                 casenum,
-                                body['PoolName'],
+                                body['poolname'],
                                 rw,
                                 bs,
-                                body['Runtime'],
+                                body['runtime'],
                                 str(iodepth),
                                 str(numjob),
-                                body['Image Count'],
+                                body['imagecount'],
                                 body['jobname'],
-                                body['rwmixread-{}'.format(rwmixreadkey)],
-                                body['Image Name'],
+                                rwmixread,
+                                body['imagename'],
                                 clientslist,
                                 other_fio_config,
                             )
@@ -84,23 +83,33 @@ class CreateFioJob(generic.View):
         print body
 
         suite_dir, create_time = self.create_suite(body)
-        runfio = run_suite.RunFIO(suite_dir,  body['cluster'])
+        
+        result = deploymodels.Cluster.objects.filter(clustername=body['cluster']).all()[0]
+        body['cluster'] = result.id
+        runfio = run_suite.RunFIO(suite_dir, result.id)
         runfio.checkandstart_fioser_allclient()
 
         body['suite_dir'] = suite_dir
 
         ceph_config_file = '{}/setup_ceph_config.json'.format(suite_dir)
+        jobinfo = {
+            'name': body['jobname'],
+            'status': "New",
+            'createtime': create_time,
+            'testdir': suite_dir,
+            'cluster': result.clustername,
+            'ceph_config': body['cephconfig'],
+            'fiopara': body['fiopara']
+        }
         if os.path.exists(ceph_config_file):
             ceph_configs = json.load(open(ceph_config_file))
             for ceph_config in ceph_configs:
                 body['ceph_config'] = ceph_config
-                jobinfo = {'name': body['jobname'], 'status': "New", 'createtime': create_time}
-                result = models.Jobs.objects.create(**jobinfo)
+                result = fiomodels.Jobs.objects.create(**jobinfo)
                 body['jobid'] = result.id
                 self.job_conductor.run_fio(body)
         else:
-            jobinfo = {'name': body['jobname'], 'status': "New", 'createtime': create_time}
-            result = models.Jobs.objects.create(**jobinfo)
+            result = fiomodels.Jobs.objects.create(**jobinfo)
             body['jobid'] = result.id
             self.job_conductor.run_fio(body)
 

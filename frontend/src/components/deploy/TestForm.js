@@ -268,7 +268,7 @@ class TestTestForm extends React.Component {
     });
 
     const nodeselectItems = nodeipkeys.map((k, index) => {
-      const node = getFieldValue(`nodeip-${k}`)
+      const node = getFieldValue(`nodename-${k}`)
       if ( node != undefined ) {
         //console.log('Node:',node)
         return (
@@ -304,7 +304,7 @@ class TestTestForm extends React.Component {
             </Col>
             <Col span={6}>
               {getFieldDecorator(`node-${k}`, {
-                rules: [{ required: true, message: 'Please input the client!' }],
+                rules: [{ required: true, message: 'Please input the host!' }],
               })(
                 <Select
                   style={{ width: '100%' }}
@@ -319,7 +319,7 @@ class TestTestForm extends React.Component {
             </Col>
             <Col span={4}>
               {getFieldDecorator(`osddisk-${k}`, {
-                rules: [{ required: true, message: 'Please input the client!' }],
+                rules: [{ required: true, message: 'Please input the osd disk!' }],
               })(
                 <Input size="large" placeholder="/dev/sdb"/>
               )}
@@ -329,7 +329,7 @@ class TestTestForm extends React.Component {
             </Col>
             <Col span={4}>
               {getFieldDecorator(`osdj-${k}`, {
-                rules: [{ required: true, message: 'Please input the client!' }],
+                rules: [{ required: true, message: 'Please input the osd journal disk!' }],
               })(
                 <Input size="large" placeholder="/dev/sdc"/>
               )}

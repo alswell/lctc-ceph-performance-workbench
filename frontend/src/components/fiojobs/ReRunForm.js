@@ -15,19 +15,50 @@ function hasErrors (fieldsError) {
 
 let clientid = 1;
 class TestTestForm extends React.Component {
- constructor(props) {
+
+  constructor(props) {
     super(props);
     this.state = {
       spinning: true,
+      data: {},
       clusters: {},
-      clients: [],
+      setvaluejobname: false,
+      setvaluebs: false,
+      setvaluepoolname: false,
+      setvalueiodepth: false,
+      setvaluenumjob: false,
+      setvaluerwmixread: false,
+      setvaluecluster: false,
+      setvalueimagename: false,
+      setvalueimagecount: false,
+      setvaluefiotype: false,
+      setvalueruntime: false,
+      setvaluefiopara: false,
+      setvaluecephconfig: false,
     }
   }
 
   componentDidMount () {
     // To disabled submit button at the beginning.
     this.props.form.validateFields()
+    this.fetchDetail()
     this.fetchCluster()
+  }
+
+  fetchDetail = () => {
+    fetchAndNotification({
+      //url: `sarcpu?caseid=${this.state.id}`,
+      url: `jobdetail?jobid=${this.props.record.id}`,
+      method: 'get',
+      notifications:{
+        error: `获取数据失败！`,
+      }
+    }).then((result) => {
+      this.setState({
+        spinning: false,
+        data: result.data
+      })
+    })
   }
 
   fetchCluster = () => {
@@ -102,8 +133,8 @@ class TestTestForm extends React.Component {
 
 
   render () {
-    const { getFieldDecorator, getFieldsError, getFieldError, isFieldTouched, getFieldValue } = this.props.form
-
+    const { getFieldDecorator, getFieldsError, getFieldError, isFieldTouched, getFieldValue, setFieldsValue } = this.props.form
+    
     // Only show error after a field is touched.
     const userNameError = isFieldTouched('userName') && getFieldError('userName')
     const passwordError = isFieldTouched('password') && getFieldError('password')
@@ -156,27 +187,6 @@ class TestTestForm extends React.Component {
       );
     });
 
-    // getFieldDecorator('cluster', { initialValue: [] });
-    // const clustername = getFieldValue('cluster');
-    // console.log(clustername.length)
-    // if (cluster.length > 0 ) {
-        
-    // }
-    
-    // const clientselectItems = this.state.clients.map((k, index) => {
-    //   if ( node != undefined ) {
-    //     //console.log('Node:',node)
-    //     return (
-    //       <Option key={node}>{node}</Option>
-    //     );
-    //   }
-    //   else {
-    //     return (
-    //       <Option key={1}></Option>
-    //     );
-    //   }
-    // });
-
     const getcluster = [];
     if ( this.state.clusters.length > 0 ) {
       for (let i=0; i<this.state.clusters.length; i++) {
@@ -192,6 +202,132 @@ class TestTestForm extends React.Component {
       rwmixread.push(<Option key={i}>{i}</Option>);
     }
     
+    const testset = () => {
+      const bsvalue = getFieldValue('bs');
+      if ( bsvalue != this.props.data.blocksize ){
+        setFieldsValue({
+          bs: this.props.data.blocksize,
+        });
+      }
+    }
+
+    let jobnamevalue = this.props.form.getFieldValue('jobname');
+    if (this.props.visible && this.state.data != {} && this.state.setvaluejobname == false && jobnamevalue != this.state.data.jobname ){
+      this.props.form.setFieldsValue({
+        jobname: this.state.data.jobname,
+      });
+      this.setState({
+        setvaluejobname: true,
+      })
+    }
+    let clustervalue = this.props.form.getFieldValue('cluster');
+    if ( this.props.visible && this.state.data != {} && clustervalue != this.state.data.cluster && this.state.setvaluecluster == false ){
+      this.props.form.setFieldsValue({
+        cluster: this.state.data.cluster,
+      });
+      this.setState({
+        setvaluecluster: true,
+      })
+    }
+    const bsvalue = this.props.form.getFieldValue('bs');
+    if ( this.props.visible && this.state.data != {} && bsvalue != this.state.data.bs && this.state.setvaluebs == false){
+      this.props.form.setFieldsValue({
+        bs: this.state.data.bs,
+      });
+      this.setState({
+        setvaluebs: true,
+      })
+    }
+    const fiotypevalue = this.props.form.getFieldValue('fiotype');
+    if ( this.props.visible && this.state.data != {} && fiotypevalue != this.state.data.fiotype && this.state.setvaluefiotype == false ){
+      this.props.form.setFieldsValue({
+        fiotype: this.state.data.fiotype,
+      });
+      this.setState({
+        setvaluefiotype: true,
+      })
+    }
+    const rwmixreadvalue = this.props.form.getFieldValue('rwmixread');
+    if ( this.props.visible && this.state.data != {} && rwmixreadvalue != this.state.data.rwmixread && this.state.setvaluerwmixread == false ){
+      this.props.form.setFieldsValue({
+        rwmixread: this.state.data.rwmixread,
+      });
+      this.setState({
+        setvaluerwmixread: true,
+      })
+    }
+    const iodepthvalue = this.props.form.getFieldValue('iodepth');
+    if ( this.props.visible && this.state.data != {} && iodepthvalue != this.state.data.iodepth && this.state.setvalueiodepth == false ){
+      this.props.form.setFieldsValue({
+        iodepth: this.state.data.iodepth,
+      });
+      this.setState({
+        setvalueiodepth: true,
+      })
+    }
+    const numjobvalue = this.props.form.getFieldValue('numjob');
+    if ( this.props.visible && this.state.data != {} && numjobvalue != this.state.data.numjob && this.state.setvaluenumjob == false ){
+      this.props.form.setFieldsValue({
+        numjob: this.state.data.numjob,
+      });
+      this.setState({
+        setvaluenumjob: true,
+      })
+    }
+    const imagenamevalue = this.props.form.getFieldValue('imagename');
+    if ( this.props.visible && this.state.data != {} && imagenamevalue != this.state.data.imagename && this.state.setvalueimagename == false ){
+      this.props.form.setFieldsValue({
+        imagename: this.state.data.imagename,
+      });
+      this.setState({
+        setvalueimagename: true,
+      })
+    }
+    const poolnamevalue = this.props.form.getFieldValue('poolname');
+    if ( this.props.visible && this.state.data != {} && poolnamevalue != this.state.data.poolname && this.state.setvaluepoolname == false ){
+      this.props.form.setFieldsValue({
+        poolname: this.state.data.poolname,
+      });
+      this.setState({
+        setvaluepoolname: true,
+      })
+    }
+    const runtimevalue = this.props.form.getFieldValue('runtime');
+    if ( this.props.visible && this.state.data != {} && runtimevalue != this.state.data.runtime && this.state.setvalueruntime == false ){
+      this.props.form.setFieldsValue({
+        runtime: this.state.data.runtime,
+      });
+      this.setState({
+        setvalueruntime: true,
+      })
+    }
+    const imagecountvalue = this.props.form.getFieldValue('imagecount');
+    if ( this.props.visible && this.state.data != {} && imagecountvalue != this.state.data.imagecount && this.state.setvalueimagecount == false ){
+      this.props.form.setFieldsValue({
+        imagecount: this.state.data.imagecount,
+      });
+      this.setState({
+        setvalueimagecount: true,
+      })
+    }
+    const fioparavalue = this.props.form.getFieldValue('fiopara');
+    if ( this.props.visible && this.state.data != {} && fioparavalue != this.state.data.fiopara && this.state.setvaluefiopara == false ){
+      this.props.form.setFieldsValue({
+        fiopara: this.state.data.fiopara,
+      });
+      this.setState({
+        setvaluefiopara: true,
+      })
+    }
+    const cephconfigvalue = this.props.form.getFieldValue('cephconfig');
+    if ( this.props.visible && this.state.data != {} && cephconfigvalue != this.state.data.cephconfig && this.state.setvaluecephconfig == false ){
+      this.props.form.setFieldsValue({
+        cephconfig: this.state.data.cephconfig,
+      });
+      this.setState({
+        setvaluecephconfig: true,
+      })
+    }
 
     return (
       <Modal
@@ -259,7 +395,7 @@ class TestTestForm extends React.Component {
               </Col>
             </Row>
           </FormItem>
-           {clientformItems}
+          {clientformItems}
           <FormItem
             {...formItemLayout}
             label="Fio Type"
@@ -331,8 +467,14 @@ class TestTestForm extends React.Component {
                 <Option key="1024k">1024k</Option>
                 <Option key="2048k">2048k</Option>
                 <Option key="4M">4M</Option>
+                <Option key="8M">8M</Option>
+                <Option key="16M">16M</Option>
+                <Option key="32M">32M</Option>
+                <Option key="64M">64M</Option>
+                <Option key="128M">128M</Option>
               </Select>
             )}
+            {testset}
           </FormItem>
           <FormItem
             {...formItemLayout}
@@ -396,8 +538,7 @@ class TestTestForm extends React.Component {
             validateStatus={userNameError ? 'error' : ''}
             help={userNameError || ''}
           >
-            {getFieldDecorator('Runtime', {
-              initialValue: "120",
+            {getFieldDecorator('runtime', {
               rules: [
                 { required: true, message: 'Please input the Run Time!' },
               ],
@@ -411,8 +552,7 @@ class TestTestForm extends React.Component {
             validateStatus={userNameError ? 'error' : ''}
             help={userNameError || ''}
           >
-            {getFieldDecorator('PoolName', {
-              initialValue: "rbd",
+            {getFieldDecorator('poolname', {
               rules: [
                 { required: true, message: 'Please input the Pool Name!' },
               ],
@@ -426,7 +566,7 @@ class TestTestForm extends React.Component {
             validateStatus={userNameError ? 'error' : ''}
             help={userNameError || ''}
           >
-            {getFieldDecorator('Image Count', {
+            {getFieldDecorator('imagecount', {
               rules: [
                 { required: true, message: 'Please input the Image Count!' },
               ],
@@ -440,7 +580,7 @@ class TestTestForm extends React.Component {
             validateStatus={userNameError ? 'error' : ''}
             help={userNameError || ''}
           >
-            {getFieldDecorator('Image Name', {
+            {getFieldDecorator('imagename', {
               rules: [
                 { required: true, message: 'Please input the Image Name!' },
               ],
@@ -499,6 +639,8 @@ TestTestForm.propTypes = {
   form: PropTypes.object,
   onCancel: PropTypes.function,
   visible: PropTypes.boolean,
+  record: PropTypes.array,
+  data: PropTypes.array,
 }
 
 const TestForm = Form.create()(TestTestForm)

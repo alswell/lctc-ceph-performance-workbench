@@ -14,7 +14,7 @@ export default {
     iopsModalVisible: false,
     latModalVisible: false,
     bwModalVisible: false,
-    createModalVisible: false,
+    record: {},
   },
 
   effects: {
@@ -23,5 +23,12 @@ export default {
 
   reducers: {
     ...model.reducers,
+    updateOperationItems (state, { payload: {record} }) {
+      return {
+        ...state,
+        modalVisible: true,
+        record,
+      }
+    },
   },
 }

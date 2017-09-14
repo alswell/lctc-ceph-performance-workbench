@@ -11,13 +11,18 @@ import DropOption from '../../components/DropOption/DropOption'
 import FioJobsModal from '../../components/modals/FioJobsModal'
 import { fetchAndNotification } from '../../services/restfulService'
 import { CollectionsPage } from '../../components/fiojobs/CreateModal'
+import { ReRunPage } from '../../components/fiojobs/ReRunModal'
 
 const confirm = Modal.confirm
 
 class HostPage extends React.Component {
-  // constructor (props) {
-  //   super(props)
-  // }
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      spinning: true,
+    }
+  }
 
   componentDidMount () {
 
@@ -64,8 +69,27 @@ class HostPage extends React.Component {
         })
         },
       })
+    } else if (e.key === '3') {
+      let { dispatch } = this.props
+      dispatch({
+        type: 'fiojobs/updateOperationItems',
+        payload: {
+          record,
+        },
+      })
     }
   };
+
+  updateOperationItems = (record) => {
+    let { dispatch } = this.props
+    dispatch({
+      type: 'fiojobs/updateOperationItems',
+      payload: {
+        record,
+      },
+    })
+  };
+
 
   showModal = (key) => {
     let { dispatch } = this.props
@@ -119,6 +143,7 @@ class HostPage extends React.Component {
           title: 'ceph config',
           dataIndex: 'ceph_config',
           key: 'ceph_config',
+          width: 200,
           render: (text, record) => <Link to={`cephconfig/${record.id}`}>{text}</Link>,
         }, 
         {
@@ -133,7 +158,11 @@ class HostPage extends React.Component {
           width: 100,
           render: (text, record) => {
             return (<DropOption onMenuClick={e => this.handleMenuClick(record, e)}
-              menuOptions={[{ key: '1', name: 'Cancel' }, { key: '2', name: 'Delete' }]}
+              menuOptions={[
+                { key: '1', name: 'Cancel' },
+                { key: '2', name: 'Delete' },
+                { key: '3', name: 'Re-run' },
+              ]}
             />)
           },
         }
@@ -204,7 +233,27 @@ class HostPage extends React.Component {
       },
     }
 
-
+    this.modalProps = {
+      visible: this.props.host.modalVisible,
+      maskClosable: true,
+      title: 'test',
+      wrapClassName: 'vertical-center-modal',
+      record: this.props.host.record,
+      data: this.state.data,
+      refresh:this.refresh,
+      onOk: (data) => {
+        console.log(data)
+      },
+      onCancel: () => {
+        let { dispatch } = this.props
+        dispatch({
+          type: 'fiojobs/hideModal',
+          payload: {
+            key: 'modalVisible',
+          },
+        })
+      },
+    }
   };
 
   actionCollectionsProps = {
@@ -240,6 +289,7 @@ class HostPage extends React.Component {
             </Card>
           </Col>
         </Row>
+        {this.props.host.modalVisible && <ReRunPage {...this.modalProps} />}
         {this.props.host.iopsModalVisible && <FioJobsModal {...this.iopsModalProps} />}
         {this.props.host.latModalVisible && <FioJobsModal {...this.latModalProps} />}
         {this.props.host.bwModalVisible && <FioJobsModal {...this.bwModalProps} />}

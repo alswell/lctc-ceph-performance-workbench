@@ -42,16 +42,16 @@ class Manager(object):
                     body['jobid'],
                 ) 
         except Exception, e:
+            print e
             runfio = run_suite.RunFIO(body['suite_dir'], body['cluster'])
-            if body.has_key('ceph_config'):
-                runfio.set_default_ceph_config(body['ceph_config'])
             job_status = runfio.fiodb.query_jobs(body['jobid'])[0][3]
             if job_status != "Canceled":
                 error_info = re.sub("u'", '', str(e))
                 error_info = re.sub("'", '', str(e))
                 jobinfo = {'status': "Failed: {}".format(error_info)}
                 runfio.fiodb.update_jobs(body['jobid'], **jobinfo)
-            print e
+            if body.has_key('ceph_config'):
+                runfio.set_default_ceph_config(body['ceph_config'])
         else:
             runfio.store_logfile_FS(log_dir)
             print "finish"

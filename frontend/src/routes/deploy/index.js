@@ -131,8 +131,8 @@ class HostPage extends React.Component {
         },
         {
           title: 'Cluster Name',
-          dataIndex: 'name',
-          key: 'name',
+          dataIndex: 'clustername',
+          key: 'clustername',
           // width: 64,
           sorter: true,
         }, {

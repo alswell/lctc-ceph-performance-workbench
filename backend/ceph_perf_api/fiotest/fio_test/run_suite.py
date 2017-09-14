@@ -90,6 +90,10 @@ class RunFIO(SysInfo):
             cephconfig = 'default_'
         print datetime.datetime.now(),
         print "modify_ceph_config"
+        if self.havedb:
+            self.check_job_status(jobid, ceph_config=ceph_config)
+            job_info = {'status': "Modify ceph config"}
+            self.fiodb.update_jobs(jobid, **job_info)
         restart = self.modify_ceph_config(ceph_config)
         if restart:
             print datetime.datetime.now(),
@@ -122,7 +126,6 @@ class RunFIO(SysInfo):
                 'status': 'Running',
                 'casenum': casenum,
                 'starttime': jobtime,
-                'ceph_config': re.sub('_', '', cephconfig)
             }
             self.fiodb.update_jobs(jobid, **jobinfo)
 

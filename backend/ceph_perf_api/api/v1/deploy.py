@@ -66,7 +66,7 @@ class CLUSTERS(generic.View):
 
         deploy = ceph_deploy.Deploy()
         cluster_info = {}
-        cluster_info['name'] = body['clustername']
+        cluster_info['clustername'] = body['clustername']
         cluster_info['public_network'] = body['publicnetwork']
         cluster_info['cluster_network'] = body['clusternetwork']
         cluster_info['objectstore'] = body['objectstore']
@@ -76,7 +76,7 @@ class CLUSTERS(generic.View):
         mons = []
         for mon in body['mon']:
             for key in body['nodeipkeys']:
-                if body['nodeip-{}'.format(key)] == mon:
+                if body['node-{}'.format(key)] == mon:
                     mons.append('{}:{}'.format(body['nodename-{}'.format(key)], body['nodeip-{}'.format(key)]))
         cluster_info['mons'] = '\n'.join(mons)
 
@@ -105,13 +105,13 @@ class CLUSTERS(generic.View):
         ips = nodeips + clientips
         disk_list = []
         for key in body['nodekeys']:
-            i = ips.index(body['node-{}'.format(key)])
             disk_list.append('{}:{}:{}'.format(
-                osdhost_list[i],
+                body['node-{}'.format(key)],
                 body['osddisk-{}'.format(key)],
                 body['osdj-{}'.format(key)])
             )
 
+        print cluster_info
         result = models.Cluster.objects.create(**cluster_info)
         clusterid = result.id
 
