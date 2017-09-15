@@ -1,7 +1,7 @@
 import logging
 from oslo_log import log
 
-
+logging.addHandler()
 def setup_log():
     root_log = log.getLogger().logger
     handler = logging.FileHandler("/log.log")
