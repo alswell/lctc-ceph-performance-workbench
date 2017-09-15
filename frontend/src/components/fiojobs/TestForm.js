@@ -396,7 +396,7 @@ class TestTestForm extends React.Component {
             validateStatus={userNameError ? 'error' : ''}
             help={userNameError || ''}
           >
-            {getFieldDecorator('Runtime', {
+            {getFieldDecorator('runtime', {
               initialValue: "120",
               rules: [
                 { required: true, message: 'Please input the Run Time!' },
@@ -411,7 +411,7 @@ class TestTestForm extends React.Component {
             validateStatus={userNameError ? 'error' : ''}
             help={userNameError || ''}
           >
-            {getFieldDecorator('PoolName', {
+            {getFieldDecorator('poolname', {
               initialValue: "rbd",
               rules: [
                 { required: true, message: 'Please input the Pool Name!' },
@@ -426,7 +426,7 @@ class TestTestForm extends React.Component {
             validateStatus={userNameError ? 'error' : ''}
             help={userNameError || ''}
           >
-            {getFieldDecorator('Image Count', {
+            {getFieldDecorator('imagecount', {
               rules: [
                 { required: true, message: 'Please input the Image Count!' },
               ],
@@ -440,7 +440,7 @@ class TestTestForm extends React.Component {
             validateStatus={userNameError ? 'error' : ''}
             help={userNameError || ''}
           >
-            {getFieldDecorator('Image Name', {
+            {getFieldDecorator('imagename', {
               rules: [
                 { required: true, message: 'Please input the Image Name!' },
               ],

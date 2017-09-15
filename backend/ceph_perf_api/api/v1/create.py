@@ -28,9 +28,8 @@ class CreateFioJob(generic.View):
         for clientkey in body['clientkeys']:
             clientslist.append(body['client-{}'.format(clientkey)])
 
-        if body.has_key('fiopara'):
+        if body['fiopara']:
             other_fio_config = body['fiopara'].split('\n')
-            print other_fio_config
         else:
              other_fio_config = []
 
@@ -43,12 +42,11 @@ class CreateFioJob(generic.View):
                 f.write(client)
                 f.write('\n')
 
-        if not body.has_key('fiopara'):
+        if not body['cephconfig']:
             cephconfig = ['default']
         else:
             config = re.sub('\n', ';', body['cephconfig'])
             cephconfig = [config]
-
         fiotest.gen_setup_ceph_config(dir_path, cephconfig)
 
         casenum = 1
@@ -82,6 +80,10 @@ class CreateFioJob(generic.View):
         body = request.DATA
         print body
 
+        if not body.has_key('cephconfig'):
+            body['cephconfig'] = None
+        if not body.has_key('fiopara'):
+            body['fiopara'] = None
         suite_dir, create_time = self.create_suite(body)
         
         result = deploymodels.Cluster.objects.filter(clustername=body['cluster']).all()[0]

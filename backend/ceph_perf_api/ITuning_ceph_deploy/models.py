@@ -6,7 +6,7 @@ from django.db import models
 # Create your models here.
 class Cluster(models.Model):
     id = models.AutoField(primary_key=True)
-    clustername = models.CharField(max_length=100, unique=True)
+    clustername = models.CharField(max_length=100, unique=True, null=True)
     create_time = models.DateTimeField(null=True)
     public_network = models.CharField(max_length=100, null=True)
     cluster_network = models.CharField(max_length=100, null=True)

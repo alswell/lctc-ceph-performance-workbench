@@ -84,6 +84,8 @@ class FIOTest(object):
     
                 result_ceph_config = {}
                 ceph_config_list = raw_ceph_config.split(';')
+                if ceph_config_list[-1] == '':
+                    del ceph_config_list[-1]
                 n = 0
     
                 if match:
@@ -112,7 +114,10 @@ class FIOTest(object):
                 else:
                     for ceph_config in ceph_config_list:
                         match = re.match('(.*)=(.*)', ceph_config)
-                        result_ceph_config[match.group(1)] = match.group(2)
+                        if match:
+                            result_ceph_config[match.group(1)] = match.group(2)
+                        else:
+                            raise Exception("ceph config format incorrect: {}".format(ceph_config))
                     result_ceph_configs.append(result_ceph_config)
             json.dump(result_ceph_configs, open('{}/setup_ceph_config.json'.format(path), 'w'), indent=2)
     

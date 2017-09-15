@@ -270,8 +270,9 @@ class RunFIO(SysInfo):
     def restart_ceph(self):
         for node in self.host_list:
             host = self.nodes[node]['ip']
-            cmd = "ssh -o StrictHostKeyChecking=no {} \
-                'service ceph-osd.target restart'".format(host)
+            password = self.nodes[node]['password']
+            cmd = "sshpass -p {} ssh -o StrictHostKeyChecking=no {} \
+                'service ceph-osd.target restart'".format(password, host)
             subprocess.check_call(cmd, shell=True)
         while True:
             time.sleep(5)
