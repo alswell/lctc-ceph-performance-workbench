@@ -16,7 +16,7 @@ class DataTable extends React.Component {
       loading: true,
       current: getSessionStorage('pagination')[window.location.pathname],
       dataSourceBack: [],
-      pageSize: 10,
+      pageSize: 40,
       title,
     }
   }

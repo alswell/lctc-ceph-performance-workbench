@@ -20,7 +20,8 @@ class FIOTESTS(generic.View):
             for key, values in dict(request.GET).items():
                 for value in values:
                     f[key] = value
-                    r = models.Result.objects.filter(**f).all()
+                    r = models.Result.objects.filter(**f).all().order_by(
+                        'jobid', 'blocksize', 'imagenum', 'readwrite', 'numberjob', 'iodepth')
                     results = utils.query_to_dict(r)
                     for result in results:
                         case_name = '{}_{}_{}_{}_{}_{}'.format(
@@ -61,7 +62,8 @@ class FIOTESTS(generic.View):
 
         else:
             filter_param = utils.parse_filter_param(request.DATA, request.GET)
-            result = models.Result.objects.filter(**filter_param).all().order_by('-id')
+            result = models.Result.objects.filter(**filter_param).all().order_by('-jobid',
+                'blocksize', 'imagenum', 'readwrite', 'numberjob', 'iodepth')
             d = utils.query_to_dict(result)
             return {"total": len(d), "data": d}
 
@@ -71,7 +73,8 @@ class FIOTEST(generic.View):
 
     @utils.json_response
     def get(self, request, jobid):
-        result = models.Result.objects.filter(jobid=jobid).all()
+        result = models.Result.objects.filter(jobid=jobid).all().order_by(
+            'blocksize', 'imagenum', 'readwrite', 'numberjob', 'iodepth')
         d = utils.query_to_dict(result)
         return {"total": len(d), "data": d}
 

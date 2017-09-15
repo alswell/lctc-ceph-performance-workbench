@@ -260,12 +260,6 @@ class Result(FioBase):
         jobname = pwd_log_dir[0]
         del pwd_log_dir[0]
 
-        cephconfig = ''
-        for c in pwd_log_dir:
-            cephconfig = cephconfig + c
-        if cephconfig == '':
-            cephconfig = 'Default'
-
         return job_start_time, jobname
 
     

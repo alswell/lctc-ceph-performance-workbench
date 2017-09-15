@@ -35,15 +35,14 @@ class RunFIO(SysInfo):
             password = client_info['password']
             self.checkandstart_fioser(client, password=password)
 
-    def create_log_dir(self, jobname, config, jobtime):
+    def create_log_dir(self, jobname, jobtime):
         jobtime = re.sub('-', '_', jobtime)
         jobtime = re.sub(':', '_', jobtime)
         jobtime = re.sub(' ', '_', jobtime)
 
-        log_dir = '{}/{}_{}{}'.format(
+        log_dir = '{}/{}_{}'.format(
             self.test_path,
             jobname,
-            config,
             jobtime
         )
         if not os.path.exists(log_dir):
@@ -115,7 +114,7 @@ class RunFIO(SysInfo):
             self.restart_ceph()
 
 
-        log_dir = self.create_log_dir(jobname, cephconfig, jobtime)
+        log_dir = self.create_log_dir(jobname, jobtime)
 
         if self.havedb:
             self.check_job_status(jobid, ceph_config=ceph_config)
