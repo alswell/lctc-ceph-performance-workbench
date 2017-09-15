@@ -112,14 +112,14 @@ class TestTestForm extends React.Component {
             help={userNameError || ''}
           >
             {getFieldDecorator('imagesize', {
-              initialValue: "1024M",
               rules: [
-                { required: true, message: 'Please input the image size!' },
+                { required: true, message: 'Please select the image size!' },
               ],
             })(
-              <Select style={{ width: 120 }} onChange={this.handleChange}>
-                <Option value="1024">1024M</Option>
-                <Option value="102400">102400M</Option>
+              <Select style={{ width: 120 }} onChange={this.handleChange} placeholder="Please select">
+                <Option value="1G">1G</Option>
+                <Option value="100G">100G</Option>
+                <Option value="300G">300G</Option>
               </Select>
             )}
           </FormItem>

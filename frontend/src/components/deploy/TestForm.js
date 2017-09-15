@@ -487,12 +487,10 @@ class TestTestForm extends React.Component {
           <FormItem
             {...formItemLayout}
             label="Journal Size"
-            validateStatus={userNameError ? 'error' : ''}
-            help={userNameError || ''}
           >
             {getFieldDecorator('journalsize', {
               rules: [
-                { required: true, message: 'Please input the Journal Size!' },
+                { required: false,},
               ],
             })(
               <Input placeholder="10240" />
@@ -535,7 +533,6 @@ class TestTestForm extends React.Component {
             <Select
               mode="multiple"
               style={{ width: '100%' }}
-              onChange={this.handleChange}
             >
               {nodeselectItems}
             </Select>

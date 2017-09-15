@@ -226,7 +226,7 @@ class TestTestForm extends React.Component {
           >
             {getFieldDecorator('cluster', {
               rules: [
-                { required: true, message: 'Please select read write type!' },
+                { required: true,},
               ],
             })(
               <Select

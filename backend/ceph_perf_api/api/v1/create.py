@@ -101,6 +101,7 @@ class CreateFioJob(generic.View):
             'status': "New",
             'createtime': create_time,
             'testdir': suite_dir,
+            'jobdir': suite_dir.split('/')[-1],
             'cluster': result.clustername,
             'ceph_config': body['cephconfig'],
             'fiopara': body['fiopara'],

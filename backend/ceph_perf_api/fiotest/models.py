@@ -287,6 +287,7 @@ class Jobs(models.Model):
     ceph_config = models.TextField(default='default', null=True)
     fiopara = models.TextField(null=True)
     testdir = models.TextField(null=True)
+    jobdir = models.CharField(max_length=200, null=True)
     cluster = models.CharField(max_length=200, null=True)
     sysdata = models.CharField(max_length=200, null=True)
 

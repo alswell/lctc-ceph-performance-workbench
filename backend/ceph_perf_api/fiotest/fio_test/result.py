@@ -536,8 +536,8 @@ def main():
                     help='''test suite test time''')
     args = parser.parse_args()
 
-    result = Result()
-    result.deal_with_fio_data(args.suitename, args.timetag, 'result_{}'.format(args.timetag))
+    result = Result('/root/lctc-ceph-performance-workbench/backend/ceph_perf_api/test-suites/hahaha_2017-09-1516:26:48.188330', 1)
+    result.deal_with_fio_data('/tmp', 'case36_poolrbd_rw_8k_runtime120_iodepth64_numjob1_imagenum1_lj-fstore-new-rand_%100_2017_09_15_16_22_23', 1)
 
 if __name__ == '__main__':
     main()

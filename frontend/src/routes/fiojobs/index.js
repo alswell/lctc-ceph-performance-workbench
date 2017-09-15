@@ -153,6 +153,12 @@ class HostPage extends React.Component {
           render: (text, record) => <Link to={`sysinfo?jobid=${record.id}`}>sys info</Link>,
         },
         {
+          title: 'log link',
+          //dataIndex: 'ceph_config',
+          //key: 'ceph_config',
+          render: (text, record) => <a href={`http://10.240.217.74/${record.jobdir}`}>log files</a>,
+        },
+        {
           title: 'Operation',
           key: 'operation',
           width: 100,

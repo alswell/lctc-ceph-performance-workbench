@@ -385,10 +385,10 @@ class RunFIO(SysInfo):
     def store_logfile_FS(self, log_dir):
         if log_dir[-1] == '/':
             del log_dir[-1]
-        dir_name = log_dir.split('/')[-1]
+        dir_name = log_dir.split('/')[-2]
 
         FShost = "10.240.217.74"
-        cmd = ['sshpass', '-p', 'passw0rd', 'scp', '-o', 'StrictHostKeyChecking=no', '-r', log_dir, 'root@{}:/usr/share/fiotest/'.format(FShost)]
+        cmd = ['sshpass', '-p', 'passw0rd', 'scp', '-o', 'StrictHostKeyChecking=no', '-r', '{}/../../{}'.format(log_dir, dir_name), 'root@{}:/usr/share/fiotest/'.format(FShost)]
         print cmd
         subprocess.check_call(cmd)
 

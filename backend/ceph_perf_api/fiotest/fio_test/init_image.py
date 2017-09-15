@@ -76,12 +76,27 @@ def fullfill(path, image_name, size, client, client_password):
     del status[0]
     del status[-1]
     del status[-1]
+    match_size = re.match('(\d+)([GM])', size)
+    if match_size.group(2) == 'G':
+        size = int(match_size.group(1)) * 1024
     for _status in status:
         match = re.match(r'([^\s]*)\s+([^\s]*)\s+([^\s]*)', _status)
         if re.match('{}'.format(image_name), match.group(1)):
-           if match.group(2) != '{}'.format(size):
+            size_match = re.match('(\d+)([GM])', match.group(2))
+            if size_match.group(2) == 'G':
+                total_size = int(size_match.group(1)) * 1024
+            else:
+                total_size = int(size_match.group(1))
+            if total_size != size:
                 raise Exception("Error: image error, please check the image name.")
-           if match.group(3) != '{}'.format(size):
+    
+            size_match = re.match('(\d+)([GM])', match.group(3))
+            if size_match.group(2) == 'G':
+                fill_size = int(size_match.group(1)) * 1024
+            else:
+                fill_size = int(size_match.group(1))
+    
+            if fill_size != size:
                 raise Exception("full fill {} fail! The use size is {} which should be {}.".format(match.group(1), match.group(3), size))
 
 
