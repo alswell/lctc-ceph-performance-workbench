@@ -172,7 +172,7 @@ class TestTestForm extends React.Component {
   };
 
   handleChange = (value) => {
-      console.log(`selected ${value}`);
+      console.log(`selected  checked ${value}`);
     };
 
 
@@ -270,7 +270,6 @@ class TestTestForm extends React.Component {
     const nodeselectItems = nodeipkeys.map((k, index) => {
       const node = getFieldValue(`nodename-${k}`)
       if ( node != undefined ) {
-        //console.log('Node:',node)
         return (
           <Option key={node}>{node}</Option>
         );

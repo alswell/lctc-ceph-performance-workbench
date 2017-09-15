@@ -20,6 +20,15 @@ class RunFIO(SysInfo):
         super(RunFIO, self).__init__(test_path, clusterid)
         self.result = Result(test_path, clusterid)
 
+    def install_deps(self):
+        dep_p = {'sysstat': '/usr/bin/sar', 'smartmontools': '/usr/sbin/smartctl'}
+        for host in self.host_list:
+            ip = self.nodes[host]['ip']
+            password = self.nodes[host]['password']
+            for p, exe in dep_p.items():
+                cmd = "sshpass -p {} ssh {} 'if [ ! -f {} ]; then yum install -y {}; fi'".format(password, ip, exe, p)
+                subprocess.check_call(cmd, shell=True)
+
     def checkandstart_fioser_allclient(self):
         for client, client_info in self.clients.items():
             client = client_info['ip']
@@ -46,7 +55,6 @@ class RunFIO(SysInfo):
         for column in columns:
             if column[0] == 'total':
                 total_index = columns.index(column)
-                print total_index
                 break
         
         default_configs = json.loads(result[-1][total_index])
@@ -76,8 +84,13 @@ class RunFIO(SysInfo):
                 self.set_default_ceph_config(ceph_config)
                 raise Exception("Job Canceled!!!")
 
-    def run(self, jobname, jobid, ceph_config={}):
+    def run(self, jobname, jobid, ceph_config={}, sysdata=[]):
         self.check_job_status(jobid)
+        if self.havedb:
+            self.check_job_status(jobid)
+            job_info = {'status': "Install dependence packages"}
+            self.fiodb.update_jobs(jobid, **job_info)
+        self.install_deps()
         jobname = re.sub('_', '', jobname)
         casenum = len(self.search('{}/config/'.format(self.test_path), '_0.config'))
         jobtime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
@@ -117,6 +130,7 @@ class RunFIO(SysInfo):
         self.deal_with_sysinfo_logfile(
             '{}/sysinfo'.format(log_dir),
             jobid,
+            sysdata,
         )
 
         configs = os.listdir('{}/config/'.format(self.test_path))
@@ -207,6 +221,7 @@ class RunFIO(SysInfo):
                         self.deal_with_sysdata_logfile(
                             log_dir,
                             'sysdata_{}'.format(log_file_name),
+                            sysdata,
                         )
                 else:
                     i = i + 1

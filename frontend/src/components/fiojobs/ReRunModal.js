@@ -25,7 +25,6 @@ export class ReRunPage extends React.Component {
           onCancel={this.props.onCancel}
           refresh={this.props.refresh}
           record={this.props.record}
-          data={this.props.data}
         />
       </span>
     )

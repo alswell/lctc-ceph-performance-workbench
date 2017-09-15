@@ -34,12 +34,14 @@ class Manager(object):
                 log_dir = runfio.run(
                     body['jobname'],
                     body['jobid'],
-                    ceph_config=body['ceph_config']
+                    ceph_config=body['ceph_config'],
+                    sysdata=body['sysdata']
                 )
             else:
                 log_dir = runfio.run(
                     body['jobname'],
                     body['jobid'],
+                    sysdata=body['sysdata']
                 ) 
         except Exception, e:
             print e

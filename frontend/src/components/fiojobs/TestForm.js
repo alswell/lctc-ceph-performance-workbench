@@ -2,7 +2,7 @@
  * Created by chenkang1 on 2017/7/4.
  */
 import React from 'react'
-import { Form, Icon, Input, Button, Modal, Row, Col, Select } from 'antd'
+import { Form, Icon, Input, Button, Modal, Row, Col, Select, Checkbox } from 'antd'
 const { TextArea } = Input;
 import PropTypes from 'prop-types'
 import './TestForm.less'
@@ -142,7 +142,7 @@ class TestTestForm extends React.Component {
               message: "Please input client or delete this field.",
             }],
           })(
-            <Input placeholder="10.240.217.101" style={{ width: '60%', marginRight: 8 }} />
+            <Input placeholder="10.240.217.131" style={{ width: '60%', marginRight: 8 }} />
           )}
           {clientkeys.length > 0 ? (
             <Icon
@@ -247,9 +247,10 @@ class TestTestForm extends React.Component {
             <Row gutter={8}>
               <Col span={12}>
                 {getFieldDecorator('client-1', {
+                  initialValue: "10.240.217.131",
                   rules: [{ required: true, message: 'Please input the client!' }],
                 })(
-                  <Input size="large" placeholder="10.240.217.101"/>
+                  <Input size="large" placeholder="10.240.217.131"/>
                 )}
               </Col>
               <Col span={12}>
@@ -478,6 +479,27 @@ class TestTestForm extends React.Component {
               }],
               })(
               <TextArea placeholder="rw=rw" style={{ width: '100%', marginRight: 8, height: 100 }} />
+            )}
+          </FormItem>
+          <FormItem
+            {...formItemLayout}
+            label="sysdata collect"
+          >
+            {getFieldDecorator(`sysdata`, {
+              initialValue: "perfdump",
+              rules: [{
+                required: false,
+              }],
+              })(
+              <Checkbox.Group onChange={this.handleChange}>
+                <Row>
+                  <Col span={3}><Checkbox value="sar">sar</Checkbox></Col>
+                  <Col span={4}><Checkbox value="iostat">iostat</Checkbox></Col>
+                  <Col span={6}><Checkbox value="cephstatus">ceph status</Checkbox></Col>
+                  <Col span={6}><Checkbox value="perfdump">perf dump</Checkbox></Col>
+                  <Col span={8}><Checkbox value="lsblk">lsblk&smartctl</Checkbox></Col>
+                </Row>
+              </Checkbox.Group>
             )}
           </FormItem>
           <FormItem>

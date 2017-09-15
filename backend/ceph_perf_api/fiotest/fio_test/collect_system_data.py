@@ -407,8 +407,6 @@ class SysData(FioBase):
                     del disk_data_list[0]
                     del disk_data_list[-1]
                     n = 0
-                    print datetime.datetime.now(),
-                    print len(disk_data_list)
                     for disk_data in disk_data_list:
                         result = {}
                         disk_data = re.sub(r'\s+', ",", disk_data)
@@ -534,24 +532,28 @@ class SysData(FioBase):
             for pool, pool_info in pools_info.items():
                 self.fiodb.insert_tb_poolinfo(casename, pool, **pool_info)
 
-    def deal_with_sysdata_logfile(self, log_dir, sysdata_dir):
+    def deal_with_sysdata_logfile(self, log_dir, sysdata_dir, sysdata):
         path = '{}/{}'.format(log_dir, sysdata_dir)
         dir_list = path.split('/')
         casename = re.match('sysdata_(.*)', dir_list[-1]).group(1)
 
-        print datetime.datetime.now(),
-        print "deal_with_sarlog"
-        self.deal_with_sarlog(casename, path)
-        print datetime.datetime.now(),
-        print "deal_with_iostatlog"
-        #self.deal_with_iostatlog(casename, path)
+        if sysdata.count('sar') > 0:
+            print datetime.datetime.now(),
+            print "deal_with_sarlog"
+            self.deal_with_sarlog(casename, path)
+        if sysdata.count('iostat') > 0:
+            print datetime.datetime.now(),
+            print "deal_with_iostatlog"
+            self.deal_with_iostatlog(casename, path)
         if self.havedb:
-            print datetime.datetime.now(),
-            print "deal_with_perfdumplog"
-            self.deal_with_perfdumplog(casename, path)
-            print datetime.datetime.now(),
-            print "deal_with_cephstatuslog"
-            self.deal_with_cephstatuslog(casename, path)
+            if sysdata.count('perfdump') > 0:
+                print datetime.datetime.now(),
+                print "deal_with_perfdumplog"
+                self.deal_with_perfdumplog(casename, path)
+            if sysdata.count('cephstatus') > 0:
+                print datetime.datetime.now(),
+                print "deal_with_cephstatuslog"
+                self.deal_with_cephstatuslog(casename, path)
             print datetime.datetime.now(),
             print "deal_with_cephinfo"
             self.deal_with_cephinfo(casename, path)

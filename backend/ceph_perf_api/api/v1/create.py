@@ -42,7 +42,7 @@ class CreateFioJob(generic.View):
                 f.write(client)
                 f.write('\n')
 
-        if not body['cephconfig']:
+        if body['cephconfig'] == 'default':
             cephconfig = ['default']
         else:
             config = re.sub('\n', ';', body['cephconfig'])
@@ -80,10 +80,12 @@ class CreateFioJob(generic.View):
         body = request.DATA
         print body
 
-        if not body.has_key('cephconfig'):
-            body['cephconfig'] = None
-        if not body.has_key('fiopara'):
+        if not body.has_key('cephconfig') or body['cephconfig'] == '':
+            body['cephconfig'] = 'default'
+        if not body.has_key('fiopara') or body['fiopara'] == '':
             body['fiopara'] = None
+        if not body.has_key('sysdata') or body['sysdata'] == '':
+            body['sysdata'] = []
         suite_dir, create_time = self.create_suite(body)
         
         result = deploymodels.Cluster.objects.filter(clustername=body['cluster']).all()[0]
@@ -101,7 +103,8 @@ class CreateFioJob(generic.View):
             'testdir': suite_dir,
             'cluster': result.clustername,
             'ceph_config': body['cephconfig'],
-            'fiopara': body['fiopara']
+            'fiopara': body['fiopara'],
+            'sysdata': str(body['sysdata'])
         }
         if os.path.exists(ceph_config_file):
             ceph_configs = json.load(open(ceph_config_file))

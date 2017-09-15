@@ -24,17 +24,25 @@ class JOBDETAIL(generic.View):
         jobdetail['cluster'] = jobinfo['cluster']
         jobdetail['jobname'] = jobinfo['name']
         jobdetail['fiopara'] = jobinfo['fiopara']
-        jobdetail['cephconfig'] = jobinfo['ceph_config']
-        print 
+        if jobinfo['ceph_config'] == 'default':
+            jobdetail['cephconfig'] = ''
+        else:
+            jobdetail['cephconfig'] = jobinfo['ceph_config']
+
+        sysdata = re.sub('[\[\]]', '', jobinfo['sysdata'])
+        sysdata = re.sub('u\'', '', sysdata)
+        sysdata = re.sub('\'', '', sysdata)
+
+        jobdetail['sysdata'] = sysdata.split(', ')
 
         if jobinfo['testdir']:
             cmd = "ls {}/config".format(jobinfo['testdir'])
             cases = subprocess.check_output(cmd, shell=True).split('\n')
             del cases[-1]
+
             cmd = "grep rbdname {}/config/{}".format(jobinfo['testdir'], cases[0])
             jobdetail['imagename'] = subprocess.check_output(cmd, shell=True).split('=')[1].split('_')[0]
-        
-
+            
             onecase = cases[0].split('_')
             for config in onecase:
                 pool_m = re.match('pool(.*)', config)
@@ -75,7 +83,6 @@ class JOBDETAIL(generic.View):
                         jobdetail['numjob'].count(numjob)
                         if jobdetail['numjob'].count(numjob) == 0:
                             jobdetail['numjob'].append(numjob)
-
             cmd = "cat {}/fioserver_list.conf".format(jobinfo['testdir'])
             jobdetail['clients'] = subprocess.check_output(cmd, shell=True).split('\n')
             del jobdetail['clients'][-1]

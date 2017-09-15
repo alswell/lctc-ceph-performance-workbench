@@ -335,16 +335,17 @@ class SysInfo(SysData):
             if self.havedb:
                 self.fiodb.insert_tb_osinfo(jobid, host, **os_info)
 
-    def deal_with_sysinfo_logfile(self, sysinfo_dir, jobid):
+    def deal_with_sysinfo_logfile(self, sysinfo_dir, jobid, sysdata):
         dir_list = sysinfo_dir.split('/')
 
         if self.havedb:
             print datetime.datetime.now(),
             print "deal_with_cephconfiglog"
             self.deal_with_cephconfiglog(jobid, sysinfo_dir)
-        print datetime.datetime.now(),
-        print "deal_with_lsblk_log"
-        self.deal_with_lsblk_log(jobid, sysinfo_dir)
+        if sysdata.count('lsblk') > 0:
+            print datetime.datetime.now(),
+            print "deal_with_lsblk_log"
+            self.deal_with_lsblk_log(jobid, sysinfo_dir)
         print datetime.datetime.now(),
         print "deal_with_hwinfo"
         self.deal_with_hwinfo(jobid, sysinfo_dir)

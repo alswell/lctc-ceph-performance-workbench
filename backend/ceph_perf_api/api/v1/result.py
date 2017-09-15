@@ -1,4 +1,5 @@
 # -*- coding: UTF-8 -*-
+import subprocess
 import urls
 import re
 from django.views import generic
@@ -119,12 +120,13 @@ class FIOJOBS(generic.View):
         result = models.Jobs.objects.filter(id=jobid).all()[0]
         if re.match("Failed", result.status):
             result.delete()
-            return "delete Failed job {}".format(jobid)
         elif result.status == "Canceled":
             result.delete()
-            return "delete Canceled job {}".format(jobid)
         elif result.status == "Finished":
             result.delete()
-            return "delete Canceled job {}".format(jobid)
         else:
             raise Exception("Error: The job with status {} can't be deleted!".format(result.status))
+        if result.testdir:
+            cmd = "rm -rf {}".format(result.testdir)
+            subprocess.check_call(cmd, shell=True)
+        return "delete {} job {}".format(result.status, jobid)
