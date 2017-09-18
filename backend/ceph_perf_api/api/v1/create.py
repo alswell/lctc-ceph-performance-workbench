@@ -23,11 +23,6 @@ class CreateFioJob(generic.View):
         self.job_conductor = job_api.API()
 
     def create_suite(self, body):
-        body['clientkeys'].append(1)
-        clientslist = []
-        for clientkey in body['clientkeys']:
-            clientslist.append(body['client-{}'.format(clientkey)])
-
         if body['fiopara']:
             other_fio_config = body['fiopara'].split('\n')
         else:
@@ -38,7 +33,7 @@ class CreateFioJob(generic.View):
         dir_path, create_time = fiotest.create_suite_dir(body['jobname'])
 
         with open('{}/fioserver_list.conf'.format(dir_path), 'w') as f:
-            for client in clientslist:
+            for client in body['client']:
                 f.write(client)
                 f.write('\n')
 
@@ -68,7 +63,7 @@ class CreateFioJob(generic.View):
                                 body['jobname'],
                                 rwmixread,
                                 body['imagename'],
-                                clientslist,
+                                body['client'],
                                 other_fio_config,
                             )
                             casenum = casenum + 1

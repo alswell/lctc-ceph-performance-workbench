@@ -31,11 +31,31 @@ class DeployCeph(generic.View):
         self.job_conductor.deploy(body)
 
 @urls.register
+class CLIENTS(generic.View):
+    url_regex = r'^clients$'
+
+    @utils.json_response
+    def get(self, request):
+        print dict(request.GET)
+        f = {}
+        for key, value in dict(request.GET).items():
+            f[key] = value[0]
+        result = models.Cluster.objects.filter(**f).all()
+        clients = utils.query_to_dict(result)[0]['clients'].split('\n')
+        d = []
+        for client in clients:
+            d.append(client.split(":")[1])
+        
+        return d
+
+
+@urls.register
 class CLUSTERS(generic.View):
     url_regex = r'^cluster$'
 
     @utils.json_response
     def get(self, request):
+        print dict(request.GET)
         f = {}
         for key, value in dict(request.GET).items():
             f[key] = value[0]
@@ -111,7 +131,6 @@ class CLUSTERS(generic.View):
                 body['osdj-{}'.format(key)])
             )
 
-        print cluster_info
         result = models.Cluster.objects.create(**cluster_info)
         clusterid = result.id
 

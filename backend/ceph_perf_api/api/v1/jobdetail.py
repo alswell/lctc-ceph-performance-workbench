@@ -29,11 +29,12 @@ class JOBDETAIL(generic.View):
         else:
             jobdetail['cephconfig'] = jobinfo['ceph_config']
 
-        sysdata = re.sub('[\[\]]', '', jobinfo['sysdata'])
-        sysdata = re.sub('u\'', '', sysdata)
-        sysdata = re.sub('\'', '', sysdata)
+        if jobinfo['sysdata'] != None:
+            sysdata = re.sub('[\[\]]', '', jobinfo['sysdata'])
+            sysdata = re.sub('u\'', '', sysdata)
+            sysdata = re.sub('\'', '', sysdata)
 
-        jobdetail['sysdata'] = sysdata.split(', ')
+            jobdetail['sysdata'] = sysdata.split(', ')
 
         if jobinfo['testdir']:
             cmd = "ls {}/config".format(jobinfo['testdir'])

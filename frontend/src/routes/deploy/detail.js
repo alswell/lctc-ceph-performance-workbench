@@ -51,12 +51,12 @@ class DeployDetail extends React.Component {
       for (let key in data) {
           if ( key != 'key' & key != 'id' & key != 'name' ){
           content.push(
-            <pre style={{'overflow-y':'scroll','max-height':'700px'}}>
+            
             <div key={key} className={styles.item}>
             <div>{key}</div>
             <div>{String(data[key])}</div>
             </div>
-            </pre>)
+            )
           }
       }
       //console.log('content: ', content)
@@ -71,8 +71,10 @@ class DeployDetail extends React.Component {
         <div className="action-btn-container">
           <InitImagePage {...this.modalProps}/>
         </div>
-            <h1>{this.state.data ? this.state.data.name :null}</h1>
-            <Detail data={this.state.data}/>
+        <pre style={{'overflow-y':'scroll','max-height':'700px'}}>
+          <h1>{this.state.data ? this.state.data.name :null}</h1>
+          <Detail data={this.state.data}/>
+        </pre>
       </Spin>
     )
   }

@@ -13,7 +13,6 @@ function hasErrors (fieldsError) {
   return Object.keys(fieldsError).some(field => fieldsError[field])
 }
 
-let clientid = 1;
 class TestTestForm extends React.Component {
  constructor(props) {
     super(props);
@@ -45,33 +44,6 @@ class TestTestForm extends React.Component {
     })
   }
 
-  clientremove = (k) => {
-    const { form } = this.props;
-
-    const clientkeys = form.getFieldValue('clientkeys');
-
-    if (clientkeys.length === 0) {
-      return;
-    }
-
-
-    form.setFieldsValue({
-      clientkeys: clientkeys.filter(key => key !== k),
-    });
-  }
-
-  clientadd = () => {
-    clientid++;
-    const { form } = this.props;
-
-    const clientkeys = form.getFieldValue('clientkeys');
-    const nextclientKeys = clientkeys.concat(clientid);
-
-    form.setFieldsValue({
-      clientkeys: nextclientKeys,
-    });
-  }
-
   handleSubmit = (e) => {
     e.preventDefault()
     this.props.form.validateFields((err, values) => {
@@ -97,8 +69,23 @@ class TestTestForm extends React.Component {
   };
 
   handleChange = (value) => {
-      console.log(`selected ${value}`);
-    };
+    //console.log(`selected ${value}`);
+    for (let i=0; i<this.state.clusters.length; i++) {
+      if (this.state.clusters[i].clustername == value) {
+        fetchAndNotification({
+          url: `clients?id=${this.state.clusters[i].id}`,
+          method: 'get',
+          notifications:{
+            error: `获取数据失败！`,
+          }
+        }).then((result) => {
+          this.setState({
+            clients: result.data
+           })
+         })
+      }
+    }
+  };
 
 
   render () {
@@ -125,59 +112,7 @@ class TestTestForm extends React.Component {
       },
     };
 
-    getFieldDecorator('clientkeys', { initialValue: [] });
-    const clientkeys = getFieldValue('clientkeys');
-    const clientformItems = clientkeys.map((k, index) => {
-      return (
-        <FormItem
-          {...formItemLayoutWithOutLabel}
-          required={false}
-          clientkey={k}
-        >
-          {getFieldDecorator(`client-${k}`, {
-            validateTrigger: ['onChange', 'onBlur'],
-            rules: [{
-              required: true,
-              whitespace: true,
-              message: "Please input client or delete this field.",
-            }],
-          })(
-            <Input placeholder="10.240.217.131" style={{ width: '60%', marginRight: 8 }} />
-          )}
-          {clientkeys.length > 0 ? (
-            <Icon
-              className="dynamic-delete-button"
-              type="minus-circle-o"
-              disabled={clientkeys.length === 0}
-              onClick={() => this.clientremove(k)}
-            />
-          ) : null}
-        </FormItem>
-      );
-    });
-
-    // getFieldDecorator('cluster', { initialValue: [] });
-    // const clustername = getFieldValue('cluster');
-    // console.log(clustername.length)
-    // if (cluster.length > 0 ) {
-        
-    // }
-    
-    // const clientselectItems = this.state.clients.map((k, index) => {
-    //   if ( node != undefined ) {
-    //     //console.log('Node:',node)
-    //     return (
-    //       <Option key={node}>{node}</Option>
-    //     );
-    //   }
-    //   else {
-    //     return (
-    //       <Option key={1}></Option>
-    //     );
-    //   }
-    // });
-
-    const getcluster = [];
+    let getcluster = [];
     if ( this.state.clusters.length > 0 ) {
       for (let i=0; i<this.state.clusters.length; i++) {
         getcluster.push(<Option key={this.state.clusters[i].clustername}>{this.state.clusters[i].clustername}</Option>)
@@ -187,12 +122,22 @@ class TestTestForm extends React.Component {
       getcluster.push(<Option key={1}></Option>)
     }
 
-    const rwmixread = [];
+    let rwmixread = [];
     for (let i = 0; i <= 100; i=i+10) {
       rwmixread.push(<Option key={i}>{i}</Option>);
     }
-    
 
+    let getclients = [];
+    if ( this.state.clients.length > 0 ) {
+      for (let i=0; i<this.state.clients.length; i++) {
+        getclients.push(<Option key={this.state.clients[i]}>{this.state.clients[i]}</Option>)
+      }
+    }
+    else{
+      getclients.push(<Option key={1}></Option>)
+    }
+    
+    //console.log(this.state.clients)
     return (
       <Modal
         visible={this.props.visible}
@@ -244,23 +189,18 @@ class TestTestForm extends React.Component {
             validateStatus={userNameError ? 'error' : ''}
             help={userNameError || ''}
           >
-            <Row gutter={8}>
-              <Col span={12}>
-                {getFieldDecorator('client-1', {
-                  initialValue: "10.240.217.131",
-                  rules: [{ required: true, message: 'Please input the client!' }],
+                {getFieldDecorator('client', {
+                  rules: [{ required: true, message: 'Please select the client!' }],
                 })(
-                  <Input size="large" placeholder="10.240.217.131"/>
+                  <Select
+                    mode="multiple"
+                    style={{ width: '100%' }}
+                    placeholder="Please select"
+                  >
+                    {getclients}
+                  </Select>
                 )}
-              </Col>
-              <Col span={12}>
-                <Button type="dashed" onClick={this.clientadd} style={{ width: '100%' }}>
-                  <Icon type="plus" /> Add Client
-                </Button>
-              </Col>
-            </Row>
           </FormItem>
-           {clientformItems}
           <FormItem
             {...formItemLayout}
             label="Fio Type"
@@ -276,7 +216,6 @@ class TestTestForm extends React.Component {
                 mode="multiple"
                 style={{ width: '100%' }}
                 placeholder="Please select"
-                onChange={this.handleChange}
               >
                 <Option key="rw">rw</Option>
                 <Option key="randrw">randrw</Option>
@@ -298,7 +237,6 @@ class TestTestForm extends React.Component {
                 mode="multiple"
                 style={{ width: '100%' }}
                 placeholder="Please select"
-                onChange={this.handleChange}
               >
                 {rwmixread}
               </Select>
@@ -319,7 +257,6 @@ class TestTestForm extends React.Component {
                 mode="multiple"
                 style={{ width: '100%' }}
                 placeholder="Please select"
-                onChange={this.handleChange}
               >
                 <Option key="4k">4k</Option>
                 <Option key="8k">8k</Option>
@@ -350,7 +287,6 @@ class TestTestForm extends React.Component {
                 mode="multiple"
                 style={{ width: '100%' }}
                 placeholder="Please select"
-                onChange={this.handleChange}
               >
                 <Option key="1">1</Option>
                 <Option key="4">4</Option>
@@ -380,7 +316,6 @@ class TestTestForm extends React.Component {
                 mode="multiple"
                 style={{ width: '100%' }}
                 placeholder="Please select"
-                onChange={this.handleChange}
               >
                 <Option key="1">1</Option>
                 <Option key="4">4</Option>
@@ -491,7 +426,7 @@ class TestTestForm extends React.Component {
                 required: false,
               }],
               })(
-              <Checkbox.Group onChange={this.handleChange}>
+              <Checkbox.Group>
                 <Row>
                   <Col span={3}><Checkbox value="sar">sar</Checkbox></Col>
                   <Col span={4}><Checkbox value="iostat">iostat</Checkbox></Col>

@@ -214,4 +214,11 @@ module.exports = [
     name: "Cluster Detail",
     router: "/Cluster/:id"
   },
+  {
+    id: 632,
+    mpid: -1,
+    bpid: 630,
+    name: "Ceph Config",
+    router: "/defaultcephconfig/:id"
+  },
 ];

@@ -143,8 +143,13 @@ class HostPage extends React.Component {
           title: 'ceph config',
           dataIndex: 'ceph_config',
           key: 'ceph_config',
-          width: 200,
-          render: (text, record) => <Link to={`cephconfig/${record.id}`}>{text}</Link>,
+          render: (text, record) => {
+            return (
+              <pre>
+                <Link to={`cephconfig/${record.id}`}>{text}</Link>
+              </pre>
+            )
+          },
         }, 
         {
           title: 'sys info',

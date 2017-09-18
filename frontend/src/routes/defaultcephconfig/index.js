@@ -44,9 +44,7 @@ class HostDetail extends React.Component {
       //console.log('content: ', content)
       return (<div className="content-inner">
         <div className={styles.content}>
-          <pre style={{'overflow-y':'scroll','max-height':'700px'}}>
-              {JSON.stringify(cephConfig, null, 2) }
-            </pre>
+          {JSON.stringify(cephConfig, null, 2) }  
         </div>
       </div>)
     }
@@ -54,8 +52,10 @@ class HostDetail extends React.Component {
     return (
       <Spin spinning={this.state.spinning}>
         <div className="content-inner">
-           <h2>{this.state.data ? this.state.data.osd :null}</h2>
-           <Detail cephConfig={this.state.data}/>
+          <pre style={{'overflow-y':'scroll','max-height':'700px'}}>
+            <h2>{this.state.data ? this.state.data.osd :null}</h2>
+            <Detail cephConfig={this.state.data}/>
+          </pre>
         </div>
       </Spin>
     )
