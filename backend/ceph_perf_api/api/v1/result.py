@@ -11,56 +11,58 @@ from fiotest import models
 class FIOTESTS(generic.View):
     url_regex = r'^fiotest$'
 
+    def get_index(self, mylist, casename):
+        for item in mylist:
+            if item['casename'] == casename:
+                return mylist.index(item)
+
     @utils.json_response
     def get(self, request):
         print dict(request.GET)
         f = {}
         if len(dict(request.GET)) == 1 and dict(request.GET).has_key('jobid'):
             output = {}
-            for key, values in dict(request.GET).items():
-                for value in values:
-                    f[key] = value
-                    r = models.Result.objects.filter(**f).all().order_by(
-                        'blocksize', 'imagenum', 'readwrite', 'numberjob', 'iodepth')
-                    results = utils.query_to_dict(r)
-                    for result in results:
-                        case_name = '{}_{}_{}_{}_{}_{}'.format(
-                            result['blocksize'],
-                            result['imagenum'],
-                            result['readwrite'],
-                            result['numberjob'],
-                            result['iodepth'],
-                            result['clientnum'],
-                        )
-                        j = {}
-                        j['id'] = value
-                        job_r = models.Jobs.objects.filter(**j).all()
-                        result_j = utils.query_to_dict(job_r)[0]
-                        if output.has_key(case_name):
-                            output[case_name]['{}_iops'.format(value)] = result['iops']
-                            output[case_name]['{}_lat'.format(value)] = result['lat']
-                            output[case_name]['{}_bw'.format(value)] = result['bw']
-                            if result_j.has_key('name'):
-                                output[case_name]['{}{}_iops'.format(value, result_j['name'])] = result['iops']
-                                output[case_name]['{}{}_lat'.format(value, result_j['name'])] = result['lat']
-                                output[case_name]['{}{}_bw'.format(value, result_j['name'])] = result['bw']
-                        else:
-                            output[case_name] = {}
-                            output[case_name]['{}_iops'.format(value)] = result['iops']
-                            output[case_name]['{}_lat'.format(value)] = result['lat']
-                            output[case_name]['{}_bw'.format(value)] = result['bw']
-                            if result_j.has_key('name'):
-                                output[case_name]['{}{}_iops'.format(value, result_j['name'])] = result['iops']
-                                output[case_name]['{}{}_lat'.format(value, result_j['name'])] = result['lat']
-                                output[case_name]['{}{}_bw'.format(value, result_j['name'])] = result['bw']
-            output = sorted(output.items(),key = lambda x:x[0])
-            
-            d = []
-            for item in output:
-                tmp_dic = {'casename': item[0]}
-                tmp_dic.update(item[1])
-                d.append(tmp_dic)
-            return d
+            _output = []
+            f = utils.parse_filter_param(request.DATA, request.GET)
+            r = models.Result.objects.filter(**f).all().order_by(
+                'blocksize', 'imagenum', 'readwrite', 'numberjob', 'iodepth', '-jobid')
+            results = utils.query_to_dict(r)
+            for result in results:
+                case_name = '{}_{}_{}_{}_{}_{}'.format(
+                    result['blocksize'],
+                    result['iodepth'],
+                    result['numberjob'],
+                    result['imagenum'],
+                    result['clientnum'],
+                    result['readwrite'],
+                )
+                j = {}
+                j['id'] = result['jobid']
+                job_r = models.Jobs.objects.filter(**j).all()
+                result_j = utils.query_to_dict(job_r)[0]
+                if output.has_key(case_name):
+                    output[case_name]['{}_iops'.format(result['jobid'])] = result['iops']
+                    output[case_name]['{}_lat'.format(result['jobid'])] = result['lat']
+                    output[case_name]['{}_bw'.format(result['jobid'])] = result['bw']
+                    if result_j.has_key('name'):
+                        output[case_name]['{}{}_iops'.format(result['jobid'], result_j['name'])] = result['iops']
+                        output[case_name]['{}{}_lat'.format(result['jobid'], result_j['name'])] = result['lat']
+                        output[case_name]['{}{}_bw'.format(result['jobid'], result_j['name'])] = result['bw']
+                    case_index = self.get_index(_output, case_name)
+                    _output[case_index].update(output[case_name])
+
+                else:
+                    output[case_name] = {}
+                    output[case_name]['{}_iops'.format(result['jobid'])] = result['iops']
+                    output[case_name]['{}_lat'.format(result['jobid'])] = result['lat']
+                    output[case_name]['{}_bw'.format(result['jobid'])] = result['bw']
+                    if result_j.has_key('name'):
+                        output[case_name]['{}{}_iops'.format(result['jobid'], result_j['name'])] = result['iops']
+                        output[case_name]['{}{}_lat'.format(result['jobid'], result_j['name'])] = result['lat']
+                        output[case_name]['{}{}_bw'.format(result['jobid'], result_j['name'])] = result['bw']
+                    output[case_name].update({'casename': case_name})
+                    _output.append(output[case_name])
+            return _output
 
         else:
             filter_param = utils.parse_filter_param(request.DATA, request.GET)
