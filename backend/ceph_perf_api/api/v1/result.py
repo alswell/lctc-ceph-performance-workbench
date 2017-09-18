@@ -21,16 +21,16 @@ class FIOTESTS(generic.View):
                 for value in values:
                     f[key] = value
                     r = models.Result.objects.filter(**f).all().order_by(
-                        'jobid', 'blocksize', 'imagenum', 'readwrite', 'numberjob', 'iodepth')
+                        'blocksize', 'imagenum', 'readwrite', 'numberjob', 'iodepth')
                     results = utils.query_to_dict(r)
                     for result in results:
                         case_name = '{}_{}_{}_{}_{}_{}'.format(
                             result['blocksize'],
-                            result['iodepth'],
-                            result['numberjob'],
                             result['imagenum'],
+                            result['readwrite'],
+                            result['numberjob'],
+                            result['iodepth'],
                             result['clientnum'],
-                            result['readwrite']
                         )
                         j = {}
                         j['id'] = value
@@ -53,10 +53,12 @@ class FIOTESTS(generic.View):
                                 output[case_name]['{}{}_iops'.format(value, result_j['name'])] = result['iops']
                                 output[case_name]['{}{}_lat'.format(value, result_j['name'])] = result['lat']
                                 output[case_name]['{}{}_bw'.format(value, result_j['name'])] = result['bw']
+            output = sorted(output.items(),key = lambda x:x[0])
+            
             d = []
-            for key, value in output.items():
-                tmp_dic = {'casename': key}
-                tmp_dic.update(value)
+            for item in output:
+                tmp_dic = {'casename': item[0]}
+                tmp_dic.update(item[1])
                 d.append(tmp_dic)
             return d
 

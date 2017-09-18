@@ -302,12 +302,20 @@ class RunFIO(SysInfo):
         print ceph_config
         restart = False
         for ceph_key, ceph_value in ceph_config.items():
-            cmd = "sshpass -p {} ssh -o StrictHostKeyChecking=no {} 'ceph tell osd.* injectargs --{} {} 2>&1'".format(
-                self.client_password,
-                self.client,
-                ceph_key,
-                ceph_value
-            )
+            if ceph_value == "false" or ceph_value == "true":
+                cmd = "sshpass -p {} ssh -o StrictHostKeyChecking=no {} 'ceph tell osd.* injectargs --{}={} 2>&1'".format(
+                    self.client_password,
+                    self.client,
+                    ceph_key,
+                    ceph_value
+                )
+            else:
+                cmd = "sshpass -p {} ssh -o StrictHostKeyChecking=no {} 'ceph tell osd.* injectargs --{} {} 2>&1'".format(
+                    self.client_password,
+                    self.client,
+                    ceph_key,
+                    ceph_value
+                )
             print cmd
             output = subprocess.check_output(cmd, shell=True)
             if re.search('\(not observed, change may require restart\)', output):
