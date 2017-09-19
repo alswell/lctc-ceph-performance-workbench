@@ -90,7 +90,8 @@ class CLUSTERS(generic.View):
         cluster_info['public_network'] = body['publicnetwork']
         cluster_info['cluster_network'] = body['clusternetwork']
         cluster_info['objectstore'] = body['objectstore']
-        cluster_info['journal_size'] = body['journalsize']
+        if body.has_key('journalsize'):
+            cluster_info['journal_size'] = body['journalsize']
         cluster_info['status'] = 'New'
 
         mons = []
@@ -131,6 +132,7 @@ class CLUSTERS(generic.View):
                 body['osdj-{}'.format(key)])
             )
 
+        print cluster_info
         result = models.Cluster.objects.create(**cluster_info)
         clusterid = result.id
 
@@ -190,8 +192,19 @@ class CLUSTER(generic.View):
         except Exception, e:
             image = ''
 
+        cmd = "sshpass -p {} ssh -o StrictHostKeyChecking=no {} 'ceph df -f json-pretty'".format(client_password, client_ip)
+        pool = []
+        try:
+            output = subprocess.check_output(cmd, shell=True)
+            output = json.loads(output)['pools']
+            for item in output:
+                pool.append(item['name'])
+        except Exception, e:
+            pass
+
         if len(d) > 0:
             d[0]['image'] = image
+            d[0]['pool'] = pool
             return d[0]
         else:
             return []

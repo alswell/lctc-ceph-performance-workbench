@@ -42,7 +42,11 @@ class JOBDETAIL(generic.View):
             del cases[-1]
 
             cmd = "grep rbdname {}/config/{}".format(jobinfo['testdir'], cases[0])
-            jobdetail['imagename'] = subprocess.check_output(cmd, shell=True).split('=')[1].split('_')[0]
+            imagename = subprocess.check_output(cmd, shell=True).split('=')[1].split('_')[0]
+            if jobinfo['imagename'] != None and re.search(imagename, jobinfo['imagename']):
+                jobdetail['imagename'] = jobinfo['imagename']
+            else:
+                jobdetail['imagename'] = ''
             
             onecase = cases[0].split('_')
             for config in onecase:

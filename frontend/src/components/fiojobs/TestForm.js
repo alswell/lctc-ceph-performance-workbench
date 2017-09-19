@@ -3,6 +3,7 @@
  */
 import React from 'react'
 import { Form, Icon, Input, Button, Modal, Row, Col, Select, Checkbox } from 'antd'
+import { Link } from 'dva/router'
 const { TextArea } = Input;
 import PropTypes from 'prop-types'
 import './TestForm.less'
@@ -20,6 +21,8 @@ class TestTestForm extends React.Component {
       spinning: true,
       clusters: {},
       clients: [],
+      pools: [],
+      images: [],
     }
   }
 
@@ -68,6 +71,28 @@ class TestTestForm extends React.Component {
     })
   };
 
+  handleImagecountChange = (value) => {
+    this.props.form.setFieldsValue({
+      imagename: '',
+    });
+    const clustervalue = this.props.form.getFieldValue('cluster');
+    for (let i=0; i<this.state.clusters.length; i++) {
+      if (this.state.clusters[i].clustername == clustervalue ) {
+        fetchAndNotification({
+            url: `images/${this.state.clusters[i].id}/`,
+            method: 'get',
+            params: { imagecount: imagecountvalue },
+            notifications:{
+              error: `获取数据失败！`,
+            }
+          }).then((result) => {
+            this.setState({
+              images: result.data
+            })
+          })
+      }
+    }
+  }
   handleChange = (value) => {
     //console.log(`selected ${value}`);
     for (let i=0; i<this.state.clusters.length; i++) {
@@ -82,11 +107,41 @@ class TestTestForm extends React.Component {
           this.setState({
             clients: result.data
            })
-         })
+        })
+        fetchAndNotification({
+          url: `pools/${this.state.clusters[i].id}/`,
+          method: 'get',
+          notifications:{
+            error: `获取数据失败！`,
+          }
+        }).then((result) => {
+          this.setState({
+            pools: result.data
+          })
+        })
+        const imagecountvalue = this.props.form.getFieldValue('imagecount');
+        fetchAndNotification({
+            url: `images/${this.state.clusters[i].id}/`,
+            method: 'get',
+            params: { imagecount: imagecountvalue },
+            notifications:{
+              error: `获取数据失败！`,
+            }
+          }).then((result) => {
+            this.setState({
+              images: result.data
+            })
+          })
       }
     }
+    this.props.form.setFieldsValue({
+        imagename: '',
+        client: [],
+        pool: 'rbd',
+      });
   };
 
+ 
 
   render () {
     const { getFieldDecorator, getFieldsError, getFieldError, isFieldTouched, getFieldValue } = this.props.form
@@ -112,6 +167,13 @@ class TestTestForm extends React.Component {
       },
     };
 
+    let gotoinitimage = []
+    const clustervalue = getFieldValue('cluster')
+    for (let i=0; i<this.state.clusters.length; i++) {
+      if  (this.state.clusters[i].clustername == clustervalue) {
+        gotoinitimage.push(<Link to={`cluster/${this.state.clusters[i].id}`}>Create image</Link>)
+      }
+    }
     let getcluster = [];
     if ( this.state.clusters.length > 0 ) {
       for (let i=0; i<this.state.clusters.length; i++) {
@@ -135,6 +197,26 @@ class TestTestForm extends React.Component {
     }
     else{
       getclients.push(<Option key={1}></Option>)
+    }
+
+    let getpools = [];
+    if ( this.state.pools.length > 0 ) {
+      for (let i=0; i<this.state.pools.length; i++) {
+        getpools.push(<Option key={this.state.pools[i]}>{this.state.pools[i]}</Option>)
+      }
+    }
+    else{
+      getpools.push(<Option key={1}></Option>)
+    }
+
+    let getimages = [];
+    if ( this.state.images.length > 0 ) {
+      for (let i=0; i<this.state.images.length; i++) {
+        getimages.push(<Option key={this.state.images[i]}>{this.state.images[i]}</Option>)
+      }
+    }
+    else{
+      getimages.push(<Option key={1}></Option>)
     }
     
     //console.log(this.state.clients)
@@ -343,7 +425,7 @@ class TestTestForm extends React.Component {
           </FormItem>
           <FormItem
             {...formItemLayout}
-            label="Pool Name"
+            label="Pool"
             validateStatus={userNameError ? 'error' : ''}
             help={userNameError || ''}
           >
@@ -353,7 +435,12 @@ class TestTestForm extends React.Component {
                 { required: true, message: 'Please input the Pool Name!' },
               ],
             })(
-              <Input placeholder="rbd" />
+              <Select
+                style={{ width: '100%' }}
+                placeholder="Please select"
+              >
+                {getpools}
+              </Select>
             )}
           </FormItem>
           <FormItem
@@ -367,12 +454,23 @@ class TestTestForm extends React.Component {
                 { required: true, message: 'Please input the Image Count!' },
               ],
             })(
-              <Input placeholder="1" />
+              <Select
+                style={{ width: '100%' }}
+                placeholder="Please select"
+                onChange={this.handleImagecountChange}
+              >
+                <Option key="1">1</Option>
+                <Option key="2">2</Option>
+                <Option key="3">3</Option>
+                <Option key="4">4</Option>
+                <Option key="5">5</Option>
+                <Option key="6">6</Option>
+              </Select>
             )}
           </FormItem>
           <FormItem
             {...formItemLayout}
-            label="Image Name"
+            label="Image"
             validateStatus={userNameError ? 'error' : ''}
             help={userNameError || ''}
           >
@@ -381,8 +479,14 @@ class TestTestForm extends React.Component {
                 { required: true, message: 'Please input the Image Name!' },
               ],
             })(
-              <Input placeholder="testimage_102400" />
+              <Select
+                style={{ width: '100%' }}
+                placeholder="Please select"
+              >
+                {getimages}
+              </Select>
             )}
+            {gotoinitimage}
           </FormItem>
           <FormItem
             {...formItemLayout}

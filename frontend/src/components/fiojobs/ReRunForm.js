@@ -4,6 +4,7 @@
 import React from 'react'
 import { Form, Icon, Input, Button, Modal, Row, Col, Select, Checkbox } from 'antd'
 const { TextArea } = Input;
+import { Link } from 'dva/router'
 import PropTypes from 'prop-types'
 import './TestForm.less'
 import { fetchAndNotification } from '../../services/restfulService'
@@ -22,6 +23,9 @@ class TestTestForm extends React.Component {
       data: {},
       clusters: {},
       clients: [],
+      pools: [],
+      imagecount: 0,
+      images: [],
       setvaluejobname: false,
       setvaluebs: false,
       setvaluepoolname: false,
@@ -102,8 +106,31 @@ class TestTestForm extends React.Component {
     })
   };
 
+  handleImagecountChange = (value) => {
+    this.props.form.setFieldsValue({
+      imagename: '',
+    });
+    const clustervalue = this.props.form.getFieldValue('cluster');
+    for (let i=0; i<this.state.clusters.length; i++) {
+      if (this.state.clusters[i].clustername == clustervalue ) {
+        fetchAndNotification({
+            url: `images/${this.state.clusters[i].id}/`,
+            method: 'get',
+            params: { imagecount: imagecountvalue },
+            notifications:{
+              error: `获取数据失败！`,
+            }
+          }).then((result) => {
+            this.setState({
+              images: result.data
+            })
+          })
+      }
+    }
+  }
+
   handleChange = (value) => {
-    console.log(`selected ${value}`);
+    //console.log(`selected ${value}`);
     for (let i=0; i<this.state.clusters.length; i++) {
       if (this.state.clusters[i].clustername == value) {
         fetchAndNotification({
@@ -117,8 +144,37 @@ class TestTestForm extends React.Component {
             clients: result.data
            })
         })
+        fetchAndNotification({
+          url: `pools/${this.state.clusters[i].id}/`,
+          method: 'get',
+          notifications:{
+            error: `获取数据失败！`,
+          }
+        }).then((result) => {
+          this.setState({
+            pools: result.data
+          })
+        })
+        const imagecountvalue = this.props.form.getFieldValue('imagecount');
+        fetchAndNotification({
+            url: `images/${this.state.clusters[i].id}/`,
+            method: 'get',
+            params: { imagecount: imagecountvalue },
+            notifications:{
+              error: `获取数据失败！`,
+            }
+          }).then((result) => {
+            this.setState({
+              images: result.data
+            })
+          })
       }
     }
+    this.props.form.setFieldsValue({
+      imagename: '',
+      poolname: 'rbd',
+      client: [],
+    });
   };
 
 
@@ -146,6 +202,13 @@ class TestTestForm extends React.Component {
       },
     };
 
+    let gotoinitimage = []
+    const clustervalue = getFieldValue('cluster')
+    for (let i=0; i<this.state.clusters.length; i++) {
+      if  (this.state.clusters[i].clustername == clustervalue) {
+        gotoinitimage.push(<Link to={`cluster/${this.state.clusters[i].id}`}>Create image</Link>)
+      }
+    }
     const getcluster = [];
     if ( this.state.clusters.length > 0 ) {
       for (let i=0; i<this.state.clusters.length; i++) {
@@ -171,6 +234,26 @@ class TestTestForm extends React.Component {
       getclients.push(<Option key={1}></Option>)
     }
     
+    let getpools = [];
+    if ( this.state.pools.length > 0 ) {
+      for (let i=0; i<this.state.pools.length; i++) {
+        getpools.push(<Option key={this.state.pools[i]}>{this.state.pools[i]}</Option>)
+      }
+    }
+    else{
+      getpools.push(<Option key={1}></Option>)
+    }
+
+    let getimages = [];
+    if ( this.state.images.length > 0 ) {
+      for (let i=0; i<this.state.images.length; i++) {
+        getimages.push(<Option key={this.state.images[i]}>{this.state.images[i]}</Option>)
+      }
+    }
+    else{
+      getimages.push(<Option key={1}></Option>)
+    }
+
     const testset = () => {
       const bsvalue = getFieldValue('bs');
       if ( bsvalue != this.props.data.blocksize ){
@@ -180,17 +263,16 @@ class TestTestForm extends React.Component {
       }
     }
 
-    let jobnamevalue = this.props.form.getFieldValue('jobname');
+    let jobnamevalue = getFieldValue('jobname');
     if (this.props.visible && this.state.data != {} && this.state.setvaluejobname == false && jobnamevalue != this.state.data.jobname ){
-      this.props.form.setFieldsValue({
+      setFieldsValue({
         jobname: this.state.data.jobname,
       });
       this.setState({
         setvaluejobname: true,
       })
     }
-    let clustervalue = this.props.form.getFieldValue('cluster');
-    if ( clustervalue != undefined && this.state.clients == [] ){
+    if ( this.state.clients.length == 0 || this.state.pools.length == 0 ){
       for (let i=0; i<this.state.clusters.length; i++) {
         if (this.state.clusters[i].clustername == clustervalue ) {
           fetchAndNotification({
@@ -204,129 +286,161 @@ class TestTestForm extends React.Component {
               clients: result.data
             })
           })
+          fetchAndNotification({
+            url: `pools/${this.state.clusters[i].id}/`,
+            method: 'get',
+            notifications:{
+              error: `获取数据失败！`,
+            }
+          }).then((result) => {
+            this.setState({
+              pools: result.data
+            })
+          })
         }
       }
     }
     if ( this.props.visible && this.state.data != {} && clustervalue != this.state.data.cluster && this.state.setvaluecluster == false ){
-      this.props.form.setFieldsValue({
+      setFieldsValue({
         cluster: this.state.data.cluster,
       });
       this.setState({
         setvaluecluster: true,
       })
     }
-    const bsvalue = this.props.form.getFieldValue('bs');
+    const bsvalue = getFieldValue('bs');
     if ( this.props.visible && this.state.data != {} && bsvalue != this.state.data.bs && this.state.setvaluebs == false){
-      this.props.form.setFieldsValue({
+      setFieldsValue({
         bs: this.state.data.bs,
       });
       this.setState({
         setvaluebs: true,
       })
     }
-    const fiotypevalue = this.props.form.getFieldValue('fiotype');
+    const fiotypevalue = getFieldValue('fiotype');
     if ( this.props.visible && this.state.data != {} && fiotypevalue != this.state.data.fiotype && this.state.setvaluefiotype == false ){
-      this.props.form.setFieldsValue({
+      setFieldsValue({
         fiotype: this.state.data.fiotype,
       });
       this.setState({
         setvaluefiotype: true,
       })
     }
-    const rwmixreadvalue = this.props.form.getFieldValue('rwmixread');
+    const rwmixreadvalue = getFieldValue('rwmixread');
     if ( this.props.visible && this.state.data != {} && rwmixreadvalue != this.state.data.rwmixread && this.state.setvaluerwmixread == false ){
-      this.props.form.setFieldsValue({
+      setFieldsValue({
         rwmixread: this.state.data.rwmixread,
       });
       this.setState({
         setvaluerwmixread: true,
       })
     }
-    const iodepthvalue = this.props.form.getFieldValue('iodepth');
+    const iodepthvalue = getFieldValue('iodepth');
     if ( this.props.visible && this.state.data != {} && iodepthvalue != this.state.data.iodepth && this.state.setvalueiodepth == false ){
-      this.props.form.setFieldsValue({
+      setFieldsValue({
         iodepth: this.state.data.iodepth,
       });
       this.setState({
         setvalueiodepth: true,
       })
     }
-    const numjobvalue = this.props.form.getFieldValue('numjob');
+    const numjobvalue = getFieldValue('numjob');
     if ( this.props.visible && this.state.data != {} && numjobvalue != this.state.data.numjob && this.state.setvaluenumjob == false ){
-      this.props.form.setFieldsValue({
+      setFieldsValue({
         numjob: this.state.data.numjob,
       });
       this.setState({
         setvaluenumjob: true,
       })
     }
-    const imagenamevalue = this.props.form.getFieldValue('imagename');
+    const imagenamevalue = getFieldValue('imagename');
     if ( this.props.visible && this.state.data != {} && imagenamevalue != this.state.data.imagename && this.state.setvalueimagename == false ){
-      this.props.form.setFieldsValue({
+      setFieldsValue({
         imagename: this.state.data.imagename,
       });
       this.setState({
         setvalueimagename: true,
       })
     }
-    const poolnamevalue = this.props.form.getFieldValue('poolname');
+    const poolnamevalue = getFieldValue('poolname');
     if ( this.props.visible && this.state.data != {} && poolnamevalue != this.state.data.poolname && this.state.setvaluepoolname == false ){
-      this.props.form.setFieldsValue({
+      setFieldsValue({
         poolname: this.state.data.poolname,
       });
       this.setState({
         setvaluepoolname: true,
       })
     }
-    const runtimevalue = this.props.form.getFieldValue('runtime');
+    const runtimevalue = getFieldValue('runtime');
     if ( this.props.visible && this.state.data != {} && runtimevalue != this.state.data.runtime && this.state.setvalueruntime == false ){
-      this.props.form.setFieldsValue({
+      setFieldsValue({
         runtime: this.state.data.runtime,
       });
       this.setState({
         setvalueruntime: true,
       })
     }
-    const imagecountvalue = this.props.form.getFieldValue('imagecount');
+    const imagecountvalue = getFieldValue('imagecount');
+    if ( this.props.visible && this.state.imagecount != imagecountvalue && imagecountvalue != undefined ) {
+      this.setState({
+          imagecount: imagecountvalue
+      })
+      for (let i=0; i<this.state.clusters.length; i++) {
+        if (this.state.clusters[i].clustername == clustervalue ) {
+          fetchAndNotification({
+            url: `images/${this.state.clusters[i].id}/`,
+            method: 'get',
+            params: { imagecount: imagecountvalue },
+            notifications:{
+              error: `获取数据失败！`,
+            }
+          }).then((result) => {
+            this.setState({
+              images: result.data
+            })
+          })
+        }
+      }
+    }
     if ( this.props.visible && this.state.data != {} && imagecountvalue != this.state.data.imagecount && this.state.setvalueimagecount == false ){
-      this.props.form.setFieldsValue({
+      setFieldsValue({
         imagecount: this.state.data.imagecount,
       });
       this.setState({
         setvalueimagecount: true,
       })
     }
-    const fioparavalue = this.props.form.getFieldValue('fiopara');
+    const fioparavalue = getFieldValue('fiopara');
     if ( this.props.visible && this.state.data != {} && fioparavalue != this.state.data.fiopara && this.state.setvaluefiopara == false ){
-      this.props.form.setFieldsValue({
+      setFieldsValue({
         fiopara: this.state.data.fiopara,
       });
       this.setState({
         setvaluefiopara: true,
       })
     }
-    const cephconfigvalue = this.props.form.getFieldValue('cephconfig');
+    const cephconfigvalue = getFieldValue('cephconfig');
     if ( this.props.visible && this.state.data != {} && cephconfigvalue != this.state.data.cephconfig && this.state.setvaluecephconfig == false ){
-      this.props.form.setFieldsValue({
+      setFieldsValue({
         cephconfig: this.state.data.cephconfig,
       });
       this.setState({
         setvaluecephconfig: true,
       })
     }
-    const sysdatavalue = this.props.form.getFieldValue('sysdata');
+    const sysdatavalue = getFieldValue('sysdata');
     if ( this.props.visible && this.state.data != {} && sysdatavalue != this.state.data.sysdata && this.state.setvaluesysdata == false ){
-      this.props.form.setFieldsValue({
+      setFieldsValue({
         sysdata: this.state.data.sysdata,
       });
       this.setState({
         setvaluesysdata: true,
       })
     }
-    const clientvalue = this.props.form.getFieldValue('client');
+    const clientvalue = getFieldValue('client');
     if ( this.props.visible && this.state.data != {} && clientvalue != this.state.data.clients && this.state.setvalueclient == false ){
-      console.log(this.state.data.clients)
-      this.props.form.setFieldsValue({
+      //console.log(this.state.data.clients)
+      setFieldsValue({
         client: this.state.data.clients,
       });
       this.setState({
@@ -544,7 +658,7 @@ class TestTestForm extends React.Component {
           </FormItem>
           <FormItem
             {...formItemLayout}
-            label="Pool Name"
+            label="Pool"
             validateStatus={userNameError ? 'error' : ''}
             help={userNameError || ''}
           >
@@ -553,7 +667,12 @@ class TestTestForm extends React.Component {
                 { required: true, message: 'Please input the Pool Name!' },
               ],
             })(
-              <Input placeholder="rbd" />
+              <Select
+                style={{ width: '100%' }}
+                placeholder="Please select"
+              >
+                {getpools}
+              </Select>
             )}
           </FormItem>
           <FormItem
@@ -567,7 +686,18 @@ class TestTestForm extends React.Component {
                 { required: true, message: 'Please input the Image Count!' },
               ],
             })(
-              <Input placeholder="1" />
+              <Select
+                style={{ width: '100%' }}
+                placeholder="Please select"
+                onChange={this.handleImagecountChange}
+              >
+                <Option key="1">1</Option>
+                <Option key="2">2</Option>
+                <Option key="3">3</Option>
+                <Option key="4">4</Option>
+                <Option key="5">5</Option>
+                <Option key="6">6</Option>
+              </Select>
             )}
           </FormItem>
           <FormItem
@@ -581,8 +711,14 @@ class TestTestForm extends React.Component {
                 { required: true, message: 'Please input the Image Name!' },
               ],
             })(
-              <Input placeholder="testimage_102400" />
+              <Select
+                style={{ width: '100%' }}
+                placeholder="Please select"
+              >
+                {getimages}
+              </Select>
             )}
+            {gotoinitimage}
           </FormItem>
           <FormItem
             {...formItemLayout}

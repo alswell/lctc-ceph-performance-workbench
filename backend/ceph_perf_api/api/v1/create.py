@@ -4,6 +4,8 @@ import re
 import json
 import os
 import sys
+import yaml
+import subprocess
 
 import urls
 from django.views import generic
@@ -44,6 +46,7 @@ class CreateFioJob(generic.View):
             cephconfig = [config]
         fiotest.gen_setup_ceph_config(dir_path, cephconfig)
 
+        imagename = body['imagename'].split(' ')[0]
         casenum = 1
         for rw in body['fiotype']:
             for bs in body['bs']:
@@ -62,7 +65,7 @@ class CreateFioJob(generic.View):
                                 body['imagecount'],
                                 body['jobname'],
                                 rwmixread,
-                                body['imagename'],
+                                imagename,
                                 body['client'],
                                 other_fio_config,
                             )
@@ -100,7 +103,8 @@ class CreateFioJob(generic.View):
             'cluster': result.clustername,
             'ceph_config': body['cephconfig'],
             'fiopara': body['fiopara'],
-            'sysdata': str(body['sysdata'])
+            'sysdata': str(body['sysdata']),
+            'imagename': body['imagename'],
         }
         if os.path.exists(ceph_config_file):
             ceph_configs = json.load(open(ceph_config_file))
@@ -120,3 +124,84 @@ class CreateFioJob(generic.View):
     def options(self, request):
         return "option"
 
+
+@urls.register
+class POOLS(generic.View):
+    url_regex = r'^pools/(?P<clusterid>\d+)/$'
+
+    @utils.json_response
+    def get(self, request, clusterid):
+        hwinfo_file = '{}/../../{}_ceph_hw_info.yml'.format(
+            os.path.dirname(os.path.realpath(__file__)),
+            clusterid)
+        with open(hwinfo_file, 'r') as f:
+            ceph_info = yaml.load(f)
+        client = ceph_info['ceph-client'].popitem()
+        client_ip = client[1]['ip']
+        client_password = client[1]['password']
+
+        cmd = "sshpass -p {} ssh -o StrictHostKeyChecking=no {} 'ceph df -f json-pretty'".format(client_password, client_ip)
+        pool = []
+        output = subprocess.check_output(cmd, shell=True)
+        output = json.loads(output)['pools']
+        for item in output:
+            pool.append(item['name'])
+
+        return pool
+
+@urls.register
+class IMAGES(generic.View):
+    url_regex = r'^images/(?P<clusterid>\d+)/$'
+
+    @utils.json_response
+    def get(self, request, clusterid):
+        body =dict(request.GET)
+        print body
+
+        hwinfo_file = '{}/../../{}_ceph_hw_info.yml'.format(
+            os.path.dirname(os.path.realpath(__file__)),
+            clusterid)
+        with open(hwinfo_file, 'r') as f:
+            ceph_info = yaml.load(f)
+        client = ceph_info['ceph-client'].popitem()
+        client_ip = client[1]['ip']
+        client_password = client[1]['password']
+
+        all_images = {}
+        images = []
+        cmd = "sshpass -p  {} ssh -o StrictHostKeyChecking=no {} 'rbd du'".format(client_password, client_ip)
+        status = subprocess.check_output(cmd, shell=True).split('\n')
+        del status[0]
+        del status[-1]
+        del status[-1]
+        for image_info in status:
+            match = re.match(r'([^\s]*)\s+([^\s]*)\s+([^\s]*)', image_info)
+            name_match = re.search('(.*)_(\d+)$', match.group(1))
+            if name_match:
+                image_name = name_match.group(1)
+                image_num = name_match.group(2)
+                size = match.group(2)
+                fill_size = match.group(3)
+                if size == fill_size:
+                    if all_images.has_key(image_name):
+                        all_images[image_name]['num'].append(image_num)
+                    else:
+                        all_images[image_name] = {'num': [image_num], 'size': size}
+        for name, infos in all_images.items():
+           index = self.get_sequence_index(infos['num'])
+           if body.has_key('imagecount') and body['imagecount'][0] != '':
+               if index >= int(body['imagecount'][0]):
+                   images.append('{} {}'.format(name, infos['size']))
+           else:
+               images.append('{} {}'.format(name, infos['size']))
+
+        return images
+
+    def get_sequence_index(self, mylist):
+        mylist.sort()
+        index = len(mylist)
+        for item in mylist:
+            if mylist.index(item) != int(item):
+                index = mylist.index(item)
+                break
+        return index

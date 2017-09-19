@@ -290,6 +290,7 @@ class Jobs(models.Model):
     jobdir = models.CharField(max_length=200, null=True)
     cluster = models.CharField(max_length=200, null=True)
     sysdata = models.CharField(max_length=200, null=True)
+    imagename = models.CharField(max_length=100, null=True)
 
 class CephInfo(models.Model):
     id = models.AutoField(primary_key=True)
