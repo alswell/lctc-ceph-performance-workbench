@@ -48,28 +48,30 @@ class CreateFioJob(generic.View):
 
         imagename = body['imagename'].split(' ')[0]
         casenum = 1
-        for rw in body['fiotype']:
-            for bs in body['bs']:
-                for iodepth in body['iodepth']:
-                    for numjob in body['numjob']:
-                        for rwmixread in body['rwmixread']:
-                            fiotest.case(
-                                dir_path,
-                                casenum,
-                                body['poolname'],
-                                rw,
-                                bs,
-                                body['runtime'],
-                                str(iodepth),
-                                str(numjob),
-                                body['imagecount'],
-                                body['jobname'],
-                                rwmixread,
-                                imagename,
-                                body['client'],
-                                other_fio_config,
-                            )
-                            casenum = casenum + 1
+        for fiotype in body['fiotype']:
+            fiotype = fiotype.split(' ')
+            rw = fiotype[0]
+            bs = fiotype[1]
+            for iodepth in body['iodepth']:
+                for numjob in body['numjob']:
+                    for rwmixread in body['rwmixread']:
+                        fiotest.case(
+                            dir_path,
+                            casenum,
+                            body['poolname'],
+                            rw,
+                            bs,
+                            body['runtime'],
+                            str(iodepth),
+                            str(numjob),
+                            body['imagecount'],
+                            body['jobname'],
+                            rwmixread,
+                            imagename,
+                            body['client'],
+                            other_fio_config,
+                        )
+                        casenum = casenum + 1
         return dir_path, create_time
 
 

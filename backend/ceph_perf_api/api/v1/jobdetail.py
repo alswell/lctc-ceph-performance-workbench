@@ -15,7 +15,7 @@ class JOBDETAIL(generic.View):
 
     @utils.json_response
     def get(self, request):
-        jobdetail = {'numjob': [], 'bs': [], 'fiotype': [], 'iodepth': [], 'rwmixread': []}
+        jobdetail = {'numjob': [], 'fiotype': [], 'iodepth': [], 'rwmixread': []}
 
         jobid = dict(request.GET)['jobid'][0]
         result = models.Jobs.objects.filter(id=jobid).all()
@@ -64,30 +64,25 @@ class JOBDETAIL(generic.View):
     
             for case in cases:
                 configs = case.split('_')
-                for config in configs:
-                    if re.match('\d+[kM]', config):
-                        jobdetail['bs'].count(config)
-                        if jobdetail['bs'].count(config) == 0:
-                            jobdetail['bs'].append(config)
-                    elif re.match('%', config):
-                        rwmixread = re.match('%(.*)', config).group(1)
-                        jobdetail['rwmixread'].count(rwmixread)
+                i = 0
+                while i < len(configs):
+                    if re.match('%', configs[i]):
+                        rwmixread = re.match('%(.*)', configs[i]).group(1)
                         if jobdetail['rwmixread'].count(rwmixread) == 0:
                             jobdetail['rwmixread'].append(rwmixread)
-                    elif re.match('rw|randrw', config):
-                        jobdetail['fiotype'].count(config)
+                    elif re.match('rw|randrw', configs[i]):
+                        config = '{} {}'.format(configs[i], configs[i+1])
                         if jobdetail['fiotype'].count(config) == 0:
                             jobdetail['fiotype'].append(config)
-                    elif re.match('iodepth', config):
-                        iodepth = re.match('iodepth(.*)', config).group(1)
-                        jobdetail['iodepth'].count(iodepth)
+                    elif re.match('iodepth', configs[i]):
+                        iodepth = re.match('iodepth(.*)', configs[i]).group(1)
                         if jobdetail['iodepth'].count(iodepth) == 0:
                             jobdetail['iodepth'].append(iodepth)
-                    elif re.match('numjob', config):
-                        numjob = re.match('numjob(.*)', config).group(1)
-                        jobdetail['numjob'].count(numjob)
+                    elif re.match('numjob', configs[i]):
+                        numjob = re.match('numjob(.*)', configs[i]).group(1)
                         if jobdetail['numjob'].count(numjob) == 0:
                             jobdetail['numjob'].append(numjob)
+                    i = i + 1
             cmd = "cat {}/fioserver_list.conf".format(jobinfo['testdir'])
             jobdetail['clients'] = subprocess.check_output(cmd, shell=True).split('\n')
             del jobdetail['clients'][-1]

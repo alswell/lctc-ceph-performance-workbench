@@ -3,11 +3,13 @@
  */
 import React from 'react'
 import { Button } from 'antd'
-import TestForm from './TestForm'
+//import TestForm from './TestForm'
+import TestForm from './ReRunForm'
 
 export class CollectionsPage extends React.Component {
   state = {
     visible: false,
+    record: {id: 0}
   };
   showModal = () => {
     this.setState({ visible: true })
@@ -41,6 +43,7 @@ export class CollectionsPage extends React.Component {
           onCancel={this.handleCancel}
           onCreate={this.handleCreate}
           refresh={this.props.refresh}
+          record={this.state.record}
         />
       </span>
     )

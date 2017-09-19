@@ -47,7 +47,7 @@ class TestTestForm extends React.Component {
   componentDidMount () {
     // To disabled submit button at the beginning.
     this.props.form.validateFields()
-    this.fetchDetail()
+    if ( this.props.record.id != 0 ){this.fetchDetail()}
     this.fetchCluster()
   }
 
@@ -111,6 +111,7 @@ class TestTestForm extends React.Component {
       imagename: '',
     });
     const clustervalue = this.props.form.getFieldValue('cluster');
+    const imagecountvalue = this.props.form.getFieldValue('imagecount');
     for (let i=0; i<this.state.clusters.length; i++) {
       if (this.state.clusters[i].clustername == clustervalue ) {
         fetchAndNotification({
@@ -254,17 +255,8 @@ class TestTestForm extends React.Component {
       getimages.push(<Option key={1}></Option>)
     }
 
-    const testset = () => {
-      const bsvalue = getFieldValue('bs');
-      if ( bsvalue != this.props.data.blocksize ){
-        setFieldsValue({
-          bs: this.props.data.blocksize,
-        });
-      }
-    }
-
     let jobnamevalue = getFieldValue('jobname');
-    if (this.props.visible && this.state.data != {} && this.state.setvaluejobname == false && jobnamevalue != this.state.data.jobname ){
+    if (this.props.visible && this.state.data.jobname != undefined && this.state.setvaluejobname == false && jobnamevalue != this.state.data.jobname ){
       setFieldsValue({
         jobname: this.state.data.jobname,
       });
@@ -300,7 +292,7 @@ class TestTestForm extends React.Component {
         }
       }
     }
-    if ( this.props.visible && this.state.data != {} && clustervalue != this.state.data.cluster && this.state.setvaluecluster == false ){
+    if ( this.props.visible && this.state.data.cluster != undefined && clustervalue != this.state.data.cluster && this.state.setvaluecluster == false ){
       setFieldsValue({
         cluster: this.state.data.cluster,
       });
@@ -309,7 +301,7 @@ class TestTestForm extends React.Component {
       })
     }
     const bsvalue = getFieldValue('bs');
-    if ( this.props.visible && this.state.data != {} && bsvalue != this.state.data.bs && this.state.setvaluebs == false){
+    if ( this.props.visible && this.state.data.bs != undefined && bsvalue != this.state.data.bs && this.state.setvaluebs == false){
       setFieldsValue({
         bs: this.state.data.bs,
       });
@@ -318,7 +310,7 @@ class TestTestForm extends React.Component {
       })
     }
     const fiotypevalue = getFieldValue('fiotype');
-    if ( this.props.visible && this.state.data != {} && fiotypevalue != this.state.data.fiotype && this.state.setvaluefiotype == false ){
+    if ( this.props.visible && this.state.data.fiotype != undefined && fiotypevalue != this.state.data.fiotype && this.state.setvaluefiotype == false ){
       setFieldsValue({
         fiotype: this.state.data.fiotype,
       });
@@ -327,7 +319,7 @@ class TestTestForm extends React.Component {
       })
     }
     const rwmixreadvalue = getFieldValue('rwmixread');
-    if ( this.props.visible && this.state.data != {} && rwmixreadvalue != this.state.data.rwmixread && this.state.setvaluerwmixread == false ){
+    if ( this.props.visible && this.state.data.rwmixread != undefined && rwmixreadvalue != this.state.data.rwmixread && this.state.setvaluerwmixread == false ){
       setFieldsValue({
         rwmixread: this.state.data.rwmixread,
       });
@@ -336,7 +328,7 @@ class TestTestForm extends React.Component {
       })
     }
     const iodepthvalue = getFieldValue('iodepth');
-    if ( this.props.visible && this.state.data != {} && iodepthvalue != this.state.data.iodepth && this.state.setvalueiodepth == false ){
+    if ( this.props.visible && this.state.data.iodepth != undefined && iodepthvalue != this.state.data.iodepth && this.state.setvalueiodepth == false ){
       setFieldsValue({
         iodepth: this.state.data.iodepth,
       });
@@ -345,7 +337,7 @@ class TestTestForm extends React.Component {
       })
     }
     const numjobvalue = getFieldValue('numjob');
-    if ( this.props.visible && this.state.data != {} && numjobvalue != this.state.data.numjob && this.state.setvaluenumjob == false ){
+    if ( this.props.visible && this.state.data.numjob != undefined && numjobvalue != this.state.data.numjob && this.state.setvaluenumjob == false ){
       setFieldsValue({
         numjob: this.state.data.numjob,
       });
@@ -354,7 +346,7 @@ class TestTestForm extends React.Component {
       })
     }
     const imagenamevalue = getFieldValue('imagename');
-    if ( this.props.visible && this.state.data != {} && imagenamevalue != this.state.data.imagename && this.state.setvalueimagename == false ){
+    if ( this.props.visible && this.state.data.imagename != undefined && imagenamevalue != this.state.data.imagename && this.state.setvalueimagename == false ){
       setFieldsValue({
         imagename: this.state.data.imagename,
       });
@@ -363,7 +355,7 @@ class TestTestForm extends React.Component {
       })
     }
     const poolnamevalue = getFieldValue('poolname');
-    if ( this.props.visible && this.state.data != {} && poolnamevalue != this.state.data.poolname && this.state.setvaluepoolname == false ){
+    if ( this.props.visible && this.state.data.poolname != undefined && poolnamevalue != this.state.data.poolname && this.state.setvaluepoolname == false ){
       setFieldsValue({
         poolname: this.state.data.poolname,
       });
@@ -372,7 +364,7 @@ class TestTestForm extends React.Component {
       })
     }
     const runtimevalue = getFieldValue('runtime');
-    if ( this.props.visible && this.state.data != {} && runtimevalue != this.state.data.runtime && this.state.setvalueruntime == false ){
+    if ( this.props.visible && this.state.data.runtime != undefined && runtimevalue != this.state.data.runtime && this.state.setvalueruntime == false ){
       setFieldsValue({
         runtime: this.state.data.runtime,
       });
@@ -402,7 +394,7 @@ class TestTestForm extends React.Component {
         }
       }
     }
-    if ( this.props.visible && this.state.data != {} && imagecountvalue != this.state.data.imagecount && this.state.setvalueimagecount == false ){
+    if ( this.props.visible && this.state.data.imagecount != undefined && imagecountvalue != this.state.data.imagecount && this.state.setvalueimagecount == false ){
       setFieldsValue({
         imagecount: this.state.data.imagecount,
       });
@@ -411,7 +403,7 @@ class TestTestForm extends React.Component {
       })
     }
     const fioparavalue = getFieldValue('fiopara');
-    if ( this.props.visible && this.state.data != {} && fioparavalue != this.state.data.fiopara && this.state.setvaluefiopara == false ){
+    if ( this.props.visible && this.state.data.fiopara != undefined && fioparavalue != this.state.data.fiopara && this.state.setvaluefiopara == false ){
       setFieldsValue({
         fiopara: this.state.data.fiopara,
       });
@@ -420,7 +412,7 @@ class TestTestForm extends React.Component {
       })
     }
     const cephconfigvalue = getFieldValue('cephconfig');
-    if ( this.props.visible && this.state.data != {} && cephconfigvalue != this.state.data.cephconfig && this.state.setvaluecephconfig == false ){
+    if ( this.props.visible && this.state.data.cephconfig != undefined && cephconfigvalue != this.state.data.cephconfig && this.state.setvaluecephconfig == false ){
       setFieldsValue({
         cephconfig: this.state.data.cephconfig,
       });
@@ -429,7 +421,7 @@ class TestTestForm extends React.Component {
       })
     }
     const sysdatavalue = getFieldValue('sysdata');
-    if ( this.props.visible && this.state.data != {} && sysdatavalue != this.state.data.sysdata && this.state.setvaluesysdata == false ){
+    if ( this.props.visible && this.state.data.sysdata != undefined && sysdatavalue != this.state.data.sysdata && this.state.setvaluesysdata == false ){
       setFieldsValue({
         sysdata: this.state.data.sysdata,
       });
@@ -438,7 +430,7 @@ class TestTestForm extends React.Component {
       })
     }
     const clientvalue = getFieldValue('client');
-    if ( this.props.visible && this.state.data != {} && clientvalue != this.state.data.clients && this.state.setvalueclient == false ){
+    if ( this.props.visible && this.state.data.clients != undefined && clientvalue != this.state.data.clients && this.state.setvalueclient == false ){
       //console.log(this.state.data.clients)
       setFieldsValue({
         client: this.state.data.clients,
@@ -513,7 +505,7 @@ class TestTestForm extends React.Component {
           </FormItem>
           <FormItem
             {...formItemLayout}
-            label="Fio Type"
+            label="FioType & BlockSize"
             validateStatus={userNameError ? 'error' : ''}
             help={userNameError || ''}
           >
@@ -527,8 +519,38 @@ class TestTestForm extends React.Component {
                 style={{ width: '100%' }}
                 placeholder="Please select"
               >
-                <Option key="rw">rw</Option>
-                <Option key="randrw">randrw</Option>
+                <Option key="rw 4k">rw 4k</Option>
+                <Option key="rw 8k">rw 8k</Option>
+                <Option key="rw 16k">rw 16k</Option>
+                <Option key="rw 32k">rw 32k</Option>
+                <Option key="rw 64k">rw 64k</Option>
+                <Option key="rw 128k">rw 128k</Option>
+                <Option key="rw 256k">rw 256k</Option>
+                <Option key="rw 512k">rw 512k</Option>
+                <Option key="rw 1024k">rw 1024k</Option>
+                <Option key="rw 2048k">rw 2048k</Option>
+                <Option key="rw 4M">rw 4M</Option>
+                <Option key="rw 8M">rw 8M</Option>
+                <Option key="rw 16M">rw 16M</Option>
+                <Option key="rw 32M">rw 32M</Option>
+                <Option key="rw 64M">rw 64M</Option>
+                <Option key="rw 128M">rw 128M</Option>
+                <Option key="randrw 4k">randrw 4k</Option>
+                <Option key="randrw 8k">randrw 8k</Option>
+                <Option key="randrw 16k">randrw 16k</Option>
+                <Option key="randrw 32k">randrw 32k</Option>
+                <Option key="randrw 64k">randrw 64k</Option>
+                <Option key="randrw 128k">randrw 128k</Option>
+                <Option key="randrw 256k">randrw 256k</Option>
+                <Option key="randrw 512k">randrw 512k</Option>
+                <Option key="randrw 1024k">randrw 1024k</Option>
+                <Option key="randrw 2048k">randrw 2048k</Option>
+                <Option key="randrw 4M">randrw 4M</Option>
+                <Option key="randrw 8M">randrw 8M</Option>
+                <Option key="randrw 16M">randrw 16M</Option>
+                <Option key="randrw 32M">randrw 32M</Option>
+                <Option key="randrw 64M">randrw 64M</Option>
+                <Option key="randrw 128M">randrw 128M</Option>
               </Select>
             )}
           </FormItem>
@@ -551,42 +573,6 @@ class TestTestForm extends React.Component {
                 {rwmixread}
               </Select>
             )}
-          </FormItem>
-          <FormItem
-            {...formItemLayout}
-            label="Block Size"
-            validateStatus={userNameError ? 'error' : ''}
-            help={userNameError || ''}
-          >
-            {getFieldDecorator('bs', {
-              rules: [
-                { required: true, message: 'Please select Block Size!' },
-              ],
-            })(
-              <Select
-                mode="multiple"
-                style={{ width: '100%' }}
-                placeholder="Please select"
-              >
-                <Option key="4k">4k</Option>
-                <Option key="8k">8k</Option>
-                <Option key="16k">16k</Option>
-                <Option key="32k">32k</Option>
-                <Option key="64k">64k</Option>
-                <Option key="128k">128k</Option>
-                <Option key="256k">256k</Option>
-                <Option key="512k">512k</Option>
-                <Option key="1024k">1024k</Option>
-                <Option key="2048k">2048k</Option>
-                <Option key="4M">4M</Option>
-                <Option key="8M">8M</Option>
-                <Option key="16M">16M</Option>
-                <Option key="32M">32M</Option>
-                <Option key="64M">64M</Option>
-                <Option key="128M">128M</Option>
-              </Select>
-            )}
-            {testset}
           </FormItem>
           <FormItem
             {...formItemLayout}
@@ -649,6 +635,7 @@ class TestTestForm extends React.Component {
             help={userNameError || ''}
           >
             {getFieldDecorator('runtime', {
+              initialValue: "120",
               rules: [
                 { required: true, message: 'Please input the Run Time!' },
               ],
@@ -663,6 +650,7 @@ class TestTestForm extends React.Component {
             help={userNameError || ''}
           >
             {getFieldDecorator('poolname', {
+              initialValue: "rbd",
               rules: [
                 { required: true, message: 'Please input the Pool Name!' },
               ],
@@ -757,6 +745,7 @@ class TestTestForm extends React.Component {
             label="sysdata collect"
           >
             {getFieldDecorator(`sysdata`, {
+              initialValue: ['perfdump'],
               rules: [{
                 required: false,
               }],
