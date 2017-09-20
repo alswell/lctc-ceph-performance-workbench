@@ -190,39 +190,7 @@ class CLUSTER(generic.View):
                 body = {'health': status}
                 d[0]['health'] = status
 
-            #update image
-            all_images = {}
-            images = []
-            cmd = "sshpass -p {} ssh -o StrictHostKeyChecking=no {} 'rbd du'".format(client_password, client_ip)
-            try:
-                output = subprocess.check_output(cmd, shell=True)
-            except Exception, e:
-                image = ''
-            d[0]['image'] = output
-
-            status = output.split('\n')
-            del status[0]
-            del status[-1]
-            del status[-1]
-            for image_info in status:
-                match = re.match(r'([^\s]*)\s+([^\s]*)\s+([^\s]*)', image_info)
-                name_match = re.search('(.*)_(\d+)$', match.group(1))
-                if name_match:
-                    image_name = name_match.group(1)
-                    image_num = name_match.group(2)
-                    size = match.group(2)
-                    fill_size = match.group(3)
-                    if size == fill_size:
-                        if all_images.has_key(image_name):
-                            all_images[image_name]['num'].append(image_num)
-                        else:
-                            all_images[image_name] = {'num': [image_num], 'size': size}
-            for name, infos in all_images.items():
-               index = self.get_sequence_index(infos['num'])
-               images.append('{} {} {}'.format(name, infos['size'], index))
-            body['images'] = ','.join(images)
-
-            #pool
+            #update pool
             cmd = "sshpass -p {} ssh -o StrictHostKeyChecking=no {} 'ceph df -f json-pretty'".format(client_password, client_ip)
             pool = []
             try:
@@ -236,6 +204,43 @@ class CLUSTER(generic.View):
             d[0]['pools'] = pool
             body['pools'] = ','.join(pool)
 
+            #update image
+            image_output = ''
+            images = []
+            for p in pool:
+                all_images = {}
+                cmd = "sshpass -p {} ssh -o StrictHostKeyChecking=no {} 'rbd du --pool {}'".format(client_password, client_ip, p)
+                try:
+                    output = subprocess.check_output(cmd, shell=True)
+                except Exception, e:
+                    pass
+                image_output = '{}pool: {}\n{}'.format(image_output, p, output)
+                status = output.split('\n')
+                del status[0]
+                del status[-1]
+                if re.match('<TOTAL>', status[-1]):
+                    del status[-1]
+                print status
+                for image_info in status:
+                    match = re.match(r'([^\s]*)\s+([^\s]*)\s+([^\s]*)', image_info)
+                    name_match = re.search('(.*)_(\d+)$', match.group(1))
+                    if name_match:
+                        image_name = name_match.group(1)
+                        image_num = name_match.group(2)
+                        size = match.group(2)
+                        fill_size = match.group(3)
+                        if size == fill_size:
+                            if all_images.has_key(image_name):
+                                all_images[image_name]['num'].append(image_num)
+                            else:
+                                all_images[image_name] = {'num': [image_num], 'size': size}
+                for name, infos in all_images.items():
+                   index = self.get_sequence_index(infos['num'])
+                   images.append('{} {} {} {}'.format(name, infos['size'], index, p))
+            body['images'] = ','.join(images)
+            d[0]['image'] = image_output
+
+            # update DB
             models.Cluster.objects.filter(id=id).update(**body)    
             return d[0]
         else:

@@ -109,12 +109,35 @@ class TestTestForm extends React.Component {
   handleImagecountChange = (value) => {
     this.props.form.resetFields(['imagename']);
     const clustervalue = this.props.form.getFieldValue('cluster');
+    const poolnamevalue = this.props.form.getFieldValue('poolname');
     for (let i=0; i<this.state.clusters.length; i++) {
       if (this.state.clusters[i].clustername == clustervalue ) {
         fetchAndNotification({
             url: `images/${this.state.clusters[i].id}/`,
             method: 'get',
-            params: { imagecount: value },
+            params: { imagecount: value, pool: poolnamevalue },
+            notifications:{
+              error: `获取数据失败！`,
+            }
+          }).then((result) => {
+            this.setState({
+              images: result.data
+            })
+          })
+      }
+    }
+  }
+
+  handlepoolChange = (value) => {
+    this.props.form.resetFields(['imagename']);
+    const clustervalue = this.props.form.getFieldValue('cluster');
+    const imagecountvalue = this.props.form.getFieldValue('imagecount');
+    for (let i=0; i<this.state.clusters.length; i++) {
+      if (this.state.clusters[i].clustername == clustervalue ) {
+        fetchAndNotification({
+            url: `images/${this.state.clusters[i].id}/`,
+            method: 'get',
+            params: { imagecount: imagecountvalue, pool: value },
             notifications:{
               error: `获取数据失败！`,
             }
@@ -154,10 +177,11 @@ class TestTestForm extends React.Component {
           })
         })
         const imagecountvalue = this.props.form.getFieldValue('imagecount');
+        const poolnamevalue = this.props.form.getFieldValue('poolname');
         fetchAndNotification({
             url: `images/${this.state.clusters[i].id}/`,
             method: 'get',
-            params: { imagecount: imagecountvalue },
+            params: { imagecount: imagecountvalue, pool: poolnamevalue },
             notifications:{
               error: `获取数据失败！`,
             }
@@ -373,7 +397,7 @@ class TestTestForm extends React.Component {
           fetchAndNotification({
             url: `images/${this.state.clusters[i].id}/`,
             method: 'get',
-            params: { imagecount: imagecountvalue },
+            params: { imagecount: imagecountvalue, pool: poolnamevalue },
             notifications:{
               error: `获取数据失败！`,
             }
@@ -644,12 +668,13 @@ class TestTestForm extends React.Component {
             {getFieldDecorator('poolname', {
               initialValue: "rbd",
               rules: [
-                { required: true, message: 'Please input the Pool Name!' },
+                { required: true, message: 'Please select the Pool!' },
               ],
             })(
               <Select
                 style={{ width: '100%' }}
                 placeholder="Please select"
+                onChange={this.handlepoolChange}
               >
                 {getpools}
               </Select>

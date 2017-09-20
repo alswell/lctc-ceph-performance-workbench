@@ -153,10 +153,13 @@ class IMAGES(generic.View):
            name = image_info[0]
            size = image_info[1]
            index = image_info[2]
+           pool = image_info[3]
            if body.has_key('imagecount') and body['imagecount'][0] != '':
-               if int(index) >= int(body['imagecount'][0]):
-                   images.append('{} {}'.format(name, size))
+               if body.has_key('pool') and body['pool'][0] == pool:
+                   if int(index) >= int(body['imagecount'][0]):
+                       images.append('{} {}'.format(name, size))
            else:
-               images.append('{} {}'.format(name, size))
+               if body.has_key('pool') and body['pool'][0] == pool:
+                   images.append('{} {}'.format(name, size))
 
         return images

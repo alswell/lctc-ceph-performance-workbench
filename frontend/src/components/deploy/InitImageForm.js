@@ -21,13 +21,15 @@ class TestTestForm extends React.Component {
       spinning: true,
       data: null,
       id: window.location.pathname ? window.location.pathname.substr(window.location.pathname.lastIndexOf("/") + 1)
-        : ""
+        : "",
+      pools: [],
     }
   }
 
   componentDidMount () {
     // To disabled submit button at the beginning.
     this.props.form.validateFields()
+    this.fetchPools()
   }
 
   handleSubmit = (e) => {
@@ -56,15 +58,31 @@ class TestTestForm extends React.Component {
   };
 
   handleChange = (value) => {
-      console.log(`selected ${value}`);
-    };
+    console.log(`selected ${value}`);
+  };
 
+  fetchPools = () => {
+    fetchAndNotification({
+      url: `pools/${this.state.id}/`,
+      method: 'get',
+      notifications:{
+        error: `获取数据失败！`,
+      }
+    }).then((result) => {
+      this.setState({
+        pools: result.data
+      })
+    })
+  }
 
   render () {
     const { getFieldDecorator, getFieldsError, getFieldError, isFieldTouched, getFieldValue } = this.props.form
 
     // Only show error after a field is touched.
-    const userNameError = isFieldTouched('userName') && getFieldError('userName')
+    const imageNameError = isFieldTouched('imagename') && getFieldError('imagename')
+    const poolError = isFieldTouched('pool') && getFieldError('pool')
+    const imageNumError = isFieldTouched('imagenum') && getFieldError('imagenum')
+    const imageSizeError = isFieldTouched('imagesize') && getFieldError('imagesize')
     const formItemLayout = {
       labelCol: {
         xs: { span: 24 },
@@ -82,6 +100,18 @@ class TestTestForm extends React.Component {
       },
     };
 
+    let getpools = [];
+    if ( this.state.pools.length > 0 ) {
+      for (let i=0; i<this.state.pools.length; i++) {
+        getpools.push(<Option key={this.state.pools[i]}>{this.state.pools[i]}</Option>)
+      }
+    }
+    else{
+      getpools.push(<Option key={1}></Option>)
+    }
+
+    console.log(getFieldsError())
+
     return (
       <Modal
         visible={this.props.visible}
@@ -94,8 +124,8 @@ class TestTestForm extends React.Component {
           <FormItem
             {...formItemLayout}
             label="Image Name"
-            validateStatus={userNameError ? 'error' : ''}
-            help={userNameError || ''}
+            validateStatus={imageNameError ? 'error' : ''}
+            help={imageNameError || ''}
           >
             {getFieldDecorator('imagename', {
               rules: [
@@ -108,8 +138,8 @@ class TestTestForm extends React.Component {
           <FormItem
             {...formItemLayout}
             label="Image Size"
-            validateStatus={userNameError ? 'error' : ''}
-            help={userNameError || ''}
+            validateStatus={imageSizeError ? 'error' : ''}
+            help={imageSizeError || ''}
           >
             {getFieldDecorator('imagesize', {
               rules: [
@@ -126,8 +156,8 @@ class TestTestForm extends React.Component {
           <FormItem
             {...formItemLayout}
             label="Image Number"
-            validateStatus={userNameError ? 'error' : ''}
-            help={userNameError || ''}
+            validateStatus={imageNumError ? 'error' : ''}
+            help={imageNumError || ''}
           >
             {getFieldDecorator('imagenum', {
               rules: [
@@ -140,16 +170,22 @@ class TestTestForm extends React.Component {
           <FormItem
             {...formItemLayout}
             label="Pool"
-            validateStatus={userNameError ? 'error' : ''}
-            help={userNameError || ''}
+            validateStatus={poolError ? 'error' : ''}
+            help={poolError || ''}
           >
             {getFieldDecorator('pool', {
               initialValue: "rbd",
               rules: [
-                { required: true, message: 'Please input the pool!' },
+                { required: true, message: 'Please select the pool!' },
               ],
             })(
-              <Input placeholder="rbd" />
+              <Select
+                style={{ width: '100%' }}
+                placeholder="Please select"
+                onChange={this.handlepoolChange}
+              >
+                {getpools}
+              </Select>
             )}
           </FormItem>
           <FormItem>
