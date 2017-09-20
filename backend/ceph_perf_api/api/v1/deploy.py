@@ -5,6 +5,7 @@ import urls
 import yaml
 import subprocess
 import json
+import re
 
 from django.views import generic
 from ceph_perf_api import utils
@@ -166,48 +167,89 @@ class CLUSTER(generic.View):
 
     @utils.json_response
     def get(self, request, id):
-        hwinfo_file = '{}/../../{}_ceph_hw_info.yml'.format(
-            os.path.dirname(os.path.realpath(__file__)),
-            id)
-        with open(hwinfo_file, 'r') as f:
-            ceph_info = yaml.load(f)
-        client = ceph_info['ceph-client'].popitem()
-        client_ip = client[1]['ip']
-        client_password = client[1]['password']
-        try:
-            cmd = "sshpass -p {} ssh -o StrictHostKeyChecking=no {} ceph health".format(client_password, client_ip)
-            status = subprocess.check_output(cmd, shell=True)
-        except Exception, e:
-            body = {'health': ''}
-        else:
-            body = {'health': status}
-            models.Cluster.objects.filter(id=id).update(**body)
-
         result = models.Cluster.objects.filter(id=id).all()
         d = utils.query_to_dict(result)
 
-        cmd = "sshpass -p {} ssh -o StrictHostKeyChecking=no {} 'rbd du'".format(client_password, client_ip)
-        try:
-            image = subprocess.check_output(cmd, shell=True)
-        except Exception, e:
-            image = ''
-
-        cmd = "sshpass -p {} ssh -o StrictHostKeyChecking=no {} 'ceph df -f json-pretty'".format(client_password, client_ip)
-        pool = []
-        try:
-            output = subprocess.check_output(cmd, shell=True)
-            output = json.loads(output)['pools']
-            for item in output:
-                pool.append(item['name'])
-        except Exception, e:
-            pass
-
         if len(d) > 0:
-            d[0]['image'] = image
-            d[0]['pool'] = pool
+            hwinfo_file = '{}/../../{}_ceph_hw_info.yml'.format(
+                os.path.dirname(os.path.realpath(__file__)),
+                id)
+            with open(hwinfo_file, 'r') as f:
+                ceph_info = yaml.load(f)
+            client = ceph_info['ceph-client'].popitem()
+            client_ip = client[1]['ip']
+            client_password = client[1]['password']
+
+            #update health
+            try:
+                cmd = "sshpass -p {} ssh -o StrictHostKeyChecking=no {} ceph health".format(client_password, client_ip)
+                status = subprocess.check_output(cmd, shell=True)
+            except Exception, e:
+                body = {'health': ''}
+            else:
+                body = {'health': status}
+                d[0]['health'] = status
+
+            #update image
+            all_images = {}
+            images = []
+            cmd = "sshpass -p {} ssh -o StrictHostKeyChecking=no {} 'rbd du'".format(client_password, client_ip)
+            try:
+                output = subprocess.check_output(cmd, shell=True)
+            except Exception, e:
+                image = ''
+            d[0]['image'] = output
+
+            status = output.split('\n')
+            del status[0]
+            del status[-1]
+            del status[-1]
+            for image_info in status:
+                match = re.match(r'([^\s]*)\s+([^\s]*)\s+([^\s]*)', image_info)
+                name_match = re.search('(.*)_(\d+)$', match.group(1))
+                if name_match:
+                    image_name = name_match.group(1)
+                    image_num = name_match.group(2)
+                    size = match.group(2)
+                    fill_size = match.group(3)
+                    if size == fill_size:
+                        if all_images.has_key(image_name):
+                            all_images[image_name]['num'].append(image_num)
+                        else:
+                            all_images[image_name] = {'num': [image_num], 'size': size}
+            for name, infos in all_images.items():
+               index = self.get_sequence_index(infos['num'])
+               images.append('{} {} {}'.format(name, infos['size'], index))
+            body['images'] = ','.join(images)
+
+            #pool
+            cmd = "sshpass -p {} ssh -o StrictHostKeyChecking=no {} 'ceph df -f json-pretty'".format(client_password, client_ip)
+            pool = []
+            try:
+                output = subprocess.check_output(cmd, shell=True)
+                output = json.loads(output)['pools']
+                for item in output:
+                    pool.append(item['name'])
+            except Exception, e:
+                pass
+    
+            d[0]['pools'] = pool
+            body['pools'] = ','.join(pool)
+
+            models.Cluster.objects.filter(id=id).update(**body)    
             return d[0]
         else:
             return []
+
+    def get_sequence_index(self, mylist):
+        mylist.sort()
+        index = len(mylist)
+        for item in mylist:
+            if mylist.index(item) != int(item):
+                index = mylist.index(item)
+                break
+        return index
+
 
 @urls.register
 class DEFAULTCEPHCONFIG(generic.View):

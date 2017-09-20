@@ -110,15 +110,19 @@ class FIOJOBS(generic.View):
                 body[key] = value
         
         result = models.Jobs.objects.filter(id=jobid).all()[0]
-        if result.status == "New":
-            body = {'status': 'Canceled'}
-            models.Jobs.objects.filter(id=jobid).update(**body)
-            return "pass"
-        if result.status != "Finished":
-            models.Jobs.objects.filter(id=jobid).update(**body)
-            return "pass"
-        else:
-            raise Exception("Error: The Finished job can't be Cancel!")
+        for key, value in body.items():
+            if key == 'status':
+                if result.status == "New":
+                    job_info = {'status': 'Canceled'}
+                    models.Jobs.objects.filter(id=jobid).update(**job_info)
+                if result.status != "Finished":
+                    models.Jobs.objects.filter(id=jobid).update(**body)
+                else:
+                    raise Exception("Error: The Finished job can't be Cancel!")
+            else:
+                job_info = {key: value}
+                models.Jobs.objects.filter(id=jobid).update(**job_info)
+        return "pass"
 
 
     @utils.json_response

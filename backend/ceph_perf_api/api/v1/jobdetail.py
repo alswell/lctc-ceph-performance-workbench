@@ -46,7 +46,7 @@ class JOBDETAIL(generic.View):
             if jobinfo['imagename'] != None and re.search(imagename, jobinfo['imagename']):
                 jobdetail['imagename'] = jobinfo['imagename']
             else:
-                jobdetail['imagename'] = ''
+                jobdetail['imagename'] = None
             
             onecase = cases[0].split('_')
             for config in onecase:

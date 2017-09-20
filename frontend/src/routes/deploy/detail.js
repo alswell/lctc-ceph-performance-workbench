@@ -49,7 +49,7 @@ class DeployDetail extends React.Component {
       const Detail = ({data}) => {
       const content = []
       for (let key in data) {
-          if ( key != 'key' & key != 'id' & key != 'name' ){
+          if ( key != 'key' & key != 'id' & key != 'name' && key != 'images' ){
           content.push(
             
             <div key={key} className={styles.item}>

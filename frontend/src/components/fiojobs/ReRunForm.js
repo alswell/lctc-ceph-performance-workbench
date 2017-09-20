@@ -107,17 +107,14 @@ class TestTestForm extends React.Component {
   };
 
   handleImagecountChange = (value) => {
-    this.props.form.setFieldsValue({
-      imagename: '',
-    });
+    this.props.form.resetFields(['imagename']);
     const clustervalue = this.props.form.getFieldValue('cluster');
-    const imagecountvalue = this.props.form.getFieldValue('imagecount');
     for (let i=0; i<this.state.clusters.length; i++) {
       if (this.state.clusters[i].clustername == clustervalue ) {
         fetchAndNotification({
             url: `images/${this.state.clusters[i].id}/`,
             method: 'get',
-            params: { imagecount: imagecountvalue },
+            params: { imagecount: value },
             notifications:{
               error: `获取数据失败！`,
             }
@@ -171,11 +168,7 @@ class TestTestForm extends React.Component {
           })
       }
     }
-    this.props.form.setFieldsValue({
-      imagename: '',
-      poolname: 'rbd',
-      client: [],
-    });
+    this.props.form.resetFields(['imagename', 'poolname', 'client']);
   };
 
 
@@ -184,8 +177,6 @@ class TestTestForm extends React.Component {
     
     // Only show error after a field is touched.
     const userNameError = isFieldTouched('userName') && getFieldError('userName')
-    const passwordError = isFieldTouched('password') && getFieldError('password')
-    const emailError = isFieldTouched('email') && getFieldError('email')
     const formItemLayout = {
       labelCol: {
         xs: { span: 24 },
@@ -439,6 +430,7 @@ class TestTestForm extends React.Component {
         setvalueclient: true,
       })
     }
+    console.log(getFieldsError())
 
     return (
       <Modal
@@ -696,7 +688,7 @@ class TestTestForm extends React.Component {
           >
             {getFieldDecorator('imagename', {
               rules: [
-                { required: true, message: 'Please input the Image Name!' },
+                { required: true, message: 'Please input the Image Name!', whitespace: true },
               ],
             })(
               <Select
@@ -765,7 +757,7 @@ class TestTestForm extends React.Component {
             <Button
               type="primary"
               htmlType="submit"
-              disabled={hasErrors(getFieldsError())}
+              disabled={hasErrors(getFieldsError()) || imagenamevalue == undefined || clientvalue == undefined}
             >
               Create
             </Button>

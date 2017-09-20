@@ -4,3 +4,41 @@
 //  line-height: 60px;
 //  border-bottom: 1px solid rgb(244, 244, 244);
 //}
+.editablecell {
+  position: relative;
+}
+
+.editablecellinputwrapper,
+.editablecelltextwrapper {
+  padding-right: 24px;
+}
+
+.editablecelltextwrapper {
+  padding: 5px 24px 5px 5px;
+}
+
+.editablecellicon,
+.editablecelliconcheck {
+  position: absolute;
+  right: 0;
+  width: 20px;
+  cursor: pointer;
+}
+
+.editablecellicon {
+  line-height: 18px;
+  display: none;
+}
+
+.editablecelliconcheck {
+  line-height: 28px;
+}
+
+.editablecell:hover .editablecellicon {
+  display: inline-block;
+}
+
+.editablecellicon:hover,
+.editablecellicon-heck:hover {
+  color: #108ee9;
+}

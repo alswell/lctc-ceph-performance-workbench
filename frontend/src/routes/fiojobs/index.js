@@ -5,15 +5,69 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'dva'
 import DataTable from '../../components/BasicTable/DataTable'
-import { Modal, Row, Col, Card, Button } from 'antd'
+import { Modal, Row, Col, Card, Button, Icon, Input } from 'antd'
+const { TextArea } = Input;
 import { Link } from 'dva/router'
 import DropOption from '../../components/DropOption/DropOption'
 import FioJobsModal from '../../components/modals/FioJobsModal'
 import { fetchAndNotification } from '../../services/restfulService'
 import { CollectionsPage } from '../../components/fiojobs/CreateModal'
 import { ReRunPage } from '../../components/fiojobs/ReRunModal'
+import styles from './List.less'
 
 const confirm = Modal.confirm
+
+class EditableCell extends React.Component {
+  state = {
+    value: this.props.value,
+    editable: false,
+  }
+  handleChange = (e) => {
+    const value = e.target.value;
+    this.setState({ value });
+  }
+  check = () => {
+    this.setState({ editable: false });
+    if (this.props.onChange) {
+      this.props.onChange(this.state.value);
+    }
+  }
+  edit = () => {
+    this.setState({ editable: true });
+  }
+  render() {
+    const { value, editable } = this.state;
+    return (
+      <div className={styles.editablecell}>
+        {
+          editable ?
+            <div className={styles.editablecellinputwrapper}>
+              <TextArea
+                value={value}
+                onChange={this.handleChange}
+              />
+              <Icon
+                type="check"
+                className={styles.editablecelliconcheck}
+                onClick={this.check}
+              />
+            </div>
+            :
+            <div className={styles.editablecelltextwrapper}>
+              <pre>
+                {value || ' '}
+              </pre>
+              <Icon
+                type="edit"
+                className={styles.editablecellicon}
+                onClick={this.edit}
+              />
+            </div>
+        }
+      </div>
+    );
+  }
+}
 
 class HostPage extends React.Component {
 
@@ -105,9 +159,24 @@ class HostPage extends React.Component {
     this.props.dispatch({ type: 'fiojobs/refresh' })
   };
 
+  onCellChange = (record, e) => {
+    return (value) => {
+      fetchAndNotification({
+          url: 'fiojobs',
+          method: 'put',
+          params: { id: record.id, comments: value },
+          notifications: {
+            title: 'create Action',
+            error: ` 操作失败！`,
+          },
+        })
+    }
+  }
+
   init = () => {
     this.tableDataProps = {
       columns: [
+        
         {
           title: 'ID',
           dataIndex: 'id',
@@ -164,11 +233,24 @@ class HostPage extends React.Component {
           render: (text, record) => <a href={`http://10.240.217.74/${record.jobdir}`}>log files</a>,
         },
         {
+          title: 'comments',
+          dataIndex: 'comments',
+          key: 'comments',
+          width: '150',
+          render: (text, record) => (
+            <EditableCell
+            value={text}
+            onChange={this.onCellChange(record)}
+            />
+          ),
+        },
+        {
           title: 'Operation',
           key: 'operation',
           width: 100,
           render: (text, record) => {
-            return (<DropOption onMenuClick={e => this.handleMenuClick(record, e)}
+            return (<DropOption 
+              onMenuClick={e => this.handleMenuClick(record, e)}
               menuOptions={[
                 { key: '1', name: 'Cancel' },
                 { key: '2', name: 'Delete' },

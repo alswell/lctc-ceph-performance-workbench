@@ -133,23 +133,8 @@ class POOLS(generic.View):
 
     @utils.json_response
     def get(self, request, clusterid):
-        hwinfo_file = '{}/../../{}_ceph_hw_info.yml'.format(
-            os.path.dirname(os.path.realpath(__file__)),
-            clusterid)
-        with open(hwinfo_file, 'r') as f:
-            ceph_info = yaml.load(f)
-        client = ceph_info['ceph-client'].popitem()
-        client_ip = client[1]['ip']
-        client_password = client[1]['password']
-
-        cmd = "sshpass -p {} ssh -o StrictHostKeyChecking=no {} 'ceph df -f json-pretty'".format(client_password, client_ip)
-        pool = []
-        output = subprocess.check_output(cmd, shell=True)
-        output = json.loads(output)['pools']
-        for item in output:
-            pool.append(item['name'])
-
-        return pool
+        result = deploymodels.Cluster.objects.filter(id=clusterid).all()[0]
+        return result.pools.split(',')
 
 @urls.register
 class IMAGES(generic.View):
@@ -157,53 +142,21 @@ class IMAGES(generic.View):
 
     @utils.json_response
     def get(self, request, clusterid):
-        body =dict(request.GET)
-        print body
+        body = dict(request.GET)
 
-        hwinfo_file = '{}/../../{}_ceph_hw_info.yml'.format(
-            os.path.dirname(os.path.realpath(__file__)),
-            clusterid)
-        with open(hwinfo_file, 'r') as f:
-            ceph_info = yaml.load(f)
-        client = ceph_info['ceph-client'].popitem()
-        client_ip = client[1]['ip']
-        client_password = client[1]['password']
-
-        all_images = {}
+        result = deploymodels.Cluster.objects.filter(id=clusterid).all()[0]
+        all_images = result.images.split(',')
         images = []
-        cmd = "sshpass -p  {} ssh -o StrictHostKeyChecking=no {} 'rbd du'".format(client_password, client_ip)
-        status = subprocess.check_output(cmd, shell=True).split('\n')
-        del status[0]
-        del status[-1]
-        del status[-1]
-        for image_info in status:
-            match = re.match(r'([^\s]*)\s+([^\s]*)\s+([^\s]*)', image_info)
-            name_match = re.search('(.*)_(\d+)$', match.group(1))
-            if name_match:
-                image_name = name_match.group(1)
-                image_num = name_match.group(2)
-                size = match.group(2)
-                fill_size = match.group(3)
-                if size == fill_size:
-                    if all_images.has_key(image_name):
-                        all_images[image_name]['num'].append(image_num)
-                    else:
-                        all_images[image_name] = {'num': [image_num], 'size': size}
-        for name, infos in all_images.items():
-           index = self.get_sequence_index(infos['num'])
+
+        for image in all_images:
+           image_info = image.split(' ')
+           name = image_info[0]
+           size = image_info[1]
+           index = image_info[2]
            if body.has_key('imagecount') and body['imagecount'][0] != '':
-               if index >= int(body['imagecount'][0]):
-                   images.append('{} {}'.format(name, infos['size']))
+               if int(index) >= int(body['imagecount'][0]):
+                   images.append('{} {}'.format(name, size))
            else:
-               images.append('{} {}'.format(name, infos['size']))
+               images.append('{} {}'.format(name, size))
 
         return images
-
-    def get_sequence_index(self, mylist):
-        mylist.sort()
-        index = len(mylist)
-        for item in mylist:
-            if mylist.index(item) != int(item):
-                index = mylist.index(item)
-                break
-        return index
