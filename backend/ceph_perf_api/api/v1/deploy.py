@@ -17,7 +17,6 @@ from job_conductor import api as job_api
 class DeployCeph(generic.View):
     url_regex = r'^deploy$'
 
-
     def __init__(self):
         self.job_conductor = job_api.API()
 
@@ -215,7 +214,10 @@ class CLUSTER(generic.View):
                 except Exception, e:
                     pass
                 image_output = '{}pool: {}\n{}'.format(image_output, p, output)
-                status = output.split('\n')
+                try:
+                    status = output.split('\n')
+                except Exception, e:
+                    continue
                 del status[0]
                 del status[-1]
                 if re.match('<TOTAL>', status[-1]):

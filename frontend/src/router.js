@@ -300,6 +300,22 @@ const Routers = function ({ history, app }) {
             );
           }
         }, {
+          path: 'cephconfig',
+          getComponent (nextState, cb) {
+            require.ensure([], require => {
+              registerModel(app, require('./models/cephconfig'))
+              cb(null, require('./routes/cephconfig/'))
+            }, 'cephconfig')
+          },
+        }, {
+          path: 'cephconfig/:id',
+          getComponent (nextState, cb) {
+            require.ensure([], require => {
+              registerModel(app, require('./models/cephconfig/detail'))
+              cb(null, require('./routes/cephconfig/'))
+            }, 'cephconfig')
+          },
+        }, {
           path: 'test',
           getComponent (nextState, cb) {
             require.ensure([], require => {

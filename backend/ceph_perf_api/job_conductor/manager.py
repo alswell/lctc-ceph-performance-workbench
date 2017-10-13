@@ -100,7 +100,7 @@ class Manager(object):
         for mon in mons:
             mon_list.append(mon.split(':')[0]) 
 
-        name = body["name"]
+        name = body["clustername"]
         public_network = body['public_network']
         cluster_network = body['cluster_network']
         objectstore = body['objectstore']
